@@ -1,7 +1,6 @@
 package webserver
 
 import (
-	// "github.com/NorskHelsenett/oss-ipam-api/cmd/internal/routes"
 	"github.com/NorskHelsenett/oss-ipam-api/internal/routes"
 	"github.com/gin-gonic/gin"
 )

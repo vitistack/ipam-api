@@ -9,9 +9,9 @@
     "url": "https://<url>",
     "token": "<token>",
     "prefix_containers": {
-      "internet": "<subnet>/<mask>",
-      "helsenett_private": "<subnet>/<mask>",
-      "helsenett_public": "<subnet>/<mask>"
+      "internet": "<subnet>/<prefix>",
+      "helsenett_private": "<subnet>/<prefix>",
+      "helsenett_public": "<subnet>/<prefix>"
     }
   }
 }
