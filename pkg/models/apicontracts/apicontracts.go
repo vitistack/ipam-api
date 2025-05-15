@@ -7,15 +7,15 @@ import (
 )
 
 type Service struct {
-	Name     string `json:"name"`
-	Uuid     string `json:"uuid"`
-	Location string `json:"location"`
+	Name     string `json:"name" validate:"required,min=8,max=64"`
+	Uuid     string `json:"uuid" validate:"required,uuid"`
+	Location string `json:"location" validate:"required,min=8,max=64"`
 }
 
 type K8sRequestBody struct {
-	Secret  string  `json:"secret"`
-	Zone    string  `json:"zone"`
-	Prefix  string  `json:"prefix"`
+	Secret  string  `json:"secret" validate:"required,min=8,max=64"`
+	Zone    string  `json:"zone" validate:"required,min=8,max=64"`
+	Prefix  string  `json:"prefix" validate:"omitempty,cidr"`
 	Service Service `json:"service"`
 }
 
