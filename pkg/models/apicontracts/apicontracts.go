@@ -9,7 +9,7 @@ import (
 type Service struct {
 	Name     string `json:"name" validate:"required,min=8,max=64"`
 	Uuid     string `json:"uuid" validate:"required,uuid"`
-	Location string `json:"location" validate:"required,min=8,max=64"`
+	Location string `json:"location" validate:"required"`
 }
 
 type K8sRequestBody struct {
