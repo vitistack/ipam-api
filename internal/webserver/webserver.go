@@ -8,6 +8,9 @@ import (
 func InitHttpServer() {
 	server := gin.Default()
 	routes.SetupRoutes(server)
-	server.Run(":3000")
+	err := server.Run(":3000")
 
+	if err != nil {
+		panic(err)
+	}
 }
