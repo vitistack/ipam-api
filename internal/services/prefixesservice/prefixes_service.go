@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/NorskHelsenett/oss-ipam-api/internal/services/mongodbservice"
 	"github.com/NorskHelsenett/oss-ipam-api/internal/services/netboxservice"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 )
@@ -35,18 +36,25 @@ func Register(request apicontracts.K8sRequestBody) (any, error) {
 			return nil, err
 		}
 
-		// newDoc := insertNewPrefixDocument(ginContext, request, nextPrefix)
+		prefixDocument, err := mongodbservice.InsertNewPrefixDocument(request, nextPrefix)
 
-		// updatePayload := map[string]any{
-		// 	"prefix": nextPrefix.Prefix,
-		// 	"custom_fields": map[string]any{
-		// 		"k8s_uuid": newDoc.ID,
-		// 	},
-		// }
+		if err != nil {
+			return nil, err
+		}
 
-		// updateNetboxPrefix(ginContext, strconv.Itoa(nextPrefix.PrefixID), updatePayload)
+		updatePayload := map[string]any{
+			"prefix": nextPrefix.Prefix,
+			"custom_fields": map[string]any{
+				"k8s_uuid": prefixDocument.ID,
+			},
+		}
 
-		// ginContext.JSON(http.StatusOK, newDoc)
+		err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(nextPrefix.ID), updatePayload)
+
+		if err != nil {
+			return nil, err
+		}
+
 		return nextPrefix, nil
 	} else {
 		return nil, nil

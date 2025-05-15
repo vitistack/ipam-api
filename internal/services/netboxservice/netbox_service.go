@@ -71,3 +71,31 @@ func GetNextPrefixFromContainer(containerId string, payload map[string]any) (res
 		Prefix: response.Prefix,
 	}, nil
 }
+
+// UpdateNetboxPrefix updates a prefix in NetBox with the provided ID and payload.
+func UpdateNetboxPrefix(prefixId string, payload map[string]any) error {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+	if netboxURL == "" || netboxToken == "" {
+		return errors.New("check your environment")
+	}
+
+	client := resty.New()
+
+	var netboxResp responses.NetboxPrefix
+	resp, err := client.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetBody(payload).
+		SetResult(&netboxResp).
+		Put(netboxURL + "/api/ipam/prefixes/" + prefixId + "/")
+
+	if err != nil {
+		return err
+	}
+
+	if resp.IsError() {
+		return errors.New(resp.String())
+	}
+	return nil
+}
