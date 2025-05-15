@@ -1,0 +1,17 @@
+{
+  "mongodb": {
+    "username": "<username",
+    "password": "<password>",
+    "host": "localhost",
+    "port": 27017
+  },
+  "netbox": {
+    "url": "https://<url>",
+    "token": "<token>",
+    "prefix_containers": {
+      "internet": "<subnet>/<mask>",
+      "helsenett_private": "<subnet>/<mask>",
+      "helsenett_public": "<subnet>/<mask>"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+package prefixescontroller
+
+import (
+	"net/http"
+
+	"github.com/NorskHelsenett/oss-ipam-api/internal/services/prefixesservice"
+	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
+	"github.com/gin-gonic/gin"
+)
+
+func RegisterPrefix(ginContext *gin.Context) {
+	var prefixRequest apicontracts.K8sRequestBody
+	err := ginContext.ShouldBindJSON(&prefixRequest)
+
+	if err != nil {
+		ginContext.JSON(http.StatusBadRequest, gin.H{"error": "Could not parse incomming request", "wtf": err})
+		return
+	}
+
+	if !prefixRequest.IsValidZone() {
+		ginContext.JSON(http.StatusBadRequest, gin.H{"error": "Invalid zone"})
+		return
+	}
+
+	if prefixRequest.Zone == "" || prefixRequest.Secret == "" {
+		ginContext.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request. Both 'zone' and 'secret' are required"})
+		return
+	}
+
+	prefix, err := prefixesservice.Register(prefixRequest)
+
+	if err != nil {
+		ginContext.JSON(http.StatusTeapot, gin.H{"error": err.Error()})
+		return
+	}
+
+	ginContext.JSON(http.StatusOK, prefix)
+
+}
