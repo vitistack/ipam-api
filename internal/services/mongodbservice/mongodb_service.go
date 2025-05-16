@@ -10,6 +10,8 @@ import (
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/mongodbtypes"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix responses.NetboxPrefix) (mongodbtypes.Prefix, error) {
@@ -38,4 +40,63 @@ func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix res
 
 	return prefix, nil
 
+}
+
+func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
+	update := bson.M{
+		"$addToSet": bson.M{
+			"services": request.Service,
+		},
+	}
+
+	opts := options.UpdateOne().SetUpsert(true)
+	client := mongodb.GetClient()
+	collection := client.Database("netbox_proxy").Collection("prefixes")
+	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
+
+	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+
+	if err != nil {
+		return errors.New("failed to insert new prefix document: " + err.Error())
+	}
+
+	return nil
+}
+
+// DeleteServiceFromPrefix removes a service from the services array in a prefix document.
+func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
+	update := bson.M{
+		"$pull": bson.M{
+			"services": request.Service,
+		},
+	}
+
+	client := mongodb.GetClient()
+	collection := client.Database("netbox_proxy").Collection("prefixes")
+	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
+
+	_, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return errors.New("failed to delete service from prefix document: " + err.Error())
+	}
+
+	var result mongodbtypes.Prefix
+
+	err = collection.FindOne(context.Background(), filter).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			// Already deleted or never existed
+			return nil
+		}
+		return errors.New("failed to fetch updated document: " + err.Error())
+	}
+
+	if len(result.Services) == 0 {
+		_, err = collection.DeleteOne(context.Background(), filter)
+		if err != nil {
+			return errors.New("failed to delete prefix document: " + err.Error())
+		}
+	}
+
+	return nil
 }

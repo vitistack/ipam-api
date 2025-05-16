@@ -13,4 +13,5 @@ func SetupRoutes(server *gin.Engine) {
 	})
 
 	server.POST("/prefixes", prefixescontroller.RegisterPrefix)
+	server.DELETE("/prefixes", prefixescontroller.DeregisterPrefix)
 }

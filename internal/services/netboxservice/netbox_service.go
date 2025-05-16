@@ -2,7 +2,6 @@ package netboxservice
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
 	"github.com/go-resty/resty/v2"
@@ -14,7 +13,6 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
-	fmt.Println("netboxURL: ", netboxURL)
 	if netboxURL == "" || netboxToken == "" {
 		return responses.NetboxPrefix{}, errors.New("check your environment")
 	}

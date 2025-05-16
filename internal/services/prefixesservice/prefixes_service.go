@@ -9,16 +9,15 @@ import (
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 )
 
-func Register(request apicontracts.K8sRequestBody) (any, error) {
+func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
 	if request.Prefix == "" {
 		container, err := netboxservice.GetPrefixContainer(request.ZonePrefix())
 
 		if err != nil {
 			fmt.Println("Error retrieving prefix container:", err)
-			return nil, err
+			return apicontracts.K8sRequestResponse{}, err
 		}
 
-		fmt.Println("Container ID:", container.ID)
 		containerId := container.ID
 		createPayload := map[string]any{
 			"prefix_length": 32,
@@ -32,14 +31,13 @@ func Register(request apicontracts.K8sRequestBody) (any, error) {
 		nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(containerId), createPayload)
 
 		if err != nil {
-			fmt.Println("Error retrieving next prefix:", err)
-			return nil, err
+			return apicontracts.K8sRequestResponse{}, err
 		}
 
 		prefixDocument, err := mongodbservice.InsertNewPrefixDocument(request, nextPrefix)
 
 		if err != nil {
-			return nil, err
+			return apicontracts.K8sRequestResponse{}, err
 		}
 
 		updatePayload := map[string]any{
@@ -52,12 +50,40 @@ func Register(request apicontracts.K8sRequestBody) (any, error) {
 		err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(nextPrefix.ID), updatePayload)
 
 		if err != nil {
-			return nil, err
+			return apicontracts.K8sRequestResponse{}, err
 		}
 
-		return nextPrefix, nil
-	} else {
-		return nil, nil
+		return apicontracts.K8sRequestResponse{
+			Message: "Prefix registered successfully",
+			Secret:  request.Secret,
+			Zone:    request.Zone,
+			Prefix:  nextPrefix.Prefix,
+		}, nil
 	}
 
+	err := mongodbservice.UpdatePrefixDocument(request)
+	if err != nil {
+		return apicontracts.K8sRequestResponse{}, err
+	}
+
+	return apicontracts.K8sRequestResponse{
+		Message: "Prefix updated successfully",
+		Secret:  request.Secret,
+		Zone:    request.Zone,
+		Prefix:  request.Prefix,
+	}, nil
+}
+
+func Deregister(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
+	err := mongodbservice.DeleteServiceFromPrefix(request)
+	if err != nil {
+		return apicontracts.K8sRequestResponse{}, err
+	}
+
+	return apicontracts.K8sRequestResponse{
+		Message: "Service deregistered successfully",
+		Secret:  request.Secret,
+		Zone:    request.Zone,
+		Prefix:  request.Prefix,
+	}, nil
 }

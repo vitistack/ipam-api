@@ -8,7 +8,7 @@ import (
 
 type Service struct {
 	Name     string `json:"name" validate:"required,min=8,max=64"`
-	Uuid     string `json:"uuid" validate:"required,uuid"`
+	Uuid     string `json:"uuid" validate:"required"`
 	Location string `json:"location" validate:"required"`
 }
 
@@ -17,6 +17,13 @@ type K8sRequestBody struct {
 	Zone    string  `json:"zone" validate:"required,min=8,max=64"`
 	Prefix  string  `json:"prefix" validate:"omitempty,cidr"`
 	Service Service `json:"service"`
+}
+
+type K8sRequestResponse struct {
+	Message string `json:"message"`
+	Secret  string `json:"secret"`
+	Zone    string `json:"zone"`
+	Prefix  string `json:"prefix"`
 }
 
 func (r *K8sRequestBody) IsValidZone() bool {
