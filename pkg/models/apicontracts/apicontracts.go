@@ -3,6 +3,8 @@ package apicontracts
 import (
 	"slices"
 
+	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
+	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/mongodbtypes"
 	"github.com/spf13/viper"
 )
 
@@ -41,5 +43,48 @@ func (r *K8sRequestBody) ZonePrefix() string {
 		return viper.GetString("netbox.prefix_containers.helsenett-public")
 	default:
 		return ""
+	}
+}
+
+type CustomFields struct {
+	Domain  string `json:"domain"`
+	Env     string `json:"env"`
+	Infra   string `json:"infra"`
+	Purpose string `json:"purpose"`
+	K8suuid string `json:"k8s_uuid"`
+}
+
+type NextPrefixPayload struct {
+	PrefixLength int          `json:"prefix_length"`
+	CustomFields CustomFields `json:"custom_fields"`
+}
+
+type UpdatePrefixPayload struct {
+	Prefix       string       `json:"prefix"`
+	CustomFields CustomFields `json:"custom_fields"`
+}
+
+func GetNextPrefixPayload() NextPrefixPayload {
+	return NextPrefixPayload{
+		PrefixLength: 32,
+		CustomFields: CustomFields{
+			Domain:  "na",
+			Env:     "na",
+			Infra:   "na",
+			Purpose: "na",
+		},
+	}
+}
+
+func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Prefix) UpdatePrefixPayload {
+	return UpdatePrefixPayload{
+		Prefix: nextPrefix.Prefix,
+		CustomFields: CustomFields{
+			Domain:  "na",
+			Env:     "na",
+			Infra:   "na",
+			Purpose: "na",
+			K8suuid: mongoPrefix.ID.Hex(),
+		},
 	}
 }

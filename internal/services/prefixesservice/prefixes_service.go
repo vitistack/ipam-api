@@ -19,16 +19,9 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 		}
 
 		containerId := container.ID
-		createPayload := map[string]any{
-			"prefix_length": 32,
-			"custom_fields": map[string]any{
-				"domain":  "na",
-				"env":     "na",
-				"infra":   "na",
-				"purpose": "na",
-			},
-		}
-		nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(containerId), createPayload)
+		payload := apicontracts.GetNextPrefixPayload()
+
+		nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(containerId), payload)
 
 		if err != nil {
 			return apicontracts.K8sRequestResponse{}, err
@@ -40,13 +33,7 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 			return apicontracts.K8sRequestResponse{}, err
 		}
 
-		updatePayload := map[string]any{
-			"prefix": nextPrefix.Prefix,
-			"custom_fields": map[string]any{
-				"k8s_uuid": prefixDocument.ID,
-			},
-		}
-
+		updatePayload := apicontracts.GetUpdatePrefixPayload(nextPrefix, prefixDocument)
 		err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(nextPrefix.ID), updatePayload)
 
 		if err != nil {

@@ -1,4 +1,4 @@
-package prefixescontroller
+package prefixeshandler
 
 import (
 	"net/http"
@@ -16,7 +16,7 @@ func RegisterPrefix(ginContext *gin.Context) {
 	err := ginContext.ShouldBindJSON(&prefixRequest)
 
 	if err != nil {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"error": "Could not parse incomming request", "wtf": err})
+		ginContext.JSON(http.StatusBadRequest, gin.H{"error": "Could not parse incomming request"})
 		return
 	}
 

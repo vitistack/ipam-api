@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
+	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/viper"
 )
@@ -44,7 +45,7 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 }
 
 // GetNextPrefixFromContainer retrieves the next available prefix from NetBox for a given container ID.
-func GetNextPrefixFromContainer(containerId string, payload map[string]any) (responses.NetboxPrefix, error) {
+func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPrefixPayload) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 	if netboxURL == "" || netboxToken == "" {
@@ -71,7 +72,7 @@ func GetNextPrefixFromContainer(containerId string, payload map[string]any) (res
 }
 
 // UpdateNetboxPrefix updates a prefix in NetBox with the provided ID and payload.
-func UpdateNetboxPrefix(prefixId string, payload map[string]any) error {
+func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayload) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 	if netboxURL == "" || netboxToken == "" {
