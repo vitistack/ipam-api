@@ -41,24 +41,4 @@ func main() {
 	log.Printf("Received signal: %s. Shutting down...", sig)
 	serverCancel()
 
-	// Add any cleanup logic here (e.g., closing DB connections)
 }
-
-// CORTEX ERROR EXAMPLE
-// func main() {
-
-// 	// viper.SetConfigFile("config.json")
-// 	viper.SetConfigName("config")
-// 	viper.SetConfigType("json")
-// 	viper.AddConfigPath(".")
-
-// 	err := viper.ReadInConfig()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	fmt.Println("OK: Read config")
-
-// 	username := viper.GetString("mongodb.username")
-// 	fmt.Println("Username:", username)
-// }
