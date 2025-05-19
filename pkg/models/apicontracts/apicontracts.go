@@ -9,15 +9,15 @@ import (
 )
 
 type Service struct {
-	Name     string `json:"name" validate:"required,min=8,max=64"`
-	Uuid     string `json:"uuid" validate:"required"`
-	Location string `json:"location" validate:"required"`
+	Name     string `json:"name" validate:"required,min=8,max=64" example:"service1"`
+	Uuid     string `json:"uuid" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
+	Location string `json:"location" validate:"required" example:"location1"`
 }
 
 type K8sRequestBody struct {
-	Secret  string  `json:"secret" validate:"required,min=8,max=64"`
-	Zone    string  `json:"zone" validate:"required,min=8,max=64"`
-	Prefix  string  `json:"prefix" validate:"omitempty,cidr"`
+	Secret  string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
+	Zone    string  `json:"zone" validate:"required,min=8,max=64" example:"internet"`
+	Prefix  string  `json:"prefix" validate:"omitempty,cidr" example:"10.0.0.0/32"`
 	Service Service `json:"service"`
 }
 
@@ -62,6 +62,11 @@ type NextPrefixPayload struct {
 type UpdatePrefixPayload struct {
 	Prefix       string       `json:"prefix"`
 	CustomFields CustomFields `json:"custom_fields"`
+}
+
+type HTTPError struct {
+	Message string `json:"message"`
+	Code    int    `json:"code"`
 }
 
 func GetNextPrefixPayload() NextPrefixPayload {

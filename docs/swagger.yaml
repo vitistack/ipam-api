@@ -1,0 +1,106 @@
+definitions:
+  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody:
+    properties:
+      prefix:
+        example: 10.0.0.0/32
+        type: string
+      secret:
+        example: a_secret_value
+        maxLength: 64
+        minLength: 8
+        type: string
+      service:
+        $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.Service'
+      zone:
+        example: internet
+        maxLength: 64
+        minLength: 8
+        type: string
+    required:
+    - secret
+    - zone
+    type: object
+  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse:
+    properties:
+      message:
+        type: string
+      prefix:
+        type: string
+      secret:
+        type: string
+      zone:
+        type: string
+    type: object
+  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.Service:
+    properties:
+      location:
+        example: location1
+        type: string
+      name:
+        example: service1
+        maxLength: 64
+        minLength: 8
+        type: string
+      uuid:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    required:
+    - location
+    - name
+    - uuid
+    type: object
+  internal_handlers_prefixeshandler.HTTPError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /prefixes:
+    delete:
+      consumes:
+      - application/json
+      description: Deregister a prefix
+      produces:
+      - application/json
+      responses: {}
+      summary: Deregister a prefix
+      tags:
+      - prefixes
+    post:
+      consumes:
+      - application/json
+      description: Register a prefix
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handlers_prefixeshandler.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handlers_prefixeshandler.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_handlers_prefixeshandler.HTTPError'
+      summary: Register a prefix
+      tags:
+      - prefixes
+swagger: "2.0"

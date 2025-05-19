@@ -9,6 +9,19 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// RegisterPrefix godoc
+// @Summary      Register a prefix
+// @Schemes
+// @Description  Register a prefix
+// @Tags         prefixes
+// @Accept       json
+// @Produce      json
+// @Success		 200 {object} apicontracts.K8sRequestResponse
+// @Param		 body body apicontracts.K8sRequestBody true "Request body"
+// @Failure      400 {object} apicontracts.HTTPError
+// @Failure      404 {object} apicontracts.HTTPError
+// @Failure      500 {object} apicontracts.HTTPError
+// @Router       /prefixes [POST]
 func RegisterPrefix(ginContext *gin.Context) {
 	var prefixRequest apicontracts.K8sRequestBody
 	validate := validator.New()
@@ -48,6 +61,14 @@ func RegisterPrefix(ginContext *gin.Context) {
 
 }
 
+// DeregisterPrefix godoc
+// @Summary      Deregister a prefix
+// @Schemes
+// @Description  Deregister a prefix
+// @Tags         prefixes
+// @Accept       json
+// @Produce      json
+// @Router       /prefixes [DELETE]
 func DeregisterPrefix(ginContext *gin.Context) {
 	var prefixRequest apicontracts.K8sRequestBody
 	validate := validator.New()
@@ -79,7 +100,7 @@ func DeregisterPrefix(ginContext *gin.Context) {
 	response, err := prefixesservice.Deregister(prefixRequest)
 
 	if err != nil {
-		ginContext.JSON(http.StatusTeapot, gin.H{"error": err.Error()})
+		ginContext.JSON(http.StatusBadRequest, apicontracts.HTTPError{Code: http.StatusTeapot, Message: err.Error()})
 		return
 	}
 
