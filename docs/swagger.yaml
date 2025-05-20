@@ -1,4 +1,11 @@
 definitions:
+  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
   github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody:
     properties:
       prefix:
@@ -49,13 +56,6 @@ definitions:
     - name
     - uuid
     type: object
-  internal_handlers_prefixeshandler.HTTPError:
-    properties:
-      code:
-        type: integer
-      message:
-        type: string
-    type: object
 info:
   contact: {}
 paths:
@@ -68,6 +68,39 @@ paths:
       - application/json
       responses: {}
       summary: Deregister a prefix
+      tags:
+      - prefixes
+    patch:
+      consumes:
+      - application/json
+      description: Register a prefix
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+      summary: Update a prefix
       tags:
       - prefixes
     post:
@@ -91,16 +124,49 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/internal_handlers_prefixeshandler.HTTPError'
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/internal_handlers_prefixeshandler.HTTPError'
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/internal_handlers_prefixeshandler.HTTPError'
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
       summary: Register a prefix
+      tags:
+      - prefixes
+    put:
+      consumes:
+      - application/json
+      description: Register a prefix
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+      summary: Update a prefix
       tags:
       - prefixes
 swagger: "2.0"

@@ -18,6 +18,8 @@ func SetupRoutes(server *gin.Engine) {
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	server.POST("/prefixes", prefixeshandler.RegisterPrefix)
+	server.PATCH("/prefixes", prefixeshandler.UpdatePrefix)
+	server.PUT("/prefixes", prefixeshandler.UpdatePrefix)
 	server.DELETE("/prefixes", prefixeshandler.DeregisterPrefix)
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

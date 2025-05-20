@@ -76,7 +76,7 @@ func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayloa
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 	if netboxURL == "" || netboxToken == "" {
-		return errors.New("check your environment")
+		return errors.New("check netbox environment variables in config.json")
 	}
 
 	client := resty.New()
@@ -88,6 +88,33 @@ func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayloa
 		SetBody(payload).
 		SetResult(&netboxResp).
 		Put(netboxURL + "/api/ipam/prefixes/" + prefixId + "/")
+
+	if err != nil {
+		return err
+	}
+
+	if resp.IsError() {
+		return errors.New(resp.String())
+	}
+	return nil
+}
+
+// DeleteNetboxPrefix deletes a prefix in NetBox with the provided ID.
+func DeleteNetboxPrefix(prefixId string) error {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+	if netboxURL == "" || netboxToken == "" {
+		return errors.New("check netbox environment variables in config.json")
+	}
+
+	client := resty.New()
+
+	var netboxResp responses.NetboxPrefix
+	resp, err := client.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetResult(&netboxResp).
+		Delete(netboxURL + "/api/ipam/prefixes/" + prefixId + "/")
 
 	if err != nil {
 		return err

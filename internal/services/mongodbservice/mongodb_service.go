@@ -3,8 +3,10 @@ package mongodbservice
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
+	"github.com/NorskHelsenett/oss-ipam-api/internal/services/netboxservice"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/clients/mongodb"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/mongodbtypes"
@@ -28,7 +30,7 @@ func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix res
 
 	result, err := collection.InsertOne(context.Background(), newDoc)
 	if err != nil {
-		return mongodbtypes.Prefix{}, errors.New("failed to insert new prefix document")
+		return mongodbtypes.Prefix{}, errors.New("failed to save prefix: " + err.Error())
 	}
 
 	var prefix mongodbtypes.Prefix
@@ -54,10 +56,20 @@ func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
 	collection := client.Database("netbox_proxy").Collection("prefixes")
 	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
 
-	_, err := collection.UpdateOne(context.Background(), filter, update, opts)
+	var result mongodbtypes.Prefix
+	err := collection.FindOne(context.Background(), filter).Decode(&result)
 
 	if err != nil {
-		return errors.New("failed to insert new prefix document: " + err.Error())
+		if err == mongo.ErrNoDocuments {
+			return errors.New("no matching prefix found")
+		}
+		return errors.New(err.Error())
+	}
+
+	_, err = collection.UpdateOne(context.Background(), filter, update, opts)
+
+	if err != nil {
+		return errors.New("failed to update prefix: " + err.Error())
 	}
 
 	return nil
@@ -75,26 +87,35 @@ func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
 	collection := client.Database("netbox_proxy").Collection("prefixes")
 	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
 
-	_, err := collection.UpdateOne(context.Background(), filter, update)
+	var result mongodbtypes.Prefix
+	err := collection.FindOne(context.Background(), filter).Decode(&result)
+
 	if err != nil {
-		return errors.New("failed to delete service from prefix document: " + err.Error())
+		if err == mongo.ErrNoDocuments {
+			return errors.New("no matching prefix found")
+		}
+		return errors.New(err.Error())
 	}
 
-	var result mongodbtypes.Prefix
+	_, err = collection.UpdateOne(context.Background(), filter, update)
+
+	if err != nil {
+		return errors.New("failed to deregister service from prefix: " + err.Error())
+	}
 
 	err = collection.FindOne(context.Background(), filter).Decode(&result)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			// Already deleted or never existed
-			return nil
-		}
-		return errors.New("failed to fetch updated document: " + err.Error())
+		return errors.New("could not find prefix: " + err.Error())
 	}
 
 	if len(result.Services) == 0 {
 		_, err = collection.DeleteOne(context.Background(), filter)
 		if err != nil {
-			return errors.New("failed to delete prefix document: " + err.Error())
+			return errors.New("failed to delete prefix from mongodb: " + err.Error())
+		}
+		err = netboxservice.DeleteNetboxPrefix(strconv.Itoa(result.NetboxID))
+		if err != nil {
+			return errors.New("failed to delete prefix from Netbox: " + err.Error())
 		}
 	}
 

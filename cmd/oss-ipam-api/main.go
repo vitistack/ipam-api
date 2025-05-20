@@ -15,7 +15,11 @@ import (
 
 func main() {
 	// read config.json file
-	settings.InitConfig()
+	err := settings.InitConfig()
+
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{
