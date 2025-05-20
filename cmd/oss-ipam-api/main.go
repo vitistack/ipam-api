@@ -18,7 +18,7 @@ func main() {
 	err := settings.InitConfig()
 
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("%s", err.Error())
 	}
 
 	// Initialize MongoDB client

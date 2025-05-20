@@ -46,7 +46,6 @@ func InitClient(config MongoConfig) *mongo.Client {
 }
 
 // GetClient returns the initialized MongoDB client
-
 func GetClient() *mongo.Client {
 	return clientInstance
 }
