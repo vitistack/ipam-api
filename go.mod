@@ -7,14 +7,10 @@ require (
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
 	go.mongodb.org/mongo-driver/v2 v2.2.1
 )
 
-require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-)
+require gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
