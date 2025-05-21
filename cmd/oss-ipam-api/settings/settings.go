@@ -20,6 +20,8 @@ func InitConfig() error {
 		"mongodb.password",
 		"mongodb.host",
 		"mongodb.port",
+		"mongodb.database",
+		"mongodb.collection",
 		"netbox.url",
 		"netbox.token",
 		"netbox.prefix_containers.internet",

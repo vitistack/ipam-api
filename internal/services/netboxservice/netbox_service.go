@@ -14,13 +14,8 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
-	if netboxURL == "" || netboxToken == "" {
-		return responses.NetboxPrefix{}, errors.New("check your environment")
-	}
-
 	restyClient := resty.New()
 	var result responses.NetboxPrefixes
-
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
@@ -48,9 +43,6 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPrefixPayload) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
-	if netboxURL == "" || netboxToken == "" {
-		return responses.NetboxPrefix{}, errors.New("check your environment")
-	}
 
 	restyClient := resty.New()
 	var response responses.NetboxPrefix
@@ -75,12 +67,8 @@ func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPre
 func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayload) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
-	if netboxURL == "" || netboxToken == "" {
-		return errors.New("check netbox environment variables in config.json")
-	}
 
 	client := resty.New()
-
 	var netboxResp responses.NetboxPrefix
 	resp, err := client.R().
 		SetHeader("Authorization", "Token "+netboxToken).
@@ -103,12 +91,8 @@ func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayloa
 func DeleteNetboxPrefix(prefixId string) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
-	if netboxURL == "" || netboxToken == "" {
-		return errors.New("check netbox environment variables in config.json")
-	}
 
 	client := resty.New()
-
 	var netboxResp responses.NetboxPrefix
 	resp, err := client.R().
 		SetHeader("Authorization", "Token "+netboxToken).

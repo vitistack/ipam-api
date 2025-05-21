@@ -108,7 +108,7 @@ func UpdatePrefix(ginContext *gin.Context) {
 		return
 	}
 
-	response, err := prefixesservice.Register(prefixRequest)
+	response, err := prefixesservice.Update(prefixRequest)
 
 	if err != nil {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})

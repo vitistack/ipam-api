@@ -1,9 +1,8 @@
 package responses
 
 type NetboxPrefix struct {
-	ID     int    `json:"id"`
-	Prefix string `json:"prefix"`
-	// Description  string `json:"description"`
+	ID           int    `json:"id"`
+	Prefix       string `json:"prefix"`
 	CustomFields struct {
 		K8sUuid string `json:"k8s_uuid"`
 	} `json:"custom_fields"`

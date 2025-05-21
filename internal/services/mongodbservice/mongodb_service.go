@@ -10,6 +10,7 @@ import (
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/clients/mongodb"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/mongodbtypes"
+	"github.com/spf13/viper"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -26,7 +27,7 @@ func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix res
 	}
 
 	client := mongodb.GetClient()
-	collection := client.Database("netbox_proxy").Collection("prefixes")
+	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	result, err := collection.InsertOne(context.Background(), newDoc)
 	if err != nil {
@@ -53,7 +54,7 @@ func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
 
 	opts := options.UpdateOne().SetUpsert(true)
 	client := mongodb.GetClient()
-	collection := client.Database("netbox_proxy").Collection("prefixes")
+	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
 
 	var result mongodbtypes.Prefix
@@ -84,7 +85,7 @@ func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
 	}
 
 	client := mongodb.GetClient()
-	collection := client.Database("netbox_proxy").Collection("prefixes")
+	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
 
 	var result mongodbtypes.Prefix
