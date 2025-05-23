@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: oss-ipam-api
+  namespace: oss-ipam-api
+  labels:
+    app: oss-ipam-api
+spec:
+  containers:
+    - name: oss-ipam-api
+      imagePullPolicy: Always
+      image: ncr.sky.nhn.no/cf-test/oss-ipam-api:latest 
+      ports:
+        - containerPort: 3000                   
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
+

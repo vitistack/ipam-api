@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  mongodb:
+    # image: mongo:latest
+    image: mongo:7
+    container_name: oss-ipam-api-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=secretpassword
+    volumes:
+      - mongo_data:/data/db
+
+  ipam-api:
+    build: .
+    container_name: ipam-api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config.json:/app/config.json
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo_data:
