@@ -2,6 +2,8 @@ package netboxservice
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 
 	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
@@ -37,6 +39,33 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	container := result.Results[0]
 
 	return container, nil
+}
+
+func CheckPrefixContainerAvailability(containerId string) (responses.NetboxPrefix, error) {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+
+	restyClient := resty.New()
+	var result responses.NetboxPrefixes
+	resp, err := restyClient.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetResult(&result).
+		Get(netboxURL + "/api/ipam/prefixes/" + containerId + "/available-prefixes/")
+
+	if err != nil {
+		return responses.NetboxPrefix{}, err
+	}
+
+	if resp.IsError() {
+		return responses.NetboxPrefix{}, err
+	}
+
+	if len(result.Results) == 0 {
+		return responses.NetboxPrefix{}, errors.New("no prefixes found in the container")
+	}
+
+	return result.Results[0], nil
 }
 
 // GetNextPrefixFromContainer retrieves the next available prefix from NetBox for a given container ID.
@@ -108,4 +137,41 @@ func DeleteNetboxPrefix(prefixId string) error {
 		return errors.New(resp.String())
 	}
 	return nil
+}
+
+func GetAvailablePrefixContainer(request apicontracts.K8sRequestBody) (responses.NetboxPrefix, error) {
+	zonePrefixes := request.ZonePrefixes()
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+	restyClient := resty.New()
+
+	for _, prefix := range zonePrefixes {
+		container, err := GetPrefixContainer(prefix)
+		if err != nil {
+			continue
+		}
+		fmt.Println("Container ID:", container.ID)
+		var result []any
+
+		resp, err := restyClient.R().
+			SetHeader("Authorization", "Token "+netboxToken).
+			SetHeader("Accept", "application/json").
+			SetResult(&result).
+			Get(netboxURL + "/api/ipam/prefixes/" + strconv.Itoa(container.ID) + "/available-prefixes/")
+
+		if err != nil {
+			continue
+		}
+
+		if resp.IsError() {
+			continue
+		}
+
+		if len(result) == 0 {
+			continue
+		}
+
+		return container, nil
+	}
+	return responses.NetboxPrefix{}, errors.New("no available prefix found. add more prefixes to config.json")
 }

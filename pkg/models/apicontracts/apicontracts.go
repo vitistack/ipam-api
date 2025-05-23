@@ -33,16 +33,16 @@ func (r *K8sRequestBody) IsValidZone() bool {
 	return slices.Contains(allowed, r.Zone)
 }
 
-func (r *K8sRequestBody) ZonePrefix() string {
+func (r *K8sRequestBody) ZonePrefixes() []string {
 	switch r.Zone {
 	case "internet":
-		return viper.GetString("netbox.prefix_containers.internet")
+		return viper.GetStringSlice("netbox.prefix_containers.internet")
 	case "helsenett-private":
-		return viper.GetString("netbox.prefix_containers.helsenett-private")
+		return viper.GetStringSlice("netbox.prefix_containers.helsenett-private")
 	case "helsenett-public":
-		return viper.GetString("netbox.prefix_containers.helsenett-public")
+		return viper.GetStringSlice("netbox.prefix_containers.helsenett-public")
 	default:
-		return ""
+		return []string{}
 	}
 }
 

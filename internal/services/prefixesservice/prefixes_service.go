@@ -10,7 +10,7 @@ import (
 )
 
 func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
-	container, err := netboxservice.GetPrefixContainer(request.ZonePrefix())
+	container, err := netboxservice.GetAvailablePrefixContainer(request)
 
 	if err != nil {
 		fmt.Println("Error retrieving prefix container:", err)
