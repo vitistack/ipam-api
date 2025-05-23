@@ -78,11 +78,6 @@ func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
 
 // DeleteServiceFromPrefix removes a service from the services array in a prefix document.
 func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
-	update := bson.M{
-		"$pull": bson.M{
-			"services": request.Service,
-		},
-	}
 
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
@@ -96,6 +91,24 @@ func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
 			return errors.New("no matching prefix found")
 		}
 		return errors.New(err.Error())
+	}
+	// Check if the service exists in the prefix document
+	serviceFound := false
+	for _, service := range result.Services {
+		if request.Service.Location == service.Location && request.Service.Name == service.Name && request.Service.Uuid == service.Uuid {
+			serviceFound = true
+			break
+		}
+	}
+
+	if !serviceFound {
+		return errors.New("service not found in prefix document")
+	}
+
+	update := bson.M{
+		"$pull": bson.M{
+			"services": request.Service,
+		},
 	}
 
 	_, err = collection.UpdateOne(context.Background(), filter, update)
