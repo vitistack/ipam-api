@@ -24,9 +24,9 @@ func InitConfig() error {
 		"mongodb.collection",
 		"netbox.url",
 		"netbox.token",
-		"netbox.prefix_containers.internet",
-		"netbox.prefix_containers.helsenett_private",
-		"netbox.prefix_containers.helsenett_public",
+		"netbox.prefix_containers.inet_v4",
+		"netbox.prefix_containers.hnet_private_v4",
+		"netbox.prefix_containers.hnet_public_v4",
 	}
 
 	for _, key := range required {

@@ -33,7 +33,7 @@ func RegisterPrefix(ginContext *gin.Context) {
 		return
 	}
 
-	if prefixRequest.Prefix != "" {
+	if prefixRequest.Address != "" {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "For updating a prefix, use the PUT method"})
 		return
 	}
@@ -96,7 +96,7 @@ func UpdatePrefix(ginContext *gin.Context) {
 		return
 	}
 
-	if prefixRequest.Zone == "" || prefixRequest.Secret == "" || prefixRequest.Prefix == "" {
+	if prefixRequest.Zone == "" || prefixRequest.Secret == "" || prefixRequest.Address == "" {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request. 'zone', 'secret' and 'prefix' are required for update"})
 		return
 	}

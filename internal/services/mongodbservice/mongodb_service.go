@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"time"
 
 	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
 	"github.com/NorskHelsenett/oss-ipam-api/internal/services/netboxservice"
@@ -18,12 +19,22 @@ import (
 )
 
 func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix responses.NetboxPrefix) (mongodbtypes.Prefix, error) {
+
+	service := apicontracts.Service{
+		ServiceName:         request.Service.ServiceName,
+		ServiceId:           request.Service.ServiceId,
+		ClusterId:           request.Service.ClusterId,
+		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		ExpiresAt:           time.Now().Add(time.Duration(time.Minute * 3)),
+		// ExpiresAt:           time.Now().AddDate(0, 0, request.Service.RetentionPeriodDays),
+	}
+
 	newDoc := bson.M{
 		"secret":   request.Secret,
 		"zone":     request.Zone,
 		"prefix":   nextPrefix.Prefix,
 		"id":       nextPrefix.ID,
-		"services": []any{request.Service},
+		"services": []apicontracts.Service{service},
 	}
 
 	client := mongodb.GetClient()
@@ -55,7 +66,7 @@ func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
 	opts := options.UpdateOne().SetUpsert(true)
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
-	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
+	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Address}
 
 	var result mongodbtypes.Prefix
 	err := collection.FindOne(context.Background(), filter).Decode(&result)
@@ -81,7 +92,7 @@ func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
 
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
-	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Prefix}
+	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Address}
 
 	var result mongodbtypes.Prefix
 	err := collection.FindOne(context.Background(), filter).Decode(&result)
@@ -95,7 +106,7 @@ func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
 	// Check if the service exists in the prefix document
 	serviceFound := false
 	for _, service := range result.Services {
-		if request.Service.Location == service.Location && request.Service.Name == service.Name && request.Service.Uuid == service.Uuid {
+		if request.Service.ServiceName == service.Name && request.Service.ServiceId == service.Uuid {
 			serviceFound = true
 			break
 		}

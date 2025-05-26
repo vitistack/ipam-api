@@ -57,7 +57,7 @@ func Update(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespons
 		Message: "Prefix updated successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,
-		Prefix:  request.Prefix,
+		Prefix:  request.Address,
 	}, nil
 }
 
@@ -71,6 +71,6 @@ func Deregister(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRes
 		Message: "Service deregistered successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,
-		Prefix:  request.Prefix,
+		Prefix:  request.Address,
 	}, nil
 }

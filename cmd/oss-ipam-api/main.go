@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/NorskHelsenett/oss-ipam-api/cmd/oss-ipam-api/settings"
+	"github.com/NorskHelsenett/oss-ipam-api/internal/utils"
 	"github.com/NorskHelsenett/oss-ipam-api/internal/webserver"
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/clients/mongodb"
 	"github.com/spf13/viper"
@@ -38,6 +39,11 @@ func main() {
 	_, serverCancel := context.WithCancel(context.Background())
 	go func() {
 		webserver.InitHttpServer()
+	}()
+
+	// Start cleanup worker
+	go func() {
+		utils.StartCleanupWorker()
 	}()
 
 	// Wait for termination signal
