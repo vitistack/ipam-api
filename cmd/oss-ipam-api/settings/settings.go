@@ -25,6 +25,7 @@ func InitConfig() error {
 		"netbox.url",
 		"netbox.token",
 		"netbox.prefix_containers.inet_v4",
+		"netbox.prefix_containers.inet_v6",
 		"netbox.prefix_containers.hnet_private_v4",
 		"netbox.prefix_containers.hnet_public_v4",
 	}

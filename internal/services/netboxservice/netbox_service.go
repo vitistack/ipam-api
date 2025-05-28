@@ -2,7 +2,6 @@ package netboxservice
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
@@ -150,7 +149,6 @@ func GetAvailablePrefixContainer(request apicontracts.K8sRequestBody) (responses
 		if err != nil {
 			continue
 		}
-		fmt.Println("Container ID:", container.ID)
 		var result []any
 
 		resp, err := restyClient.R().

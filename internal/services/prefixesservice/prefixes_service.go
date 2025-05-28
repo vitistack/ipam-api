@@ -18,7 +18,7 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 	}
 
 	containerId := container.ID
-	payload := apicontracts.GetNextPrefixPayload()
+	payload := apicontracts.GetNextPrefixPayload(request)
 	nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(containerId), payload)
 
 	if err != nil {

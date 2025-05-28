@@ -10,18 +10,19 @@ import (
 )
 
 type Service struct {
-	ServiceName         string    `json:"service_name" validate:"required" example:"service1"`
-	ServiceId           string    `json:"service_id" bson:"service_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
-	ClusterId           string    `json:"cluster_id" bson:"cluster_id" validate:"required,min=8,max=64"`
-	RetentionPeriodDays int       `json:"retention_period_days" bson:"retention_period_days"`
-	ExpiresAt           time.Time `json:"expires_at" bson:"expires_at"`
+	ServiceName         string     `json:"service_name" bson:"service_name" validate:"required" example:"service1"`
+	ServiceId           string     `json:"service_id" bson:"service_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
+	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required,min=8,max=64"`
+	RetentionPeriodDays int        `json:"retention_period_days" bson:"retention_period_days"`
+	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
 }
 
 type K8sRequestBody struct {
-	Secret  string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
-	Zone    string  `json:"zone" validate:"required" example:"inet"`
-	Address string  `json:"address"`
-	Service Service `json:"service"`
+	Secret   string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
+	Zone     string  `json:"zone" validate:"required" example:"inet"`
+	IpFamily int     `json:"ip_family" bson:"ip_family" validate:"required,oneof=4 6" example:"4"`
+	Address  string  `json:"address"`
+	Service  Service `json:"service"`
 }
 
 type K8sRequestResponse struct {
@@ -37,12 +38,14 @@ func (r *K8sRequestBody) IsValidZone() bool {
 }
 
 func (r *K8sRequestBody) ZonePrefixes() []string {
-	switch r.Zone {
-	case "inet":
+	switch {
+	case r.Zone == "inet" && r.IpFamily == 4:
 		return viper.GetStringSlice("netbox.prefix_containers.inet_v4")
-	// case "helsenett-private":
+	case r.Zone == "inet" && r.IpFamily == 6:
+		return viper.GetStringSlice("netbox.prefix_containers.inet_v6")
+	// case r.Zone == "helsenett-private":
 	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-private")
-	// case "helsenett-public":
+	// case r.Zone == "helsenett-public":
 	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-public")
 	default:
 		return []string{}
@@ -72,9 +75,16 @@ type HTTPError struct {
 	Code    int    `json:"code"`
 }
 
-func GetNextPrefixPayload() NextPrefixPayload {
+func GetNextPrefixPayload(request K8sRequestBody) NextPrefixPayload {
+	var prefixLength int
+	if request.IpFamily == 4 {
+		prefixLength = 32
+	} else if request.IpFamily == 6 {
+		prefixLength = 128
+	}
+
 	return NextPrefixPayload{
-		PrefixLength: 32,
+		PrefixLength: prefixLength,
 		CustomFields: CustomFields{
 			Domain:  "na",
 			Env:     "na",
@@ -82,6 +92,7 @@ func GetNextPrefixPayload() NextPrefixPayload {
 			Purpose: "na",
 		},
 	}
+
 }
 
 func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Prefix) UpdatePrefixPayload {

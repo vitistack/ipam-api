@@ -1,11 +1,22 @@
 package mongodbtypes
 
-import "go.mongodb.org/mongo-driver/v2/bson"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+)
+
+// type Service struct {
+// 	Name string `json:"name"`
+// 	Uuid string `json:"uuid"`
+// }
 
 type Service struct {
-	Name     string `json:"name"`
-	Uuid     string `json:"uuid"`
-	Location string `json:"location"`
+	ServiceName         string     `json:"service_name" validate:"required" example:"service1"`
+	ServiceId           string     `json:"service_id" bson:"service_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
+	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required,min=8,max=64"`
+	RetentionPeriodDays int        `json:"retention_period_days" bson:"retention_period_days"`
+	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
 }
 
 type Prefix struct {
@@ -13,6 +24,6 @@ type Prefix struct {
 	Secret   string        `json:"secret" bson:"secret"`
 	Zone     string        `json:"zone" bson:"zone"`
 	NetboxID int           `json:"-" bson:"id"`
-	Prefix   string        `json:"prefix" bson:"prefix"`
+	Address  string        `json:"address" bson:"address"`
 	Services []Service     `json:"services" bson:"services"`
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/mongodbtypes"
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 func StartCleanupWorker() {
@@ -18,31 +19,29 @@ func StartCleanupWorker() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
+	client := mongodb.GetClient()
+	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
+
 	for range ticker.C {
-		CleanupExpiredServices()
-		CleanupRegistrationsWithoutServices()
+		log.Println("running cleanup")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+		CleanupExpiredServices(ctx, collection)
+		CleanupRegistrationsWithoutServices(ctx, collection)
+		cancel()
 	}
 }
 
-func CleanupExpiredServices() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	coll := mongodb.GetClient().
-		Database(viper.GetString("mongodb.database")).
-		Collection(viper.GetString("mongodb.collection"))
-
-	now := time.Now()
-
+func CleanupExpiredServices(ctx context.Context, collection *mongo.Collection) {
 	update := bson.M{
 		"$pull": bson.M{
 			"services": bson.M{
-				"expires_at": bson.M{"$lte": now},
+				"expires_at": bson.M{"$lte": time.Now()},
 			},
 		},
 	}
 
-	_, err := coll.UpdateMany(ctx, bson.M{}, update)
+	_, err := collection.UpdateMany(ctx, bson.M{}, update)
 	if err != nil {
 		log.Printf("could not delete service: %v", err)
 		return
@@ -50,16 +49,14 @@ func CleanupExpiredServices() {
 
 }
 
-func CleanupRegistrationsWithoutServices() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	prefixes, err := GetPrefixesWithNoServices()
+func CleanupRegistrationsWithoutServices(ctx context.Context, collection *mongo.Collection) {
+	registrations, err := GetPrefixesWithNoServices(ctx, collection)
 	if err != nil {
 		log.Printf("mongodb query failed: %v", err)
 		return
 	}
 
-	for _, prefix := range prefixes {
+	for _, prefix := range registrations {
 		// Delete the prefix in Netbox
 		err := netboxservice.DeleteNetboxPrefix(strconv.Itoa(prefix.NetboxID))
 		if err != nil {
@@ -67,7 +64,6 @@ func CleanupRegistrationsWithoutServices() {
 		}
 
 		// Delete from MongoDB
-		collection := mongodb.GetClient().Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 		_, err = collection.DeleteOne(ctx, bson.M{"_id": prefix.ID})
 		if err != nil {
 			log.Printf("could not delete registration from mongodb: %v", err)
@@ -76,11 +72,11 @@ func CleanupRegistrationsWithoutServices() {
 	}
 }
 
-func GetPrefixesWithNoServices() ([]mongodbtypes.Prefix, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+func GetPrefixesWithNoServices(ctx context.Context, collection *mongo.Collection) ([]mongodbtypes.Prefix, error) {
+	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// defer cancel()
 
-	collection := mongodb.GetClient().Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
+	// collection := mongodb.GetClient().Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	// Create filter for finding registrations with no services
 	filter := bson.M{

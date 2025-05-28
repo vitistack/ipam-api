@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"time"
+	"fmt"
 
 	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
 	"github.com/NorskHelsenett/oss-ipam-api/internal/services/netboxservice"
@@ -15,18 +16,24 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	// "go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix responses.NetboxPrefix) (mongodbtypes.Prefix, error) {
+
+	retention := request.Service.RetentionPeriodDays
+	var expiresAt *time.Time
+	if retention > 0 {
+		exp := time.Now().Add(time.Minute * time.Duration(retention)) // eller .AddDate(0, 0, retention) for dager
+		expiresAt = &exp
+	}
 
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
 		ServiceId:           request.Service.ServiceId,
 		ClusterId:           request.Service.ClusterId,
-		RetentionPeriodDays: request.Service.RetentionPeriodDays,
-		ExpiresAt:           time.Now().Add(time.Duration(time.Minute * 3)),
-		// ExpiresAt:           time.Now().AddDate(0, 0, request.Service.RetentionPeriodDays),
+		RetentionPeriodDays: retention,
+		ExpiresAt:           expiresAt,
 	}
 
 	newDoc := bson.M{
@@ -57,35 +64,92 @@ func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix res
 }
 
 func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
-	update := bson.M{
+	retention := request.Service.RetentionPeriodDays
+	var expiresAt *time.Time
+	if retention > 0 {
+		exp := time.Now().Add(time.Minute * time.Duration(retention)) // eller .AddDate(0, 0, retention) for dager
+		expiresAt = &exp
+	}
+	request.Service.ExpiresAt = expiresAt
+
+	client := mongodb.GetClient()
+	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
+
+	filter := bson.M{
+		"secret": request.Secret,
+		"zone":   request.Zone,
+		"prefix": request.Address,
+	}
+
+	// 1. Fjern eksisterende service med samme id + navn + cluster
+	pull := bson.M{
+		"$pull": bson.M{
+			"services": bson.M{
+				"service_id":   request.Service.ServiceId,
+				"service_name": request.Service.ServiceName,
+				"cluster_id":   request.Service.ClusterId,
+			},
+		},
+	}
+	_, err := collection.UpdateOne(context.Background(), filter, pull)
+	if err != nil {
+		return fmt.Errorf("failed to pull existing service: %w", err)
+	}
+
+	// 2. Legg til oppdatert service
+	fmt.Println("request.service", request.Service)
+	push := bson.M{
 		"$addToSet": bson.M{
 			"services": request.Service,
 		},
 	}
-
-	opts := options.UpdateOne().SetUpsert(true)
-	client := mongodb.GetClient()
-	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
-	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Address}
-
-	var result mongodbtypes.Prefix
-	err := collection.FindOne(context.Background(), filter).Decode(&result)
-
+	_, err = collection.UpdateOne(context.Background(), filter, push)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return errors.New("no matching prefix found")
-		}
-		return errors.New(err.Error())
-	}
-
-	_, err = collection.UpdateOne(context.Background(), filter, update, opts)
-
-	if err != nil {
-		return errors.New("failed to update prefix: " + err.Error())
+		return fmt.Errorf("failed to add updated service: %w", err)
 	}
 
 	return nil
 }
+
+// func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
+
+// 	retention := request.Service.RetentionPeriodDays
+// 	var expiresAt *time.Time
+// 	if retention > 0 {
+// 		exp := time.Now().Add(time.Minute * time.Duration(retention)) // eller .AddDate(0, 0, retention) for dager
+// 		expiresAt = &exp
+// 	}
+// 	request.Service.ExpiresAt = expiresAt
+
+// 	update := bson.M{
+// 		"$addToSet": bson.M{
+// 			"services": request.Service,
+// 		},
+// 	}
+
+// 	opts := options.UpdateOne().SetUpsert(true)
+// 	client := mongodb.GetClient()
+// 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
+// 	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Address}
+
+// 	var result mongodbtypes.Prefix
+// 	err := collection.FindOne(context.Background(), filter).Decode(&result)
+
+// 	if err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return errors.New("no matching prefix found")
+// 		}
+// 		return errors.New(err.Error())
+// 	}
+
+// 	_, err = collection.UpdateOne(context.Background(), filter, update, opts)
+
+// 	if err != nil {
+// 		return errors.New("failed to update prefix: " + err.Error())
+// 	}
+
+// 	return nil
+// }
 
 // DeleteServiceFromPrefix removes a service from the services array in a prefix document.
 func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
@@ -106,7 +170,7 @@ func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
 	// Check if the service exists in the prefix document
 	serviceFound := false
 	for _, service := range result.Services {
-		if request.Service.ServiceName == service.Name && request.Service.ServiceId == service.Uuid {
+		if request.Service.ServiceName == service.ServiceName && request.Service.ServiceId == service.ServiceId {
 			serviceFound = true
 			break
 		}
