@@ -33,6 +33,7 @@ func RegisterAddress(ginContext *gin.Context) {
 	}
 
 	err = ValidateIncomingRequest(&request)
+
 	if err != nil {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -46,7 +47,7 @@ func RegisterAddress(ginContext *gin.Context) {
 	}
 
 	if err != nil {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -130,6 +131,7 @@ func ExpireAddress(ginContext *gin.Context) {
 	}
 
 	err = ValidateIncomingRequest(&prefixRequest)
+
 	if err != nil {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -150,11 +152,15 @@ func ValidateIncomingRequest(request *apicontracts.K8sRequestBody) error {
 	validate := validator.New()
 
 	if request.Zone == "" || request.Secret == "" {
-		return errors.New("invalid request. Both 'zone' and 'secret' are required")
+		return errors.New("both 'zone' and 'secret' are required")
 	}
 
 	if !request.IsValidZone() {
 		return errors.New("invalid zone")
+	}
+
+	if request.IpFamily == 6 && request.Zone != "inet" {
+		return errors.New("IPv6 is only available for zone 'inet'")
 	}
 
 	err := validate.Struct(*request)
