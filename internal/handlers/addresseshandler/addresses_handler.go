@@ -32,7 +32,7 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
-	err = ValidateIncomingRequest(&request)
+	err = ValidateRequest(&request)
 
 	if err != nil {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -130,7 +130,7 @@ func ExpireAddress(ginContext *gin.Context) {
 		return
 	}
 
-	err = ValidateIncomingRequest(&prefixRequest)
+	err = ValidateRequest(&prefixRequest)
 
 	if err != nil {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -148,7 +148,7 @@ func ExpireAddress(ginContext *gin.Context) {
 
 }
 
-func ValidateIncomingRequest(request *apicontracts.K8sRequestBody) error {
+func ValidateRequest(request *apicontracts.K8sRequestBody) error {
 	validate := validator.New()
 
 	if request.Zone == "" || request.Secret == "" {

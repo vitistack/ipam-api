@@ -16,7 +16,7 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	netboxToken := viper.GetString("netbox.token")
 
 	restyClient := resty.New()
-	var result responses.NetboxPrefixes
+	var result responses.NetboxPrefixesResponse
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
@@ -45,7 +45,7 @@ func CheckPrefixContainerAvailability(containerId string) (responses.NetboxPrefi
 	netboxToken := viper.GetString("netbox.token")
 
 	restyClient := resty.New()
-	var result responses.NetboxPrefixes
+	var result responses.NetboxPrefixesResponse
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").

@@ -21,7 +21,7 @@ func RegisterAddress(request apicontracts.K8sRequestBody, nextPrefix responses.N
 		ServiceName:         request.Service.ServiceName,
 		ServiceId:           request.Service.ServiceId,
 		ClusterId:           request.Service.ClusterId,
-		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		RetentionPeriodDays: 0,
 		ExpiresAt:           nil,
 	}
 
@@ -92,7 +92,7 @@ func UpdateAddressDocument(request apicontracts.K8sRequestBody) error {
 		ServiceName:         request.Service.ServiceName,
 		ServiceId:           request.Service.ServiceId,
 		ClusterId:           request.Service.ClusterId,
-		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		RetentionPeriodDays: 0,
 		ExpiresAt:           nil,
 	}))
 

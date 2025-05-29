@@ -8,7 +8,7 @@ type NetboxPrefix struct {
 	} `json:"custom_fields"`
 }
 
-type NetboxPrefixes struct {
+type NetboxPrefixesResponse struct {
 	Count    int            `json:"count"`
 	Next     string         `json:"next"`
 	Previous string         `json:"previous"`

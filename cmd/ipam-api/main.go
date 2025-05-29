@@ -8,7 +8,6 @@ import (
 	"syscall"
 
 	"github.com/spf13/viper"
-	// "github.com/vitistack/ipam-api/settings"
 	"github.com/vitistack/ipam-api/cmd/ipam-api/settings"
 	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/internal/webserver"

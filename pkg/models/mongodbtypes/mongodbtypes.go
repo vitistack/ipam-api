@@ -18,7 +18,7 @@ type Address struct {
 	ID       bson.ObjectID `json:"-" bson:"_id"`
 	Secret   string        `json:"secret" bson:"secret"`
 	Zone     string        `json:"zone" bson:"zone"`
-	NetboxID int           `json:"-" bson:"id"`
+	NetboxID int           `json:"-" bson:"netbox_id"`
 	Address  string        `json:"address" bson:"address"`
 	Services []Service     `json:"services" bson:"services"`
 }
