@@ -6,13 +6,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-// type Service struct {
-// 	Name string `json:"name"`
-// 	Uuid string `json:"uuid"`
-// }
-
 type Service struct {
-	ServiceName         string     `json:"service_name" validate:"required" example:"service1"`
+	ServiceName         string     `json:"service_name" bson:"service_name" validate:"required" example:"service1"`
 	ServiceId           string     `json:"service_id" bson:"service_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
 	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required,min=8,max=64"`
 	RetentionPeriodDays int        `json:"retention_period_days" bson:"retention_period_days"`

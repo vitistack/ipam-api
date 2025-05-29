@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/NorskHelsenett/oss-ipam-api/internal/services/mongodbservice"
-	"github.com/NorskHelsenett/oss-ipam-api/internal/services/netboxservice"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
+	"github.com/vitistack/ipam-api/internal/services/mongodbservice"
+	"github.com/vitistack/ipam-api/internal/services/netboxservice"
+	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
 func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {

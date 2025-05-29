@@ -1,4 +1,4 @@
-module github.com/NorskHelsenett/oss-ipam-api
+module github.com/vitistack/ipam-api
 
 go 1.24.2
 

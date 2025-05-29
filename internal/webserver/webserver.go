@@ -1,8 +1,8 @@
 package webserver
 
 import (
-	"github.com/NorskHelsenett/oss-ipam-api/internal/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/vitistack/ipam-api/internal/routes"
 )
 
 func InitHttpServer() {

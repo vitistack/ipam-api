@@ -4,9 +4,9 @@ import (
 	"slices"
 	"time"
 
-	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/mongodbtypes"
 	"github.com/spf13/viper"
+	"github.com/vitistack/ipam-api/internal/responses"
+	"github.com/vitistack/ipam-api/pkg/models/mongodbtypes"
 )
 
 type Service struct {

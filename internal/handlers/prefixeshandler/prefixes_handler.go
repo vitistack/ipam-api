@@ -3,10 +3,10 @@ package prefixeshandler
 import (
 	"net/http"
 
-	"github.com/NorskHelsenett/oss-ipam-api/internal/services/prefixesservice"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/vitistack/ipam-api/internal/services/prefixesservice"
+	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
 // RegisterPrefix godoc
@@ -32,11 +32,6 @@ func RegisterPrefix(ginContext *gin.Context) {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
 		return
 	}
-
-	// if prefixRequest.Address != "" {
-	// 	ginContext.JSON(http.StatusBadRequest, gin.H{"message": "For updating a prefix, use the PUT method"})
-	// 	return
-	// }
 
 	if !request.IsValidZone() {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid zone"})

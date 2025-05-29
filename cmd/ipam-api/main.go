@@ -7,11 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/NorskHelsenett/oss-ipam-api/cmd/oss-ipam-api/settings"
-	"github.com/NorskHelsenett/oss-ipam-api/internal/utils"
-	"github.com/NorskHelsenett/oss-ipam-api/internal/webserver"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/clients/mongodb"
 	"github.com/spf13/viper"
+	// "github.com/vitistack/ipam-api/settings"
+	"github.com/vitistack/ipam-api/cmd/ipam-api/settings"
+	"github.com/vitistack/ipam-api/internal/utils"
+	"github.com/vitistack/ipam-api/internal/webserver"
+	"github.com/vitistack/ipam-api/pkg/clients/mongodb"
 )
 
 func main() {

@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/NorskHelsenett/oss-ipam-api/internal/services/netboxservice"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/clients/mongodb"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/mongodbtypes"
 	"github.com/spf13/viper"
+	"github.com/vitistack/ipam-api/internal/services/netboxservice"
+	"github.com/vitistack/ipam-api/pkg/clients/mongodb"
+	"github.com/vitistack/ipam-api/pkg/models/mongodbtypes"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )

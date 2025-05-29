@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/NorskHelsenett/oss-ipam-api/internal/services/netboxservice"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitistack/ipam-api/internal/services/netboxservice"
+	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
 func setupViper(url, token string) {

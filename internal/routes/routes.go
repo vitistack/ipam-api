@@ -1,11 +1,11 @@
 package routes
 
 import (
-	docs "github.com/NorskHelsenett/oss-ipam-api/docs"
-	"github.com/NorskHelsenett/oss-ipam-api/internal/handlers/prefixeshandler"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
+	docs "github.com/vitistack/ipam-api/docs"
+	"github.com/vitistack/ipam-api/internal/handlers/prefixeshandler"
 )
 
 func SetupRoutes(server *gin.Engine) {

@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/NorskHelsenett/oss-ipam-api/internal/responses"
-	"github.com/NorskHelsenett/oss-ipam-api/pkg/models/apicontracts"
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/viper"
+	"github.com/vitistack/ipam-api/internal/responses"
+	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
 // GetPrefixContainer retrieves a prefix container from NetBox using the provided prefix.
