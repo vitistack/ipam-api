@@ -29,7 +29,7 @@ type K8sRequestResponse struct {
 	Message string `json:"message"`
 	Secret  string `json:"secret"`
 	Zone    string `json:"zone"`
-	Prefix  string `json:"prefix"`
+	Address string `json:"address"`
 }
 
 func (r *K8sRequestBody) IsValidZone() bool {
@@ -95,7 +95,7 @@ func GetNextPrefixPayload(request K8sRequestBody) NextPrefixPayload {
 
 }
 
-func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Prefix) UpdatePrefixPayload {
+func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Address) UpdatePrefixPayload {
 	return UpdatePrefixPayload{
 		Prefix: nextPrefix.Prefix,
 		CustomFields: CustomFields{

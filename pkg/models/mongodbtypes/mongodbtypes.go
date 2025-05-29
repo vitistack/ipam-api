@@ -14,7 +14,7 @@ type Service struct {
 	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
 }
 
-type Prefix struct {
+type Address struct {
 	ID       bson.ObjectID `json:"-" bson:"_id"`
 	Secret   string        `json:"secret" bson:"secret"`
 	Zone     string        `json:"zone" bson:"zone"`

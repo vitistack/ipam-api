@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
+	"time"
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/internal/responses"
-	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/pkg/clients/mongodb"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 	"github.com/vitistack/ipam-api/pkg/models/mongodbtypes"
@@ -17,27 +16,19 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix responses.NetboxPrefix) (mongodbtypes.Prefix, error) {
-
-	retention := request.Service.RetentionPeriodDays
-	// var expiresAt *time.Time
-	// if retention > 0 {
-	// 	exp := time.Now().Add(time.Minute * time.Duration(retention)) // eller .AddDate(0, 0, retention) for dager
-	// 	expiresAt = &exp
-	// }
-
+func RegisterAddress(request apicontracts.K8sRequestBody, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
 		ServiceId:           request.Service.ServiceId,
 		ClusterId:           request.Service.ClusterId,
-		RetentionPeriodDays: retention,
+		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		ExpiresAt:           nil,
 	}
 
-	newDoc := bson.M{
+	newAddressDocument := bson.M{
 		"secret":   request.Secret,
 		"zone":     request.Zone,
-		"prefix":   nextPrefix.Prefix,
+		"address":  nextPrefix.Prefix,
 		"id":       nextPrefix.ID,
 		"services": []apicontracts.Service{service},
 	}
@@ -45,69 +36,67 @@ func InsertNewPrefixDocument(request apicontracts.K8sRequestBody, nextPrefix res
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
-	result, err := collection.InsertOne(context.Background(), newDoc)
+	result, err := collection.InsertOne(context.Background(), newAddressDocument)
 	if err != nil {
-		return mongodbtypes.Prefix{}, errors.New("failed to save prefix: " + err.Error())
+		return mongodbtypes.Address{}, errors.New("failed to save address: " + err.Error())
 	}
 
-	var prefix mongodbtypes.Prefix
-	err = collection.FindOne(context.Background(), bson.M{"_id": result.InsertedID.(bson.ObjectID)}).Decode(&prefix)
+	var address mongodbtypes.Address
+	err = collection.FindOne(context.Background(), bson.M{"_id": result.InsertedID.(bson.ObjectID)}).Decode(&address)
 
 	if err != nil {
-		return mongodbtypes.Prefix{}, err
+		return mongodbtypes.Address{}, err
 	}
 
-	return prefix, nil
+	return address, nil
 
 }
 
-func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
-	// retention := request.Service.RetentionPeriodDays
-	// var expiresAt *time.Time
-	// if retention > 0 {
-	// 	exp := time.Now().AddDate(0, 0, retention)
-	// 	expiresAt = &exp
-	// }
-	// request.Service.ExpiresAt = expiresAt
-
+func UpdateAddressDocument(request apicontracts.K8sRequestBody) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	filter := bson.M{
-		"secret": request.Secret,
-		"zone":   request.Zone,
-		"prefix": request.Address,
+		"secret":  request.Secret,
+		"zone":    request.Zone,
+		"address": request.Address,
 	}
 
-	var doc mongodbtypes.Prefix
-	err := collection.FindOne(context.Background(), filter).Decode(&doc)
+	var registeredAddress mongodbtypes.Address
+	err := collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return fmt.Errorf("prefix not found: %w", err)
+			return fmt.Errorf("address not found: %w", err)
 		}
-		return fmt.Errorf("failed to read prefix document: %w", err)
+		return fmt.Errorf("failed to read address document: %w", err)
 	}
 
-	// 1. Filtrer ut eventuell eksisterende service med samme ID + navn + cluster
+	// Loop through the services array and remove the service that matches the request
 	var newServices []mongodbtypes.Service
-	for _, s := range doc.Services {
-		if !(s.ServiceId == request.Service.ServiceId &&
-			s.ServiceName == request.Service.ServiceName &&
-			s.ClusterId == request.Service.ClusterId) {
+	for _, service := range registeredAddress.Services {
+		if !(service.ServiceId == request.Service.ServiceId &&
+			service.ServiceName == request.Service.ServiceName &&
+			service.ClusterId == request.Service.ClusterId) {
 			newServices = append(newServices, mongodbtypes.Service{
-				ServiceName:         s.ServiceName,
-				ServiceId:           s.ServiceId,
-				ClusterId:           s.ClusterId,
-				RetentionPeriodDays: s.RetentionPeriodDays,
-				ExpiresAt:           s.ExpiresAt,
+				ServiceName:         service.ServiceName,
+				ServiceId:           service.ServiceId,
+				ClusterId:           service.ClusterId,
+				RetentionPeriodDays: service.RetentionPeriodDays,
+				ExpiresAt:           service.ExpiresAt,
 			})
 		}
 	}
 
-	// 2. Legg til ny/oppdatert service
-	newServices = append(newServices, mongodbtypes.Service(request.Service))
+	// Add the service to be updated
+	newServices = append(newServices, mongodbtypes.Service(apicontracts.Service{
+		ServiceName:         request.Service.ServiceName,
+		ServiceId:           request.Service.ServiceId,
+		ClusterId:           request.Service.ClusterId,
+		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		ExpiresAt:           nil,
+	}))
 
-	// 3. Oppdater dokumentet med ny services-array
+	// Update mongodb
 	update := bson.M{
 		"$set": bson.M{
 			"services": newServices,
@@ -122,112 +111,62 @@ func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
 	return nil
 }
 
-// func UpdatePrefixDocument(request apicontracts.K8sRequestBody) error {
-// 	retention := request.Service.RetentionPeriodDays
-// 	var expiresAt *time.Time
-// 	if retention > 0 {
-// 		exp := time.Now().Add(time.Minute * time.Duration(retention)) // eller .AddDate(0, 0, retention) for dager
-// 		expiresAt = &exp
-// 	}
-// 	request.Service.ExpiresAt = expiresAt
-
-// 	client := mongodb.GetClient()
-// 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
-
-// 	filter := bson.M{
-// 		"secret": request.Secret,
-// 		"zone":   request.Zone,
-// 		"prefix": request.Address,
-// 	}
-
-// 	// 1. Fjern eksisterende service med samme id + navn + cluster
-// 	update := bson.M{
-// 		"$pull": bson.M{
-// 			"services": bson.M{
-// 				"service_id":   request.Service.ServiceId,
-// 				"service_name": request.Service.ServiceName,
-// 				"cluster_id":   request.Service.ClusterId,
-// 			},
-// 		},
-// 		"$addToSet": bson.M{
-// 			"services": request.Service,
-// 		},
-// 	}
-// 	_, err := collection.UpdateOne(context.Background(), filter, update)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to pull existing service: %w", err)
-// 	}
-
-// 	// 2. Legg til oppdatert service
-// 	// fmt.Println("request.service", request.Service)
-// 	// push := bson.M{
-// 	// 	"$addToSet": bson.M{
-// 	// 		"services": request.Service,
-// 	// 	},
-// 	// }
-// 	// _, err = collection.UpdateOne(context.Background(), filter, push)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to add updated service: %w", err)
-// 	}
-
-// 	return nil
-// }
-
-// DeleteServiceFromPrefix removes a service from the services array in a prefix document.
-func DeleteServiceFromPrefix(request apicontracts.K8sRequestBody) error {
-
+func ExpireServiceFromAddress(request apicontracts.K8sRequestBody) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
-	filter := bson.M{"secret": request.Secret, "zone": request.Zone, "prefix": request.Address}
 
-	var result mongodbtypes.Prefix
-	err := collection.FindOne(context.Background(), filter).Decode(&result)
+	filter := bson.M{
+		"secret":  request.Secret,
+		"zone":    request.Zone,
+		"address": request.Address,
+	}
 
+	var registeredAddress mongodbtypes.Address
+	err := collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return errors.New("no matching prefix found")
+			return fmt.Errorf("address not found: %w", err)
 		}
-		return errors.New(err.Error())
+		return fmt.Errorf("failed to read address document: %w", err)
 	}
-	// Check if the service exists in the prefix document
-	serviceFound := false
-	for _, service := range result.Services {
-		if request.Service.ServiceName == service.ServiceName && request.Service.ServiceId == service.ServiceId {
-			serviceFound = true
-			break
+
+	// Loop through the services array and remove the service that matches the request
+	var newServices []mongodbtypes.Service
+	for _, service := range registeredAddress.Services {
+		if !(service.ServiceId == request.Service.ServiceId &&
+			service.ServiceName == request.Service.ServiceName &&
+			service.ClusterId == request.Service.ClusterId) {
+			newServices = append(newServices, mongodbtypes.Service{
+				ServiceName:         service.ServiceName,
+				ServiceId:           service.ServiceId,
+				ClusterId:           service.ClusterId,
+				RetentionPeriodDays: service.RetentionPeriodDays,
+				ExpiresAt:           service.ExpiresAt,
+			})
 		}
 	}
 
-	if !serviceFound {
-		return errors.New("service not found in prefix document")
-	}
+	// Add the service to be expired with an expiration date
+	var expiresAt *time.Time
+	exp := time.Now().Add(time.Minute * time.Duration(request.Service.RetentionPeriodDays)) //! Rembember to change from minutes to days .AddDate(0, 0, retention) for dager
+	expiresAt = &exp
+	newServices = append(newServices, mongodbtypes.Service{
+		ServiceName:         request.Service.ServiceName,
+		ServiceId:           request.Service.ServiceId,
+		ClusterId:           request.Service.ClusterId,
+		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		ExpiresAt:           expiresAt})
 
+	// Update mongodb
 	update := bson.M{
-		"$pull": bson.M{
-			"services": request.Service,
+		"$set": bson.M{
+			"services": newServices,
 		},
 	}
 
 	_, err = collection.UpdateOne(context.Background(), filter, update)
-
 	if err != nil {
-		return errors.New("failed to deregister service from prefix: " + err.Error())
-	}
-
-	err = collection.FindOne(context.Background(), filter).Decode(&result)
-	if err != nil {
-		return errors.New("could not find prefix: " + err.Error())
-	}
-
-	if len(result.Services) == 0 {
-		_, err = collection.DeleteOne(context.Background(), filter)
-		if err != nil {
-			return errors.New("failed to delete prefix from mongodb: " + err.Error())
-		}
-		err = netboxservice.DeleteNetboxPrefix(strconv.Itoa(result.NetboxID))
-		if err != nil {
-			return errors.New("failed to delete prefix from Netbox: " + err.Error())
-		}
+		return fmt.Errorf("failed to update services array: %w", err)
 	}
 
 	return nil

@@ -1,15 +1,15 @@
-package prefixeshandler
+package addresseshandler
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/vitistack/ipam-api/internal/services/prefixesservice"
+	"github.com/vitistack/ipam-api/internal/services/addressesservice"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
-// RegisterPrefix godoc
+// RegisterAddress godoc
 // @Summary      Register a prefix
 // @Schemes
 // @Description  Register a prefix
@@ -22,7 +22,7 @@ import (
 // @Failure      404 {object} apicontracts.HTTPError
 // @Failure      500 {object} apicontracts.HTTPError
 // @Router       /prefixes [POST]
-func RegisterPrefix(ginContext *gin.Context) {
+func RegisterAddress(ginContext *gin.Context) {
 	var request apicontracts.K8sRequestBody
 	validate := validator.New()
 
@@ -52,9 +52,9 @@ func RegisterPrefix(ginContext *gin.Context) {
 
 	var response apicontracts.K8sRequestResponse
 	if request.Address != "" {
-		response, err = prefixesservice.Update(request)
+		response, err = addressesservice.Update(request)
 	} else {
-		response, err = prefixesservice.Register(request)
+		response, err = addressesservice.Register(request)
 	}
 
 	if err != nil {
@@ -108,7 +108,7 @@ func UpdatePrefix(ginContext *gin.Context) {
 		return
 	}
 
-	response, err := prefixesservice.Update(prefixRequest)
+	response, err := addressesservice.Update(prefixRequest)
 
 	if err != nil {
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -119,19 +119,19 @@ func UpdatePrefix(ginContext *gin.Context) {
 
 }
 
-// DeregisterPrefix godoc
-// @Summary      Deregister a prefix
+// ExpireAddress godoc
+// @Summary      Deregister a service from an address
 // @Schemes
-// @Description  Deregister a prefix
-// @Tags         prefixes
+// @Description  Deregister a service from an address
+// @Tags         addresses
 // @Accept       json
 // @Produce      json
 // @Param		 body body apicontracts.K8sRequestBody true "Request body"
 // @Failure      400 {object} apicontracts.HTTPError
 // @Failure      404 {object} apicontracts.HTTPError
 // @Failure      500 {object} apicontracts.HTTPError
-// @Router       /prefixes [DELETE]
-func DeregisterPrefix(ginContext *gin.Context) {
+// @Router       / [DELETE]
+func ExpireAddress(ginContext *gin.Context) {
 	var prefixRequest apicontracts.K8sRequestBody
 	validate := validator.New()
 
@@ -159,7 +159,7 @@ func DeregisterPrefix(ginContext *gin.Context) {
 		return
 	}
 
-	response, err := prefixesservice.Deregister(prefixRequest)
+	response, err := addressesservice.ExpireService(prefixRequest)
 
 	if err != nil {
 		ginContext.JSON(http.StatusNotFound, gin.H{"message": "Could not deregister service: " + err.Error()})

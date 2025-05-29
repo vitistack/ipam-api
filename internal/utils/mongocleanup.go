@@ -72,7 +72,7 @@ func CleanupRegistrationsWithoutServices(ctx context.Context, collection *mongo.
 	}
 }
 
-func GetPrefixesWithNoServices(ctx context.Context, collection *mongo.Collection) ([]mongodbtypes.Prefix, error) {
+func GetPrefixesWithNoServices(ctx context.Context, collection *mongo.Collection) ([]mongodbtypes.Address, error) {
 	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	// defer cancel()
 
@@ -91,7 +91,7 @@ func GetPrefixesWithNoServices(ctx context.Context, collection *mongo.Collection
 		return nil, err
 	}
 
-	var prefixes []mongodbtypes.Prefix
+	var prefixes []mongodbtypes.Address
 	if err := cursor.All(ctx, &prefixes); err != nil {
 		return nil, err
 	}

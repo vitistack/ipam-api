@@ -1,4 +1,4 @@
-package prefixesservice
+package addressesservice
 
 import (
 	"fmt"
@@ -25,13 +25,13 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 		return apicontracts.K8sRequestResponse{}, err
 	}
 
-	prefixDocument, err := mongodbservice.InsertNewPrefixDocument(request, nextPrefix)
+	addressDocument, err := mongodbservice.RegisterAddress(request, nextPrefix)
 
 	if err != nil {
 		return apicontracts.K8sRequestResponse{}, err
 	}
 
-	updatePayload := apicontracts.GetUpdatePrefixPayload(nextPrefix, prefixDocument)
+	updatePayload := apicontracts.GetUpdatePrefixPayload(nextPrefix, addressDocument)
 	err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(nextPrefix.ID), updatePayload)
 
 	if err != nil {
@@ -39,38 +39,38 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 	}
 
 	return apicontracts.K8sRequestResponse{
-		Message: "Prefix registered successfully",
+		Message: "Address registered successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,
-		Prefix:  nextPrefix.Prefix,
+		Address: nextPrefix.Prefix,
 	}, nil
 
 }
 
 func Update(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
-	err := mongodbservice.UpdatePrefixDocument(request)
+	err := mongodbservice.UpdateAddressDocument(request)
 	if err != nil {
 		return apicontracts.K8sRequestResponse{}, err
 	}
 
 	return apicontracts.K8sRequestResponse{
-		Message: "Prefix updated successfully",
+		Message: "Address updated successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,
-		Prefix:  request.Address,
+		Address: request.Address,
 	}, nil
 }
 
-func Deregister(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
-	err := mongodbservice.DeleteServiceFromPrefix(request)
+func ExpireService(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
+	err := mongodbservice.ExpireServiceFromAddress(request)
 	if err != nil {
 		return apicontracts.K8sRequestResponse{}, err
 	}
 
 	return apicontracts.K8sRequestResponse{
-		Message: "Service deregistered successfully",
+		Message: "Service expiration set successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,
-		Prefix:  request.Address,
+		Address: request.Address,
 	}, nil
 }

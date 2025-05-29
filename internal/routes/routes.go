@@ -5,7 +5,7 @@ import (
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 	docs "github.com/vitistack/ipam-api/docs"
-	"github.com/vitistack/ipam-api/internal/handlers/prefixeshandler"
+	"github.com/vitistack/ipam-api/internal/handlers/addresseshandler"
 )
 
 func SetupRoutes(server *gin.Engine) {
@@ -17,10 +17,8 @@ func SetupRoutes(server *gin.Engine) {
 	docs.SwaggerInfo.BasePath = "/v2"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
-	server.POST("/prefixes", prefixeshandler.RegisterPrefix)
-	server.PATCH("/prefixes", prefixeshandler.UpdatePrefix)
-	server.PUT("/prefixes", prefixeshandler.UpdatePrefix)
-	server.DELETE("/prefixes", prefixeshandler.DeregisterPrefix)
+	server.POST("/", addresseshandler.RegisterAddress)
+	server.DELETE("/", addresseshandler.ExpireAddress)
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
