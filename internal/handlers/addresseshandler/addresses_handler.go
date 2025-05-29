@@ -1,6 +1,7 @@
 package addresseshandler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,8 +25,6 @@ import (
 // @Router       /prefixes [POST]
 func RegisterAddress(ginContext *gin.Context) {
 	var request apicontracts.K8sRequestBody
-	validate := validator.New()
-
 	err := ginContext.ShouldBindJSON(&request)
 
 	if err != nil {
@@ -33,20 +32,9 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
-	if !request.IsValidZone() {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid zone"})
-		return
-	}
-
-	if request.Zone == "" || request.Secret == "" {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request. Both 'zone' and 'secret' are required"})
-		return
-	}
-
-	err = validate.Struct(request)
-
+	err = ValidateIncomingRequest(&request)
 	if err != nil {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request: " + err.Error()})
+		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -80,49 +68,49 @@ func RegisterAddress(ginContext *gin.Context) {
 // @Failure      500 {object} apicontracts.HTTPError
 // @Router       /prefixes [PATCH]
 // @Router       /prefixes [PUT]
-func UpdatePrefix(ginContext *gin.Context) {
-	var prefixRequest apicontracts.K8sRequestBody
-	validate := validator.New()
+// func UpdatePrefix(ginContext *gin.Context) {
+// 	var prefixRequest apicontracts.K8sRequestBody
+// 	validate := validator.New()
 
-	err := ginContext.ShouldBindJSON(&prefixRequest)
+// 	err := ginContext.ShouldBindJSON(&prefixRequest)
 
-	if err != nil {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
-		return
-	}
+// 	if err != nil {
+// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
+// 		return
+// 	}
 
-	if !prefixRequest.IsValidZone() {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid zone"})
-		return
-	}
+// 	if !prefixRequest.IsValidZone() {
+// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid zone"})
+// 		return
+// 	}
 
-	if prefixRequest.Zone == "" || prefixRequest.Secret == "" || prefixRequest.Address == "" {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request. 'zone', 'secret' and 'prefix' are required for update"})
-		return
-	}
+// 	if prefixRequest.Zone == "" || prefixRequest.Secret == "" || prefixRequest.Address == "" {
+// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request. 'zone', 'secret' and 'prefix' are required for update"})
+// 		return
+// 	}
 
-	err = validate.Struct(prefixRequest)
+// 	err = validate.Struct(prefixRequest)
 
-	if err != nil {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request: " + err.Error()})
-		return
-	}
+// 	if err != nil {
+// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request: " + err.Error()})
+// 		return
+// 	}
 
-	response, err := addressesservice.Update(prefixRequest)
+// 	response, err := addressesservice.Update(prefixRequest)
 
-	if err != nil {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
-	}
+// 	if err != nil {
+// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+// 		return
+// 	}
 
-	ginContext.JSON(http.StatusOK, response)
+// 	ginContext.JSON(http.StatusOK, response)
 
-}
+// }
 
 // ExpireAddress godoc
-// @Summary      Deregister a service from an address
+// @Summary      Set expiration for a service
 // @Schemes
-// @Description  Deregister a service from an address
+// @Description  Set expiration for a service
 // @Tags         addresses
 // @Accept       json
 // @Produce      json
@@ -133,7 +121,6 @@ func UpdatePrefix(ginContext *gin.Context) {
 // @Router       / [DELETE]
 func ExpireAddress(ginContext *gin.Context) {
 	var prefixRequest apicontracts.K8sRequestBody
-	validate := validator.New()
 
 	err := ginContext.ShouldBindJSON(&prefixRequest)
 
@@ -142,24 +129,13 @@ func ExpireAddress(ginContext *gin.Context) {
 		return
 	}
 
-	if !prefixRequest.IsValidZone() {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid zone"})
-		return
-	}
-
-	if prefixRequest.Zone == "" || prefixRequest.Secret == "" {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request. Both 'zone' and 'secret' are required"})
-		return
-	}
-
-	err = validate.Struct(prefixRequest)
-
+	err = ValidateIncomingRequest(&prefixRequest)
 	if err != nil {
-		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request: " + err.Error()})
+		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
-	response, err := addressesservice.ExpireService(prefixRequest)
+	response, err := addressesservice.SetServiceExpiration(prefixRequest)
 
 	if err != nil {
 		ginContext.JSON(http.StatusNotFound, gin.H{"message": "Could not deregister service: " + err.Error()})
@@ -168,4 +144,24 @@ func ExpireAddress(ginContext *gin.Context) {
 
 	ginContext.JSON(http.StatusOK, response)
 
+}
+
+func ValidateIncomingRequest(request *apicontracts.K8sRequestBody) error {
+	validate := validator.New()
+
+	if request.Zone == "" || request.Secret == "" {
+		return errors.New("invalid request. Both 'zone' and 'secret' are required")
+	}
+
+	if !request.IsValidZone() {
+		return errors.New("invalid zone")
+	}
+
+	err := validate.Struct(*request)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -61,8 +61,8 @@ func Update(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespons
 	}, nil
 }
 
-func ExpireService(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
-	err := mongodbservice.ExpireServiceFromAddress(request)
+func SetServiceExpiration(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
+	err := mongodbservice.SetServiceExpirationOnAddress(request)
 	if err != nil {
 		return apicontracts.K8sRequestResponse{}, err
 	}

@@ -111,7 +111,7 @@ func UpdateAddressDocument(request apicontracts.K8sRequestBody) error {
 	return nil
 }
 
-func ExpireServiceFromAddress(request apicontracts.K8sRequestBody) error {
+func SetServiceExpirationOnAddress(request apicontracts.K8sRequestBody) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
