@@ -16,7 +16,7 @@ import (
 
 func StartCleanupWorker() {
 	log.Println("Starting cleanup worker...")
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	client := mongodb.GetClient()
@@ -73,11 +73,6 @@ func CleanupRegistrationsWithoutServices(ctx context.Context, collection *mongo.
 }
 
 func GetPrefixesWithNoServices(ctx context.Context, collection *mongo.Collection) ([]mongodbtypes.Address, error) {
-	// ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	// defer cancel()
-
-	// collection := mongodb.GetClient().Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
-
 	// Create filter for finding registrations with no services
 	filter := bson.M{
 		"$or": []bson.M{

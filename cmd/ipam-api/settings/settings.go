@@ -15,6 +15,17 @@ func InitConfig() error {
 		return fmt.Errorf("failed to read config: %w", err)
 	}
 
+	// zones, err := netboxservice.GetK8sZones()
+
+	// if err != nil {
+	// 	return errors.New("failed to fetch zones from Netbox: " + err.Error())
+	// }
+
+	// for _, zone := range zones {
+	// 	prefixes, _ := netboxservice.GetPrefixes("?cf_k8s_zone=" + zone)
+	// 	fmt.Println("Zone", prefixes)
+	// }
+
 	required := []string{
 		"mongodb.username",
 		"mongodb.password",
@@ -24,10 +35,10 @@ func InitConfig() error {
 		"mongodb.collection",
 		"netbox.url",
 		"netbox.token",
-		"netbox.prefix_containers.inet_v4",
-		"netbox.prefix_containers.inet_v6",
-		"netbox.prefix_containers.hnet_private_v4",
-		"netbox.prefix_containers.hnet_public_v4",
+		// "netbox.prefix_containers.inet_v4",
+		// "netbox.prefix_containers.inet_v6",
+		// "netbox.prefix_containers.hnet_private_v4",
+		// "netbox.prefix_containers.hnet_public_v4",
 	}
 
 	for _, key := range required {

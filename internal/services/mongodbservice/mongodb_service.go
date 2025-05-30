@@ -19,18 +19,18 @@ import (
 func RegisterAddress(request apicontracts.K8sRequestBody, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
-		ServiceId:           request.Service.ServiceId,
+		NamespaceId:         request.Service.NamespaceId,
 		ClusterId:           request.Service.ClusterId,
-		RetentionPeriodDays: 0,
+		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		ExpiresAt:           nil,
 	}
 
 	newAddressDocument := bson.M{
-		"secret":   request.Secret,
-		"zone":     request.Zone,
-		"address":  nextPrefix.Prefix,
-		"id":       nextPrefix.ID,
-		"services": []apicontracts.Service{service},
+		"secret":    request.Secret,
+		"zone":      request.Zone,
+		"address":   nextPrefix.Prefix,
+		"netbox_id": nextPrefix.ID,
+		"services":  []apicontracts.Service{service},
 	}
 
 	client := mongodb.GetClient()
@@ -74,12 +74,12 @@ func UpdateAddressDocument(request apicontracts.K8sRequestBody) error {
 	// Loop through the services array and remove the service that matches the request
 	var newServices []mongodbtypes.Service
 	for _, service := range registeredAddress.Services {
-		if !(service.ServiceId == request.Service.ServiceId &&
+		if !(service.NamespaceId == request.Service.NamespaceId &&
 			service.ServiceName == request.Service.ServiceName &&
 			service.ClusterId == request.Service.ClusterId) {
 			newServices = append(newServices, mongodbtypes.Service{
 				ServiceName:         service.ServiceName,
-				ServiceId:           service.ServiceId,
+				NamespaceId:         service.NamespaceId,
 				ClusterId:           service.ClusterId,
 				RetentionPeriodDays: service.RetentionPeriodDays,
 				ExpiresAt:           service.ExpiresAt,
@@ -90,9 +90,9 @@ func UpdateAddressDocument(request apicontracts.K8sRequestBody) error {
 	// Add the service to be updated
 	newServices = append(newServices, mongodbtypes.Service(apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
-		ServiceId:           request.Service.ServiceId,
+		NamespaceId:         request.Service.NamespaceId,
 		ClusterId:           request.Service.ClusterId,
-		RetentionPeriodDays: 0,
+		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		ExpiresAt:           nil,
 	}))
 
@@ -130,15 +130,19 @@ func SetServiceExpirationOnAddress(request apicontracts.K8sRequestBody) error {
 		return fmt.Errorf("failed to read address document: %w", err)
 	}
 
+	if !ServiceExists(registeredAddress.Services, mongodbtypes.Service(request.Service)) {
+		return errors.New("service does not exist for this address")
+	}
+
 	// Loop through the services array and remove the service that matches the request
 	var newServices []mongodbtypes.Service
 	for _, service := range registeredAddress.Services {
-		if !(service.ServiceId == request.Service.ServiceId &&
+		if !(service.NamespaceId == request.Service.NamespaceId &&
 			service.ServiceName == request.Service.ServiceName &&
 			service.ClusterId == request.Service.ClusterId) {
 			newServices = append(newServices, mongodbtypes.Service{
 				ServiceName:         service.ServiceName,
-				ServiceId:           service.ServiceId,
+				NamespaceId:         service.NamespaceId,
 				ClusterId:           service.ClusterId,
 				RetentionPeriodDays: service.RetentionPeriodDays,
 				ExpiresAt:           service.ExpiresAt,
@@ -152,7 +156,7 @@ func SetServiceExpirationOnAddress(request apicontracts.K8sRequestBody) error {
 	expiresAt = &exp
 	newServices = append(newServices, mongodbtypes.Service{
 		ServiceName:         request.Service.ServiceName,
-		ServiceId:           request.Service.ServiceId,
+		NamespaceId:         request.Service.NamespaceId,
 		ClusterId:           request.Service.ClusterId,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		ExpiresAt:           expiresAt})
@@ -170,4 +174,15 @@ func SetServiceExpirationOnAddress(request apicontracts.K8sRequestBody) error {
 	}
 
 	return nil
+}
+
+func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service) bool {
+	for _, s := range services {
+		if s.NamespaceId == target.NamespaceId &&
+			s.ServiceName == target.ServiceName &&
+			s.ClusterId == target.ClusterId {
+			return true
+		}
+	}
+	return false
 }

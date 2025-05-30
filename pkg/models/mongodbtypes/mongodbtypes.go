@@ -8,7 +8,7 @@ import (
 
 type Service struct {
 	ServiceName         string     `json:"service_name" bson:"service_name" validate:"required" example:"service1"`
-	ServiceId           string     `json:"service_id" bson:"service_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
+	NamespaceId         string     `json:"namespace_id" bson:"namespace_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
 	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required,min=8,max=64"`
 	RetentionPeriodDays int        `json:"retention_period_days" bson:"retention_period_days"`
 	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`

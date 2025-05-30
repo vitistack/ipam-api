@@ -2,6 +2,7 @@ package netboxservice
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
@@ -10,13 +11,13 @@ import (
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
-// GetPrefixContainer retrieves a prefix container from NetBox using the provided prefix.
+// GetPrefixContainer retrieves a prefix container from Netbox using the provided prefix.
 func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
 	restyClient := resty.New()
-	var result responses.NetboxPrefixesResponse
+	var result responses.NetboxResponse[responses.NetboxPrefix]
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
@@ -40,12 +41,40 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	return container, nil
 }
 
+func GetPrefixes(query string) ([]responses.NetboxPrefix, error) {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+
+	restyClient := resty.New()
+	var netboxResponse responses.NetboxResponse[responses.NetboxPrefix]
+	url := netboxURL + "/api/ipam/prefixes/" + query
+	resp, err := restyClient.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetResult(&netboxResponse).
+		Get(url)
+
+	if err != nil {
+		return []responses.NetboxPrefix{}, err
+	}
+
+	if resp.IsError() {
+		return []responses.NetboxPrefix{}, err
+	}
+
+	// if len(result.Results) != 1 {
+	// 	return responses.NetboxPrefixesResponse{}, errors.New("multiple or no containers matching prefix found")
+	// }
+
+	return netboxResponse.Results, nil
+}
+
 func CheckPrefixContainerAvailability(containerId string) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
 	restyClient := resty.New()
-	var result responses.NetboxPrefixesResponse
+	var result responses.NetboxResponse[responses.NetboxPrefix]
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
@@ -67,7 +96,7 @@ func CheckPrefixContainerAvailability(containerId string) (responses.NetboxPrefi
 	return result.Results[0], nil
 }
 
-// GetNextPrefixFromContainer retrieves the next available prefix from NetBox for a given container ID.
+// GetNextPrefixFromContainer retrieves the next available prefix from Netbox for a given container ID.
 func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPrefixPayload) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -91,7 +120,7 @@ func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPre
 	}, nil
 }
 
-// UpdateNetboxPrefix updates a prefix in NetBox with the provided ID and payload.
+// UpdateNetboxPrefix updates a prefix in Netbox with the provided ID and payload.
 func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayload) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -115,7 +144,7 @@ func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayloa
 	return nil
 }
 
-// DeleteNetboxPrefix deletes a prefix in NetBox with the provided ID.
+// DeleteNetboxPrefix deletes a prefix in Netbox with the provided ID.
 func DeleteNetboxPrefix(prefixId string) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -172,4 +201,35 @@ func GetAvailablePrefixContainer(request apicontracts.K8sRequestBody) (responses
 		return container, nil
 	}
 	return responses.NetboxPrefix{}, errors.New("no available prefix found. add more prefixes to config.json")
+}
+
+func GetK8sZones() ([]string, error) {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+
+	restyClient := resty.New()
+	var netboxResponse responses.NetboxResponse[responses.NetboxChoiceSet]
+
+	resp, err := restyClient.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetResult(&netboxResponse).
+		Get(netboxURL + "/api/extras/custom-field-choice-sets/?q=k8s_zone_choices")
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.IsError() {
+		return nil, errors.New(resp.String())
+	}
+
+	var zones []string
+
+	for _, choice := range netboxResponse.Results[0].ExtraChoices {
+		zones = append(zones, choice[0])
+	}
+
+	fmt.Println("Zones", zones)
+	return zones, nil
 }

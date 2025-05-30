@@ -39,7 +39,7 @@ func TestUpdateNetboxPrefix_Success(t *testing.T) {
 }
 
 func TestUpdateNetboxPrefix_ErrorFromAPI(t *testing.T) {
-	// Test server returns error (simulate NetBox failure)
+	// Test server returns error (simulate Netbox failure)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "forbidden", http.StatusForbidden)
 	}))

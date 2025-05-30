@@ -31,6 +31,12 @@ func main() {
 
 	mongodb.InitClient(mongoConfig) // check if running before starting webserver
 
+	// _, err = utils.GetNetboxConfig()
+
+	// if err != nil {
+	// 	log.Fatalf("Failed to get Netbox configuration: %s", err.Error())
+	// }
+
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
