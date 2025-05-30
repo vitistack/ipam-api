@@ -55,59 +55,6 @@ func RegisterAddress(ginContext *gin.Context) {
 
 }
 
-// RegisterPrefix godoc
-// @Summary      Update a prefix
-// @Schemes
-// @Description  Register a prefix
-// @Tags         prefixes
-// @Accept       json
-// @Produce      json
-// @Success		 200 {object} apicontracts.K8sRequestResponse
-// @Param		 body body apicontracts.K8sRequestBody true "Request body"
-// @Failure      400 {object} apicontracts.HTTPError
-// @Failure      404 {object} apicontracts.HTTPError
-// @Failure      500 {object} apicontracts.HTTPError
-// @Router       /prefixes [PATCH]
-// @Router       /prefixes [PUT]
-// func UpdatePrefix(ginContext *gin.Context) {
-// 	var prefixRequest apicontracts.K8sRequestBody
-// 	validate := validator.New()
-
-// 	err := ginContext.ShouldBindJSON(&prefixRequest)
-
-// 	if err != nil {
-// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
-// 		return
-// 	}
-
-// 	if !prefixRequest.IsValidZone() {
-// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid zone"})
-// 		return
-// 	}
-
-// 	if prefixRequest.Zone == "" || prefixRequest.Secret == "" || prefixRequest.Address == "" {
-// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request. 'zone', 'secret' and 'prefix' are required for update"})
-// 		return
-// 	}
-
-// 	err = validate.Struct(prefixRequest)
-
-// 	if err != nil {
-// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request: " + err.Error()})
-// 		return
-// 	}
-
-// 	response, err := addressesservice.Update(prefixRequest)
-
-// 	if err != nil {
-// 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-// 		return
-// 	}
-
-// 	ginContext.JSON(http.StatusOK, response)
-
-// }
-
 // ExpireAddress godoc
 // @Summary      Set expiration for a service
 // @Schemes
@@ -159,7 +106,7 @@ func ValidateRequest(request *apicontracts.K8sRequestBody) error {
 		return errors.New("invalid zone")
 	}
 
-	if request.IpFamily == 6 && request.Zone != "inet" {
+	if request.IpFamily == "ipv6" && request.Zone != "inet" {
 		return errors.New("IPv6 is only available for zone 'inet'")
 	}
 

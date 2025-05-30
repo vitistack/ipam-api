@@ -9,6 +9,8 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/cmd/ipam-api/settings"
+
+	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/internal/webserver"
 	"github.com/vitistack/ipam-api/pkg/clients/mongodb"
@@ -31,11 +33,11 @@ func main() {
 
 	mongodb.InitClient(mongoConfig) // check if running before starting webserver
 
-	// _, err = utils.GetNetboxConfig()
+	err = netboxservice.Cache.FetchData()
 
-	// if err != nil {
-	// 	log.Fatalf("Failed to get Netbox configuration: %s", err.Error())
-	// }
+	if err != nil {
+		log.Fatalf("%s", err.Error())
+	}
 
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)

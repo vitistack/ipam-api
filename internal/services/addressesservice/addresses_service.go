@@ -1,7 +1,6 @@
 package addressesservice
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/vitistack/ipam-api/internal/services/mongodbservice"
@@ -13,13 +12,13 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 	container, err := netboxservice.GetAvailablePrefixContainer(request)
 
 	if err != nil {
-		fmt.Println("Error retrieving prefix container:", err)
 		return apicontracts.K8sRequestResponse{}, err
 	}
 
-	containerId := container.ID
+	// containerId := container.ID
 	payload := apicontracts.GetNextPrefixPayload(request)
-	nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(containerId), payload)
+
+	nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(container.ID), payload)
 
 	if err != nil {
 		return apicontracts.K8sRequestResponse{}, err

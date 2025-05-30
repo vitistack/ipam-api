@@ -4,7 +4,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/internal/responses"
 	"github.com/vitistack/ipam-api/pkg/models/mongodbtypes"
 )
@@ -20,7 +19,7 @@ type Service struct {
 type K8sRequestBody struct {
 	Secret   string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
 	Zone     string  `json:"zone" validate:"required" example:"inet"`
-	IpFamily int     `json:"ip_family" bson:"ip_family" validate:"required,oneof=4 6" example:"4"`
+	IpFamily string  `json:"ip_family" bson:"ip_family" validate:"required,oneof=ipv4 ipv6" example:"ipv4"`
 	Address  string  `json:"address"`
 	Service  Service `json:"service"`
 }
@@ -37,20 +36,20 @@ func (r *K8sRequestBody) IsValidZone() bool {
 	return slices.Contains(allowed, r.Zone)
 }
 
-func (r *K8sRequestBody) ZonePrefixes() []string {
-	switch {
-	case r.Zone == "inet" && r.IpFamily == 4:
-		return viper.GetStringSlice("netbox.prefix_containers.inet_v4")
-	case r.Zone == "inet" && r.IpFamily == 6:
-		return viper.GetStringSlice("netbox.prefix_containers.inet_v6")
-	// case r.Zone == "helsenett-private":
-	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-private")
-	// case r.Zone == "helsenett-public":
-	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-public")
-	default:
-		return []string{}
-	}
-}
+// func (r *K8sRequestBody) ZonePrefixes() []string {
+// 	switch {
+// 	case r.Zone == "inet" && r.IpFamily == 4:
+// 		return viper.GetStringSlice("netbox.prefix_containers.inet_v4")
+// 	case r.Zone == "inet" && r.IpFamily == 6:
+// 		return viper.GetStringSlice("netbox.prefix_containers.inet_v6")
+// 	// case r.Zone == "helsenett-private":
+// 	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-private")
+// 	// case r.Zone == "helsenett-public":
+// 	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-public")
+// 	default:
+// 		return []string{}
+// 	}
+// }
 
 type CustomFields struct {
 	Domain  string `json:"domain"`
@@ -77,9 +76,9 @@ type HTTPError struct {
 
 func GetNextPrefixPayload(request K8sRequestBody) NextPrefixPayload {
 	var prefixLength int
-	if request.IpFamily == 4 {
+	if request.IpFamily == "ipv4" {
 		prefixLength = 32
-	} else if request.IpFamily == 6 {
+	} else if request.IpFamily == "ipv6" {
 		prefixLength = 128
 	}
 

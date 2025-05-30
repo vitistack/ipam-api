@@ -2,14 +2,26 @@ package netboxservice
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/viper"
+
+	"maps"
+
 	"github.com/vitistack/ipam-api/internal/responses"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
+
+type NetboxCache struct {
+	mu       sync.RWMutex
+	prefixes map[string][]responses.NetboxPrefix
+}
+
+var Cache = &NetboxCache{
+	prefixes: make(map[string][]responses.NetboxPrefix),
+}
 
 // GetPrefixContainer retrieves a prefix container from Netbox using the provided prefix.
 func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
@@ -61,10 +73,6 @@ func GetPrefixes(query string) ([]responses.NetboxPrefix, error) {
 	if resp.IsError() {
 		return []responses.NetboxPrefix{}, err
 	}
-
-	// if len(result.Results) != 1 {
-	// 	return responses.NetboxPrefixesResponse{}, errors.New("multiple or no containers matching prefix found")
-	// }
 
 	return netboxResponse.Results, nil
 }
@@ -168,23 +176,20 @@ func DeleteNetboxPrefix(prefixId string) error {
 }
 
 func GetAvailablePrefixContainer(request apicontracts.K8sRequestBody) (responses.NetboxPrefix, error) {
-	zonePrefixes := request.ZonePrefixes()
+	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+	zonePrefixes := Cache.Get(zone)
+
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 	restyClient := resty.New()
 
 	for _, prefix := range zonePrefixes {
-		container, err := GetPrefixContainer(prefix)
-		if err != nil {
-			continue
-		}
 		var result []any
-
 		resp, err := restyClient.R().
 			SetHeader("Authorization", "Token "+netboxToken).
 			SetHeader("Accept", "application/json").
 			SetResult(&result).
-			Get(netboxURL + "/api/ipam/prefixes/" + strconv.Itoa(container.ID) + "/available-prefixes/")
+			Get(netboxURL + "/api/ipam/prefixes/" + strconv.Itoa(prefix.ID) + "/available-prefixes/")
 
 		if err != nil {
 			continue
@@ -198,7 +203,7 @@ func GetAvailablePrefixContainer(request apicontracts.K8sRequestBody) (responses
 			continue
 		}
 
-		return container, nil
+		return prefix, nil
 	}
 	return responses.NetboxPrefix{}, errors.New("no available prefix found. add more prefixes to config.json")
 }
@@ -230,6 +235,57 @@ func GetK8sZones() ([]string, error) {
 		zones = append(zones, choice[0])
 	}
 
-	fmt.Println("Zones", zones)
 	return zones, nil
+}
+
+// Fetches Zones and prefixes from Netbox
+func (c *NetboxCache) FetchData() error {
+	zones, err := GetK8sZones()
+	if err != nil {
+		return errors.New("failed to fetch zones from Netbox: " + err.Error())
+	}
+
+	zonePrefixesMap := make(map[string][]responses.NetboxPrefix)
+
+	for _, zone := range zones {
+		ipv4Zone := zone + "_v4"
+		ipv6Zone := zone + "_v6"
+		zonePrefixesMap[ipv4Zone] = []responses.NetboxPrefix{}
+		zonePrefixesMap[ipv6Zone] = []responses.NetboxPrefix{}
+
+		prefixes, err := GetPrefixes("?cf_k8s_zone=" + zone)
+		if err != nil {
+			return errors.New("error fetching prefixes for zone " + zone + " : " + err.Error())
+		}
+
+		for _, prefix := range prefixes {
+			switch prefix.Family.Value {
+			case 4:
+				zonePrefixesMap[ipv4Zone] = append(zonePrefixesMap[ipv4Zone], prefix)
+			case 6:
+				zonePrefixesMap[ipv6Zone] = append(zonePrefixesMap[ipv6Zone], prefix)
+			}
+		}
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.prefixes = zonePrefixesMap
+	return nil
+}
+
+// Get returns prefixes for a given zone
+func (c *NetboxCache) Get(key string) []responses.NetboxPrefix {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.prefixes[key]
+}
+
+// Return the full map
+func (c *NetboxCache) All() map[string][]responses.NetboxPrefix {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	result := make(map[string][]responses.NetboxPrefix, len(c.prefixes))
+	maps.Copy(result, c.prefixes)
+	return result
 }

@@ -1,9 +1,13 @@
 package settings
 
 import (
+	// "encoding/json"
+	// "errors"
 	"fmt"
 
 	"github.com/spf13/viper"
+	// "github.com/vitistack/ipam-api/internal/responses"
+	// "github.com/vitistack/ipam-api/internal/services/netboxservice"
 )
 
 func InitConfig() error {
@@ -14,17 +18,6 @@ func InitConfig() error {
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to read config: %w", err)
 	}
-
-	// zones, err := netboxservice.GetK8sZones()
-
-	// if err != nil {
-	// 	return errors.New("failed to fetch zones from Netbox: " + err.Error())
-	// }
-
-	// for _, zone := range zones {
-	// 	prefixes, _ := netboxservice.GetPrefixes("?cf_k8s_zone=" + zone)
-	// 	fmt.Println("Zone", prefixes)
-	// }
 
 	required := []string{
 		"mongodb.username",
