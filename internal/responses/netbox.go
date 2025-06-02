@@ -20,26 +20,12 @@ func (n NetboxPrefix) GetIpFamily() int {
 	return 0
 }
 
-// type NetboxPrefixesResponse struct {
-// 	Count    int            `json:"count"`
-// 	Next     string         `json:"next"`
-// 	Previous string         `json:"previous"`
-// 	Results  []NetboxPrefix `json:"results"`
-// }
-
 type NetboxChoiceSet struct {
 	ChoicesCount int        `json:"choices_count"`
 	ExtraChoices [][]string `json:"extra_choices"`
 	ID           int        `json:"id"`
 	Name         string     `json:"name"`
 }
-
-// type NetboxChoiceSetsResponse struct {
-// 	Count    int               `json:"count"`
-// 	Next     string            `json:"next"`
-// 	Previous string            `json:"previous"`
-// 	Results  []NetboxChoiceSet `json:"results"`
-// }
 
 type NetboxResponse[T any] struct {
 	Count    int    `json:"count"`

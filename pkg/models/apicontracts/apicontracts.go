@@ -16,7 +16,7 @@ type Service struct {
 	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
 }
 
-type K8sRequestBody struct {
+type IpamApiRequest struct {
 	Secret   string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
 	Zone     string  `json:"zone" validate:"required" example:"inet"`
 	IpFamily string  `json:"ip_family" bson:"ip_family" validate:"required,oneof=ipv4 ipv6" example:"ipv4"`
@@ -24,32 +24,17 @@ type K8sRequestBody struct {
 	Service  Service `json:"service"`
 }
 
-type K8sRequestResponse struct {
+type IpamApiResponse struct {
 	Message string `json:"message"`
 	Secret  string `json:"secret"`
 	Zone    string `json:"zone"`
 	Address string `json:"address"`
 }
 
-func (r *K8sRequestBody) IsValidZone() bool {
+func (r *IpamApiRequest) IsValidZone() bool {
 	allowed := []string{"inet", "helsenett-private", "helsenett-public"}
 	return slices.Contains(allowed, r.Zone)
 }
-
-// func (r *K8sRequestBody) ZonePrefixes() []string {
-// 	switch {
-// 	case r.Zone == "inet" && r.IpFamily == 4:
-// 		return viper.GetStringSlice("netbox.prefix_containers.inet_v4")
-// 	case r.Zone == "inet" && r.IpFamily == 6:
-// 		return viper.GetStringSlice("netbox.prefix_containers.inet_v6")
-// 	// case r.Zone == "helsenett-private":
-// 	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-private")
-// 	// case r.Zone == "helsenett-public":
-// 	// 	return viper.GetStringSlice("netbox.prefix_containers.helsenett-public")
-// 	default:
-// 		return []string{}
-// 	}
-// }
 
 type CustomFields struct {
 	Domain  string `json:"domain"`
@@ -74,7 +59,7 @@ type HTTPError struct {
 	Code    int    `json:"code"`
 }
 
-func GetNextPrefixPayload(request K8sRequestBody) NextPrefixPayload {
+func GetNextPrefixPayload(request IpamApiRequest) NextPrefixPayload {
 	var prefixLength int
 	if request.IpFamily == "ipv4" {
 		prefixLength = 32

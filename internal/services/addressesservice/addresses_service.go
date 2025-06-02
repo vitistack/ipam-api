@@ -8,11 +8,11 @@ import (
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
-func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
+func Register(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
 	container, err := netboxservice.GetAvailablePrefixContainer(request)
 
 	if err != nil {
-		return apicontracts.K8sRequestResponse{}, err
+		return apicontracts.IpamApiResponse{}, err
 	}
 
 	// containerId := container.ID
@@ -21,23 +21,23 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 	nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(container.ID), payload)
 
 	if err != nil {
-		return apicontracts.K8sRequestResponse{}, err
+		return apicontracts.IpamApiResponse{}, err
 	}
 
 	addressDocument, err := mongodbservice.RegisterAddress(request, nextPrefix)
 
 	if err != nil {
-		return apicontracts.K8sRequestResponse{}, err
+		return apicontracts.IpamApiResponse{}, err
 	}
 
 	updatePayload := apicontracts.GetUpdatePrefixPayload(nextPrefix, addressDocument)
 	err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(nextPrefix.ID), updatePayload)
 
 	if err != nil {
-		return apicontracts.K8sRequestResponse{}, err
+		return apicontracts.IpamApiResponse{}, err
 	}
 
-	return apicontracts.K8sRequestResponse{
+	return apicontracts.IpamApiResponse{
 		Message: "Address registered successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,
@@ -46,13 +46,13 @@ func Register(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespo
 
 }
 
-func Update(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
+func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
 	err := mongodbservice.UpdateAddressDocument(request)
 	if err != nil {
-		return apicontracts.K8sRequestResponse{}, err
+		return apicontracts.IpamApiResponse{}, err
 	}
 
-	return apicontracts.K8sRequestResponse{
+	return apicontracts.IpamApiResponse{
 		Message: "Address updated successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,
@@ -60,13 +60,13 @@ func Update(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestRespons
 	}, nil
 }
 
-func SetServiceExpiration(request apicontracts.K8sRequestBody) (apicontracts.K8sRequestResponse, error) {
+func SetServiceExpiration(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
 	err := mongodbservice.SetServiceExpirationOnAddress(request)
 	if err != nil {
-		return apicontracts.K8sRequestResponse{}, err
+		return apicontracts.IpamApiResponse{}, err
 	}
 
-	return apicontracts.K8sRequestResponse{
+	return apicontracts.IpamApiResponse{
 		Message: "Service expiration set successfully",
 		Secret:  request.Secret,
 		Zone:    request.Zone,

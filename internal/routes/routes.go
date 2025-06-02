@@ -21,4 +21,21 @@ func SetupRoutes(server *gin.Engine) {
 	server.DELETE("/", addresseshandler.ExpireAddress)
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Catch-all route
+	server.NoRoute(func(c *gin.Context) {
+		c.Data(200, "text/html; charset=utf-8", []byte(`
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<title>Vitistack IPAM-API</title>
+		</head>
+		<body>
+			<h1>Vitistack IPAM-API</h1>
+			<p>Take a look at <a href="/swagger/index.html">Swagger</a> for api docs.</p>
+		</body>
+		</html>
+	`))
+	})
 }

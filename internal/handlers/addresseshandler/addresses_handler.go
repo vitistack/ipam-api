@@ -24,7 +24,7 @@ import (
 // @Failure      500 {object} apicontracts.HTTPError
 // @Router       /prefixes [POST]
 func RegisterAddress(ginContext *gin.Context) {
-	var request apicontracts.K8sRequestBody
+	var request apicontracts.IpamApiRequest
 	err := ginContext.ShouldBindJSON(&request)
 
 	if err != nil {
@@ -39,7 +39,7 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
-	var response apicontracts.K8sRequestResponse
+	var response apicontracts.IpamApiResponse
 	if request.Address != "" {
 		response, err = addressesservice.Update(request)
 	} else {
@@ -68,7 +68,7 @@ func RegisterAddress(ginContext *gin.Context) {
 // @Failure      500 {object} apicontracts.HTTPError
 // @Router       / [DELETE]
 func ExpireAddress(ginContext *gin.Context) {
-	var prefixRequest apicontracts.K8sRequestBody
+	var prefixRequest apicontracts.IpamApiRequest
 
 	err := ginContext.ShouldBindJSON(&prefixRequest)
 
@@ -95,7 +95,7 @@ func ExpireAddress(ginContext *gin.Context) {
 
 }
 
-func ValidateRequest(request *apicontracts.K8sRequestBody) error {
+func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 	validate := validator.New()
 
 	if request.Zone == "" || request.Secret == "" {

@@ -175,7 +175,7 @@ func DeleteNetboxPrefix(prefixId string) error {
 	return nil
 }
 
-func GetAvailablePrefixContainer(request apicontracts.K8sRequestBody) (responses.NetboxPrefix, error) {
+func GetAvailablePrefixContainer(request apicontracts.IpamApiRequest) (responses.NetboxPrefix, error) {
 	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
 	zonePrefixes := Cache.Get(zone)
 
@@ -205,7 +205,7 @@ func GetAvailablePrefixContainer(request apicontracts.K8sRequestBody) (responses
 
 		return prefix, nil
 	}
-	return responses.NetboxPrefix{}, errors.New("no available prefix found. add more prefixes to config.json")
+	return responses.NetboxPrefix{}, errors.New("no available prefix found. add more prefixes in netbox")
 }
 
 func GetK8sZones() ([]string, error) {
@@ -239,19 +239,19 @@ func GetK8sZones() ([]string, error) {
 }
 
 // Fetches Zones and prefixes from Netbox
-func (c *NetboxCache) FetchData() error {
+func (c *NetboxCache) FetchPrefixContainers() error {
 	zones, err := GetK8sZones()
 	if err != nil {
 		return errors.New("failed to fetch zones from Netbox: " + err.Error())
 	}
 
-	zonePrefixesMap := make(map[string][]responses.NetboxPrefix)
+	zonePrefixes := make(map[string][]responses.NetboxPrefix)
 
 	for _, zone := range zones {
 		ipv4Zone := zone + "_v4"
 		ipv6Zone := zone + "_v6"
-		zonePrefixesMap[ipv4Zone] = []responses.NetboxPrefix{}
-		zonePrefixesMap[ipv6Zone] = []responses.NetboxPrefix{}
+		zonePrefixes[ipv4Zone] = []responses.NetboxPrefix{}
+		zonePrefixes[ipv6Zone] = []responses.NetboxPrefix{}
 
 		prefixes, err := GetPrefixes("?cf_k8s_zone=" + zone)
 		if err != nil {
@@ -261,16 +261,16 @@ func (c *NetboxCache) FetchData() error {
 		for _, prefix := range prefixes {
 			switch prefix.Family.Value {
 			case 4:
-				zonePrefixesMap[ipv4Zone] = append(zonePrefixesMap[ipv4Zone], prefix)
+				zonePrefixes[ipv4Zone] = append(zonePrefixes[ipv4Zone], prefix)
 			case 6:
-				zonePrefixesMap[ipv6Zone] = append(zonePrefixesMap[ipv6Zone], prefix)
+				zonePrefixes[ipv6Zone] = append(zonePrefixes[ipv6Zone], prefix)
 			}
 		}
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.prefixes = zonePrefixesMap
+	c.prefixes = zonePrefixes
 	return nil
 }
 

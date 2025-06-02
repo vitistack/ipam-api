@@ -33,7 +33,7 @@ func main() {
 
 	mongodb.InitClient(mongoConfig) // check if running before starting webserver
 
-	err = netboxservice.Cache.FetchData()
+	err = netboxservice.Cache.FetchPrefixContainers()
 
 	if err != nil {
 		log.Fatalf("%s", err.Error())

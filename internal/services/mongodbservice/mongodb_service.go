@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func RegisterAddress(request apicontracts.K8sRequestBody, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
+func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
 		NamespaceId:         request.Service.NamespaceId,
@@ -52,7 +52,7 @@ func RegisterAddress(request apicontracts.K8sRequestBody, nextPrefix responses.N
 
 }
 
-func UpdateAddressDocument(request apicontracts.K8sRequestBody) error {
+func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
@@ -111,7 +111,7 @@ func UpdateAddressDocument(request apicontracts.K8sRequestBody) error {
 	return nil
 }
 
-func SetServiceExpirationOnAddress(request apicontracts.K8sRequestBody) error {
+func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
