@@ -64,11 +64,32 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 
 	var registeredAddress mongodbtypes.Address
 	err := collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
+
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("address not found: %w", err)
 		}
 		return fmt.Errorf("failed to read address document: %w", err)
+	}
+
+	if request.NewSecret != "" {
+		if registeredAddress.Secret == request.Secret && len(registeredAddress.Services) > 1 {
+			return fmt.Errorf("multiple services registered. unable to change secret")
+		} else if registeredAddress.Secret != request.Secret {
+			return errors.New("secret mismatch. unable to change secret")
+		} else {
+			update := bson.M{
+				"$set": bson.M{
+					"secret": request.NewSecret,
+				},
+			}
+
+			_, err = collection.UpdateOne(context.Background(), filter, update)
+			if err != nil {
+				return fmt.Errorf("failed to update secret: %w", err)
+			}
+		}
+
 	}
 
 	// Loop through the services array and remove the service that matches the request

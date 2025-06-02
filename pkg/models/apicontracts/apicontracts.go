@@ -17,11 +17,12 @@ type Service struct {
 }
 
 type IpamApiRequest struct {
-	Secret   string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
-	Zone     string  `json:"zone" validate:"required" example:"inet"`
-	IpFamily string  `json:"ip_family" bson:"ip_family" validate:"required,oneof=ipv4 ipv6" example:"ipv4"`
-	Address  string  `json:"address"`
-	Service  Service `json:"service"`
+	Secret    string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
+	Zone      string  `json:"zone" validate:"required" example:"inet"`
+	IpFamily  string  `json:"ip_family" bson:"ip_family" validate:"required,oneof=ipv4 ipv6" example:"ipv4"`
+	Address   string  `json:"address"`
+	Service   Service `json:"service"`
+	NewSecret string  `json:"new_secret,omitempty" bson:"new_secret,omitempty"`
 }
 
 type IpamApiResponse struct {

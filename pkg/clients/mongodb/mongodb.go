@@ -39,7 +39,6 @@ func InitClient(config MongoConfig) *mongo.Client {
 			log.Fatalf("MongoDB ping failed: %v", err)
 
 		}
-		log.Println("MongoDB connected")
 	})
 
 	return clientInstance
