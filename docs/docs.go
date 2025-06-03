@@ -15,59 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/prefixes": {
-            "put": {
-                "description": "Register a prefix",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "prefixes"
-                ],
-                "summary": "Update a prefix",
-                "parameters": [
-                    {
-                        "description": "Request body",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
-                        }
-                    }
-                }
-            },
+        "/": {
             "post": {
-                "description": "Register a prefix",
+                "description": "Register an address in Vitistack IPAM API",
                 "consumes": [
                     "application/json"
                 ],
@@ -75,9 +25,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "prefixes"
+                    "addresses"
                 ],
-                "summary": "Register a prefix",
+                "summary": "Register an address",
                 "parameters": [
                     {
                         "description": "Request body",
@@ -85,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody"
+                            "$ref": "#/definitions/apicontracts.IpamApiRequest"
                         }
                     }
                 ],
@@ -93,31 +43,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse"
+                            "$ref": "#/definitions/apicontracts.IpamApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Deregister a prefix",
+                "description": "Set expiration for a service",
                 "consumes": [
                     "application/json"
                 ],
@@ -125,23 +75,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "prefixes"
+                    "addresses"
                 ],
-                "summary": "Deregister a prefix",
-                "responses": {}
-            },
-            "patch": {
-                "description": "Register a prefix",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "prefixes"
-                ],
-                "summary": "Update a prefix",
+                "summary": "Set expiration for a service",
                 "parameters": [
                     {
                         "description": "Request body",
@@ -149,7 +85,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody"
+                            "$ref": "#/definitions/apicontracts.IpamApiRequest"
                         }
                     }
                 ],
@@ -157,25 +93,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse"
+                            "$ref": "#/definitions/apicontracts.IpamApiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     }
                 }
@@ -183,7 +119,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError": {
+        "apicontracts.HTTPError": {
             "type": "object",
             "properties": {
                 "code": {
@@ -194,16 +130,27 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody": {
+        "apicontracts.IpamApiRequest": {
             "type": "object",
             "required": [
+                "ip_family",
                 "secret",
                 "zone"
             ],
             "properties": {
-                "prefix": {
+                "address": {
+                    "type": "string"
+                },
+                "ip_family": {
                     "type": "string",
-                    "example": "10.0.0.0/32"
+                    "enum": [
+                        "ipv4",
+                        "ipv6"
+                    ],
+                    "example": "ipv4"
+                },
+                "new_secret": {
+                    "type": "string"
                 },
                 "secret": {
                     "type": "string",
@@ -212,23 +159,21 @@ const docTemplate = `{
                     "example": "a_secret_value"
                 },
                 "service": {
-                    "$ref": "#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.Service"
+                    "$ref": "#/definitions/apicontracts.Service"
                 },
                 "zone": {
                     "type": "string",
-                    "maxLength": 64,
-                    "minLength": 8,
-                    "example": "internet"
+                    "example": "inet"
                 }
             }
         },
-        "github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse": {
+        "apicontracts.IpamApiResponse": {
             "type": "object",
             "properties": {
-                "message": {
+                "address": {
                     "type": "string"
                 },
-                "prefix": {
+                "message": {
                     "type": "string"
                 },
                 "secret": {
@@ -239,27 +184,35 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.Service": {
+        "apicontracts.Service": {
             "type": "object",
             "required": [
-                "location",
-                "name",
-                "uuid"
+                "cluster_id",
+                "namespace_id",
+                "service_name"
             ],
             "properties": {
-                "location": {
-                    "type": "string",
-                    "example": "location1"
-                },
-                "name": {
-                    "type": "string",
-                    "maxLength": 64,
-                    "minLength": 8,
-                    "example": "service1"
-                },
-                "uuid": {
+                "cluster_id": {
                     "type": "string",
                     "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "deny_external_cleanup": {
+                    "type": "boolean"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2025-06-03 14:39:31.546230273"
+                },
+                "namespace_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "retention_period_days": {
+                    "type": "integer"
+                },
+                "service_name": {
+                    "type": "string",
+                    "example": "service1"
                 }
             }
         }

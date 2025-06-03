@@ -10,9 +10,9 @@ import (
 type Service struct {
 	ServiceName         string     `json:"service_name" bson:"service_name" validate:"required" example:"service1"`
 	NamespaceId         string     `json:"namespace_id" bson:"namespace_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
-	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required,min=8,max=64"`
+	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
 	RetentionPeriodDays int        `json:"retention_period_days,omitempty" bson:"retention_period_days,omitempty"`
-	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
+	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty" example:"2025-06-03 14:39:31.546230273"`
 	DenyExternalCleanup bool       `json:"deny_external_cleanup,omitempty" bson:"deny_external_cleanup"`
 }
 

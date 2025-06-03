@@ -14,18 +14,18 @@ import (
 )
 
 // RegisterAddress godoc
-// @Summary      Register a prefix
+// @Summary      Register an address
 // @Schemes
-// @Description  Register a prefix
-// @Tags         prefixes
+// @Description  Register an address in Vitistack IPAM API
+// @Tags         addresses
 // @Accept       json
 // @Produce      json
-// @Success		 200 {object} apicontracts.K8sRequestResponse
-// @Param		 body body apicontracts.K8sRequestBody true "Request body"
+// @Success		 200 {object} apicontracts.IpamApiResponse
+// @Param		 body body apicontracts.IpamApiRequest true "Request body"
 // @Failure      400 {object} apicontracts.HTTPError
 // @Failure      404 {object} apicontracts.HTTPError
 // @Failure      500 {object} apicontracts.HTTPError
-// @Router       /prefixes [POST]
+// @Router       / [POST]
 func RegisterAddress(ginContext *gin.Context) {
 	var request apicontracts.IpamApiRequest
 	err := ginContext.ShouldBindJSON(&request)
@@ -65,7 +65,8 @@ func RegisterAddress(ginContext *gin.Context) {
 // @Tags         addresses
 // @Accept       json
 // @Produce      json
-// @Param		 body body apicontracts.K8sRequestBody true "Request body"
+// @Param		 body body apicontracts.IpamApiRequest true "Request body"
+// @Success		 200 {object} apicontracts.IpamApiResponse
 // @Failure      400 {object} apicontracts.HTTPError
 // @Failure      404 {object} apicontracts.HTTPError
 // @Failure      500 {object} apicontracts.HTTPError

@@ -1,15 +1,22 @@
 definitions:
-  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError:
+  apicontracts.HTTPError:
     properties:
       code:
         type: integer
       message:
         type: string
     type: object
-  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody:
+  apicontracts.IpamApiRequest:
     properties:
-      prefix:
-        example: 10.0.0.0/32
+      address:
+        type: string
+      ip_family:
+        enum:
+        - ipv4
+        - ipv6
+        example: ipv4
+        type: string
+      new_secret:
         type: string
       secret:
         example: a_secret_value
@@ -17,156 +24,117 @@ definitions:
         minLength: 8
         type: string
       service:
-        $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.Service'
+        $ref: '#/definitions/apicontracts.Service'
       zone:
-        example: internet
-        maxLength: 64
-        minLength: 8
+        example: inet
         type: string
     required:
+    - ip_family
     - secret
     - zone
     type: object
-  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse:
+  apicontracts.IpamApiResponse:
     properties:
-      message:
+      address:
         type: string
-      prefix:
+      message:
         type: string
       secret:
         type: string
       zone:
         type: string
     type: object
-  github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.Service:
+  apicontracts.Service:
     properties:
-      location:
-        example: location1
-        type: string
-      name:
-        example: service1
-        maxLength: 64
-        minLength: 8
-        type: string
-      uuid:
+      cluster_id:
         example: 123e4567-e89b-12d3-a456-426614174000
         type: string
+      deny_external_cleanup:
+        type: boolean
+      expires_at:
+        example: "2025-06-03 14:39:31.546230273"
+        type: string
+      namespace_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      retention_period_days:
+        type: integer
+      service_name:
+        example: service1
+        type: string
     required:
-    - location
-    - name
-    - uuid
+    - cluster_id
+    - namespace_id
+    - service_name
     type: object
 info:
   contact: {}
 paths:
-  /prefixes:
+  /:
     delete:
       consumes:
       - application/json
-      description: Deregister a prefix
-      produces:
-      - application/json
-      responses: {}
-      summary: Deregister a prefix
-      tags:
-      - prefixes
-    patch:
-      consumes:
-      - application/json
-      description: Register a prefix
+      description: Set expiration for a service
       parameters:
       - description: Request body
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody'
+          $ref: '#/definitions/apicontracts.IpamApiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse'
+            $ref: '#/definitions/apicontracts.IpamApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+            $ref: '#/definitions/apicontracts.HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+            $ref: '#/definitions/apicontracts.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
-      summary: Update a prefix
+            $ref: '#/definitions/apicontracts.HTTPError'
+      summary: Set expiration for a service
       tags:
-      - prefixes
+      - addresses
     post:
       consumes:
       - application/json
-      description: Register a prefix
+      description: Register an address in Vitistack IPAM API
       parameters:
       - description: Request body
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody'
+          $ref: '#/definitions/apicontracts.IpamApiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse'
+            $ref: '#/definitions/apicontracts.IpamApiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+            $ref: '#/definitions/apicontracts.HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
+            $ref: '#/definitions/apicontracts.HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
-      summary: Register a prefix
+            $ref: '#/definitions/apicontracts.HTTPError'
+      summary: Register an address
       tags:
-      - prefixes
-    put:
-      consumes:
-      - application/json
-      description: Register a prefix
-      parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestBody'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.K8sRequestResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_NorskHelsenett_oss-ipam-api_pkg_models_apicontracts.HTTPError'
-      summary: Update a prefix
-      tags:
-      - prefixes
+      - addresses
 swagger: "2.0"
