@@ -25,11 +25,14 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypt secret: %w", err)
 	}
 
+	denyCleanup := request.Service.DenyExternalCleanup
+
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
 		NamespaceId:         request.Service.NamespaceId,
 		ClusterId:           request.Service.ClusterId,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		DenyExternalCleanup: denyCleanup,
 		ExpiresAt:           nil,
 	}
 
@@ -193,7 +196,7 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 
 	// Add the service to be expired with an expiration date
 	var expiresAt *time.Time
-	exp := time.Now().Add(time.Minute * time.Duration(request.Service.RetentionPeriodDays)) //! Rembember to change from minutes to days .AddDate(0, 0, retention) for dager
+	exp := time.Now().AddDate(0, 0, request.Service.RetentionPeriodDays)
 	expiresAt = &exp
 	newServices = append(newServices, mongodbtypes.Service{
 		ServiceName:         request.Service.ServiceName,

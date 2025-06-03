@@ -12,6 +12,7 @@ type Service struct {
 	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required,min=8,max=64"`
 	RetentionPeriodDays int        `json:"retention_period_days" bson:"retention_period_days"`
 	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty"`
+	DenyExternalCleanup bool       `json:"deny_external_cleanup" bson:"deny_external_cleanup"`
 }
 
 type Address struct {

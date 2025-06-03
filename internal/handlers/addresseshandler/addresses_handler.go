@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/vitistack/ipam-api/internal/services/addressesservice"
+	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
@@ -104,6 +105,18 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 
 	if !request.IsValidZone() {
 		return errors.New("invalid zone")
+	}
+
+	if request.Address != "" {
+		prefixIpFamily, err := utils.IPFamilyFromPrefix(request.Address)
+
+		if err != nil {
+			return err
+		}
+
+		if prefixIpFamily == request.IpFamily {
+			return errors.New("invalid ip familiy for the provided address")
+		}
 	}
 
 	if request.IpFamily == "ipv6" && request.Zone != "inet" {
