@@ -1,13 +1,9 @@
 package settings
 
 import (
-	// "encoding/json"
-	// "errors"
 	"fmt"
 
 	"github.com/spf13/viper"
-	// "github.com/vitistack/ipam-api/internal/responses"
-	// "github.com/vitistack/ipam-api/internal/services/netboxservice"
 )
 
 func InitConfig() error {
@@ -19,6 +15,22 @@ func InitConfig() error {
 		return fmt.Errorf("failed to read config: %w", err)
 	}
 
+	// Read the encryption secrets from the path specified in config.json
+	secretsPath := viper.GetString("encryption_secrets.path")
+
+	secretsViper := viper.New()
+	secretsViper.SetConfigFile(secretsPath)
+	secretsViper.SetConfigType("json")
+
+	if err := secretsViper.ReadInConfig(); err != nil {
+		return fmt.Errorf("failed to read encryption secrets: %w", err)
+	}
+
+	// Merge secrets into main viper
+	if err := viper.MergeConfigMap(secretsViper.AllSettings()); err != nil {
+		return fmt.Errorf("failed to merge encryption secrets config: %w", err)
+	}
+
 	required := []string{
 		"mongodb.username",
 		"mongodb.password",
@@ -28,10 +40,9 @@ func InitConfig() error {
 		"mongodb.collection",
 		"netbox.url",
 		"netbox.token",
-		// "netbox.prefix_containers.inet_v4",
-		// "netbox.prefix_containers.inet_v6",
-		// "netbox.prefix_containers.hnet_private_v4",
-		// "netbox.prefix_containers.hnet_public_v4",
+		"encryption_secrets.path",
+		"enc_key",
+		"enc_iv",
 	}
 
 	for _, key := range required {

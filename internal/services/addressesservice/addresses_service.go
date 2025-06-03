@@ -15,7 +15,6 @@ func Register(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse
 		return apicontracts.IpamApiResponse{}, err
 	}
 
-	// containerId := container.ID
 	payload := apicontracts.GetNextPrefixPayload(request)
 
 	nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(container.ID), payload)

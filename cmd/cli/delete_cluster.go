@@ -14,15 +14,14 @@ import (
 
 var (
 	clusterID string
-	days      int
 )
 
-var expireCmd = &cobra.Command{
-	Use:   "expire-addresses",
+var deleteClusterCmd = &cobra.Command{
+	Use:   "delete-cluster",
 	Short: "Set expires_at on addresses linked to a cluster ID",
 	Run: func(cmd *cobra.Command, args []string) {
 		if clusterID == "" {
-			fmt.Println("Missing --clusterId argument")
+			fmt.Println("Missing --cluster argument")
 			return
 		}
 		if err := setExpiresForCluster(clusterID); err != nil {
@@ -32,10 +31,9 @@ var expireCmd = &cobra.Command{
 }
 
 func init() {
-	expireCmd.Flags().StringVar(&clusterID, "clusterId", "", "Cluster ID (required)")
-	// expireCmd.Flags().IntVar(&days, "days", 30, "Days until expiration")
-	expireCmd.MarkFlagRequired("clusterId")
-	RootCmd.AddCommand(expireCmd)
+	deleteClusterCmd.Flags().StringVar(&clusterID, "cluster", "", "Cluster ID (required)")
+	deleteClusterCmd.MarkFlagRequired("cluster")
+	RootCmd.AddCommand(deleteClusterCmd)
 }
 
 func setExpiresForCluster(clusterId string) error {
@@ -79,10 +77,6 @@ func setExpiresForCluster(clusterId string) error {
 		return fmt.Errorf("no address found for cluster_id=%s", clusterId)
 	}
 
-	// json, _ := json.MarshalIndent(addresses, "", "  ")
-
-	// fmt.Println(string(json))
-
 	for _, a := range addresses {
 		newServices := []mongodbtypes.Service{}
 		for _, service := range a.Services {
@@ -92,7 +86,6 @@ func setExpiresForCluster(clusterId string) error {
 				service.RetentionPeriodDays = 0
 			}
 			newServices = append(newServices, service)
-
 		}
 
 		update := bson.M{

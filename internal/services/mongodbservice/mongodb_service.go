@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/internal/responses"
+	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/pkg/clients/mongodb"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 	"github.com/vitistack/ipam-api/pkg/models/mongodbtypes"
@@ -17,6 +18,13 @@ import (
 )
 
 func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
+
+	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
+
+	if err != nil {
+		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypt secret: %w", err)
+	}
+
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
 		NamespaceId:         request.Service.NamespaceId,
@@ -26,7 +34,7 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 	}
 
 	newAddressDocument := bson.M{
-		"secret":    request.Secret,
+		"secret":    encryptedSecret,
 		"zone":      request.Zone,
 		"address":   nextPrefix.Prefix,
 		"netbox_id": nextPrefix.ID,
@@ -56,14 +64,20 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
+	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
+
+	if err != nil {
+		return fmt.Errorf("failed to encrypted secret: %w", err)
+	}
+
 	filter := bson.M{
-		"secret":  request.Secret,
+		"secret":  encryptedSecret,
 		"zone":    request.Zone,
 		"address": request.Address,
 	}
 
 	var registeredAddress mongodbtypes.Address
-	err := collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
+	err = collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -136,14 +150,20 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
+	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
+
+	if err != nil {
+		return fmt.Errorf("failed to encrypt secret: %w", err)
+	}
+
 	filter := bson.M{
-		"secret":  request.Secret,
+		"secret":  encryptedSecret,
 		"zone":    request.Zone,
 		"address": request.Address,
 	}
 
 	var registeredAddress mongodbtypes.Address
-	err := collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
+	err = collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return fmt.Errorf("address not found: %w", err)

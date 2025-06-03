@@ -8,8 +8,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/viper"
 
-	"maps"
-
 	"github.com/vitistack/ipam-api/internal/responses"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
@@ -282,10 +280,10 @@ func (c *NetboxCache) Get(key string) []responses.NetboxPrefix {
 }
 
 // Return the full map
-func (c *NetboxCache) All() map[string][]responses.NetboxPrefix {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	result := make(map[string][]responses.NetboxPrefix, len(c.prefixes))
-	maps.Copy(result, c.prefixes)
-	return result
-}
+// func (c *NetboxCache) All() map[string][]responses.NetboxPrefix {
+// 	c.mu.RLock()
+// 	defer c.mu.RUnlock()
+// 	result := make(map[string][]responses.NetboxPrefix, len(c.prefixes))
+// 	maps.Copy(result, c.prefixes)
+// 	return result
+// }

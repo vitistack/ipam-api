@@ -9,7 +9,7 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "ipam",
+	Use:   "ipam-cli",
 	Short: "Vitistack IPAM CLI",
 	Long:  `Command-line interface for interacting with the Vitistack IPAM system.`,
 	Run: func(cmd *cobra.Command, args []string) {
