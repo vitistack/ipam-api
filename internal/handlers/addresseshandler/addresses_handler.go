@@ -3,10 +3,12 @@ package addresseshandler
 import (
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/vitistack/ipam-api/internal/services/addressesservice"
+	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
@@ -99,11 +101,23 @@ func ExpireAddress(ginContext *gin.Context) {
 func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 	validate := validator.New()
 
+	netboxZones, err := netboxservice.GetK8sZones()
+
+	if err != nil {
+		return errors.New("failed to fetch zones: " + err.Error())
+	}
+
+	err = validate.Struct(*request)
+
+	if err != nil {
+		return err
+	}
+
 	if request.Zone == "" || request.Secret == "" {
 		return errors.New("both 'zone' and 'secret' are required")
 	}
 
-	if !request.IsValidZone() {
+	if !slices.Contains(netboxZones, request.Zone) {
 		return errors.New("invalid zone")
 	}
 
@@ -114,19 +128,13 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 			return err
 		}
 
-		if prefixIpFamily == request.IpFamily {
+		if prefixIpFamily != request.IpFamily {
 			return errors.New("invalid ip familiy for the provided address")
 		}
 	}
 
 	if request.IpFamily == "ipv6" && request.Zone != "inet" {
 		return errors.New("IPv6 is only available for zone 'inet'")
-	}
-
-	err := validate.Struct(*request)
-
-	if err != nil {
-		return err
 	}
 
 	return nil

@@ -278,12 +278,3 @@ func (c *NetboxCache) Get(key string) []responses.NetboxPrefix {
 	defer c.mu.RUnlock()
 	return c.prefixes[key]
 }
-
-// Return the full map
-// func (c *NetboxCache) All() map[string][]responses.NetboxPrefix {
-// 	c.mu.RLock()
-// 	defer c.mu.RUnlock()
-// 	result := make(map[string][]responses.NetboxPrefix, len(c.prefixes))
-// 	maps.Copy(result, c.prefixes)
-// 	return result
-// }

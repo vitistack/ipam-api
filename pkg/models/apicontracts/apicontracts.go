@@ -1,7 +1,6 @@
 package apicontracts
 
 import (
-	"slices"
 	"time"
 
 	"github.com/vitistack/ipam-api/internal/responses"
@@ -33,10 +32,11 @@ type IpamApiResponse struct {
 	Address string `json:"address"`
 }
 
-func (r *IpamApiRequest) IsValidZone() bool {
-	allowed := []string{"inet", "helsenett-private", "helsenett-public"}
-	return slices.Contains(allowed, r.Zone)
-}
+// func (r *IpamApiRequest) IsValidZone() bool {
+// 	// zones, _ := netboxservice.GetK8sZones()
+// 	allowed := []string{"inet", "helsenett-private", "helsenett-public"}
+// 	return slices.Contains(allowed, r.Zone)
+// }
 
 type CustomFields struct {
 	Domain  string `json:"domain"`
