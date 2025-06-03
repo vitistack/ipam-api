@@ -1,5 +1,6 @@
 .DS_Store
 *__debug_bin*
 config.json
+secrets.json
 !config.json.example
 bin/*
