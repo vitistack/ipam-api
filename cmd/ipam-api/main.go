@@ -56,7 +56,7 @@ func main() {
 
 	// Wait for termination signal
 	sig := <-sigChan
-	log.Printf("Received signal: %s. Shutting down...", sig)
+	log.Printf("Received signal: %s. IPAM-API shutting down...", sig)
 	serverCancel()
 
 }

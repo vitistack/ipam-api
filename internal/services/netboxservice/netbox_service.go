@@ -133,9 +133,9 @@ func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayloa
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
-	client := resty.New()
+	restyClient := resty.New()
 	var netboxResp responses.NetboxPrefix
-	resp, err := client.R().
+	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
 		SetBody(payload).
@@ -157,9 +157,9 @@ func DeleteNetboxPrefix(prefixId string) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
-	client := resty.New()
+	restyClient := resty.New()
 	var netboxResp responses.NetboxPrefix
-	resp, err := client.R().
+	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
 		SetResult(&netboxResp).
