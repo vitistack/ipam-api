@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// IPFamilyFromPrefix returnerer "ipv4", "ipv6" eller en feil.
+// IPFamilyFromPrefix returns "ipv4", "ipv6" or an error.
 func IPFamilyFromPrefix(prefix string) (string, error) {
 	address := strings.Split(prefix, "/")[0]
 	ip := net.ParseIP(address)
