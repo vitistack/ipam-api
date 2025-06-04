@@ -14,18 +14,18 @@ import (
 )
 
 // RegisterAddress godoc
-// @Summary      Register an address
-// @Schemes
-// @Description  Register an address in Vitistack IPAM API
-// @Tags         addresses
-// @Accept       json
-// @Produce      json
-// @Success		 200 {object} apicontracts.IpamApiResponse
-// @Param		 body body apicontracts.IpamApiRequest true "Request body"
-// @Failure      400 {object} apicontracts.HTTPError
-// @Failure      404 {object} apicontracts.HTTPError
-// @Failure      500 {object} apicontracts.HTTPError
-// @Router       / [POST]
+//	@Summary	Register an address
+//	@Schemes
+//	@Description	Register an address in Vitistack IPAM API
+//	@Tags			addresses
+//	@Accept			json
+//	@Produce		json
+//	@Success		200		{object}	apicontracts.IpamApiResponse
+//	@Param			body	body		apicontracts.IpamApiRequest	true	"Request body"
+//	@Failure		400		{object}	apicontracts.HTTPError
+//	@Failure		404		{object}	apicontracts.HTTPError
+//	@Failure		500		{object}	apicontracts.HTTPError
+//	@Router			/ [POST]
 func RegisterAddress(ginContext *gin.Context) {
 	var request apicontracts.IpamApiRequest
 	err := ginContext.ShouldBindJSON(&request)
@@ -59,18 +59,18 @@ func RegisterAddress(ginContext *gin.Context) {
 }
 
 // ExpireAddress godoc
-// @Summary      Set expiration for a service
-// @Schemes
-// @Description  Set expiration for a service
-// @Tags         addresses
-// @Accept       json
-// @Produce      json
-// @Param		 body body apicontracts.IpamApiRequest true "Request body"
-// @Success		 200 {object} apicontracts.IpamApiResponse
-// @Failure      400 {object} apicontracts.HTTPError
-// @Failure      404 {object} apicontracts.HTTPError
-// @Failure      500 {object} apicontracts.HTTPError
-// @Router       / [DELETE]
+//	@Summary	Set expiration for a service
+//	@Schemes
+//	@Description	Set expiration for a service
+//	@Tags			addresses
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		apicontracts.IpamApiRequest	true	"Request body"
+//	@Success		200		{object}	apicontracts.IpamApiResponse
+//	@Failure		400		{object}	apicontracts.HTTPError
+//	@Failure		404		{object}	apicontracts.HTTPError
+//	@Failure		500		{object}	apicontracts.HTTPError
+//	@Router			/ [DELETE]
 func ExpireAddress(ginContext *gin.Context) {
 	var prefixRequest apicontracts.IpamApiRequest
 
