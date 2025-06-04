@@ -99,7 +99,7 @@ func displayServices(address, zone string) error {
 				fmt.Println("\t\t  Retention Period Days:\t" + strconv.Itoa(service.RetentionPeriodDays))
 				fmt.Println("\t\t  Deny External Cleanup:\t" + strconv.FormatBool(service.DenyExternalCleanup))
 				if service.ExpiresAt != nil {
-					fmt.Println("\t\t  Expires:\t" + service.ExpiresAt.String())
+					fmt.Println("\t\t  Expires:\t\t\t" + service.ExpiresAt.String())
 				}
 			}
 		}
