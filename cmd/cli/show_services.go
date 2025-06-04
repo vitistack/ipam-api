@@ -90,17 +90,17 @@ func displayServices(address, zone string) error {
 		if len(savedAddress.Services) > 0 {
 			for index, service := range savedAddress.Services {
 				if index == 0 {
-					fmt.Println("Services\t- Name: " + service.ServiceName)
+					fmt.Println("Services\t- Service Name:\t\t\t" + service.ServiceName)
 				} else {
-					fmt.Println("\t\t- Name: " + service.ServiceName)
+					fmt.Println("\t\t- Service Name:\t\t\t" + service.ServiceName)
 				}
-				fmt.Println("\t\t  Namespace ID: " + service.NamespaceId)
-				fmt.Println("\t\t  Cluster ID: " + service.ClusterId)
-				fmt.Println("\t\t  Retention Period Days: " + strconv.Itoa(service.RetentionPeriodDays))
+				fmt.Println("\t\t  Namespace ID:\t\t\t" + service.NamespaceId)
+				fmt.Println("\t\t  Cluster ID:\t\t\t" + service.ClusterId)
+				fmt.Println("\t\t  Retention Period Days:\t" + strconv.Itoa(service.RetentionPeriodDays))
+				fmt.Println("\t\t  Deny External Cleanup:\t" + strconv.FormatBool(service.DenyExternalCleanup))
 				if service.ExpiresAt != nil {
-					fmt.Println("\t\t  Expires: " + service.ExpiresAt.String())
+					fmt.Println("\t\t  Expires:\t" + service.ExpiresAt.String())
 				}
-
 			}
 		}
 
