@@ -27,16 +27,8 @@ type IpamApiRequest struct {
 
 type IpamApiResponse struct {
 	Message string `json:"message"`
-	Secret  string `json:"secret"`
-	Zone    string `json:"zone"`
 	Address string `json:"address"`
 }
-
-// func (r *IpamApiRequest) IsValidZone() bool {
-// 	// zones, _ := netboxservice.GetK8sZones()
-// 	allowed := []string{"inet", "helsenett-private", "helsenett-public"}
-// 	return slices.Contains(allowed, r.Zone)
-// }
 
 type CustomFields struct {
 	Domain  string `json:"domain"`
@@ -44,10 +36,14 @@ type CustomFields struct {
 	Infra   string `json:"infra"`
 	Purpose string `json:"purpose"`
 	K8suuid string `json:"k8s_uuid"`
+	K8sZone string `json:"k8s_zone"`
 }
 
 type NextPrefixPayload struct {
 	PrefixLength int          `json:"prefix_length"`
+	VrfId        int          `json:"vrf"`
+	TenantId     int          `json:"tenant"`
+	RoleId       int          `json:"role"`
 	CustomFields CustomFields `json:"custom_fields"`
 }
 
@@ -61,7 +57,7 @@ type HTTPError struct {
 	Code    int    `json:"code"`
 }
 
-func GetNextPrefixPayload(request IpamApiRequest) NextPrefixPayload {
+func GetNextPrefixPayload(request IpamApiRequest, container responses.NetboxPrefix) NextPrefixPayload {
 	var prefixLength int
 	if request.IpFamily == "ipv4" {
 		prefixLength = 32
@@ -71,25 +67,30 @@ func GetNextPrefixPayload(request IpamApiRequest) NextPrefixPayload {
 
 	return NextPrefixPayload{
 		PrefixLength: prefixLength,
+		VrfId:        container.Vrf.ID,
+		TenantId:     container.Tenant.ID,
+		RoleId:       container.Role.ID,
 		CustomFields: CustomFields{
 			Domain:  "na",
 			Env:     "na",
-			Infra:   "na",
+			Infra:   container.CustomFields.Infra,
 			Purpose: "na",
+			K8sZone: request.Zone,
 		},
 	}
 
 }
 
-func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Address) UpdatePrefixPayload {
+func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Address, request IpamApiRequest) UpdatePrefixPayload {
 	return UpdatePrefixPayload{
 		Prefix: nextPrefix.Prefix,
 		CustomFields: CustomFields{
 			Domain:  "na",
 			Env:     "na",
-			Infra:   "na",
+			Infra:   nextPrefix.CustomFields.Infra,
 			Purpose: "na",
 			K8suuid: mongoPrefix.ID.Hex(),
+			K8sZone: request.Zone,
 		},
 	}
 }

@@ -108,22 +108,19 @@ func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPre
 	netboxToken := viper.GetString("netbox.token")
 
 	restyClient := resty.New()
-	var response responses.NetboxPrefix
+	var newPrefix responses.NetboxPrefix
 	resp, _ := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
 		SetBody(payload).
-		SetResult(&response).
+		SetResult(&newPrefix).
 		Post(netboxURL + "/api/ipam/prefixes/" + containerId + "/available-prefixes/")
 
 	if resp.IsError() {
 		return responses.NetboxPrefix{}, errors.New(resp.String())
 	}
 
-	return responses.NetboxPrefix{
-		ID:     response.ID,
-		Prefix: response.Prefix,
-	}, nil
+	return newPrefix, nil
 }
 
 // UpdateNetboxPrefix updates a prefix in Netbox with the provided ID and payload.

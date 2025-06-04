@@ -18,9 +18,9 @@ var (
 	zone    string
 )
 
-var readSecret = &cobra.Command{
-	Use:   "read-secret",
-	Short: "Read address secret",
+var showSecret = &cobra.Command{
+	Use:   "show-secret",
+	Short: "Show address secret",
 	Run: func(cmd *cobra.Command, args []string) {
 		if address == "" {
 			fmt.Println("Missing --address argument")
@@ -30,21 +30,21 @@ var readSecret = &cobra.Command{
 			fmt.Println("Missing --zone argument")
 			return
 		}
-		if err := showSecret(address, zone); err != nil {
+		if err := displaySecret(address, zone); err != nil {
 			fmt.Println("Error:", err)
 		}
 	},
 }
 
 func init() {
-	readSecret.Flags().StringVar(&address, "address", "", "Address (required)")
-	readSecret.Flags().StringVar(&zone, "zone", "", "Zone (required)")
-	readSecret.MarkFlagRequired("address")
-	readSecret.MarkFlagRequired("zone")
-	RootCmd.AddCommand(readSecret)
+	showSecret.Flags().StringVar(&address, "address", "", "Address (required)")
+	showSecret.Flags().StringVar(&zone, "zone", "", "Zone (required)")
+	showSecret.MarkFlagRequired("address")
+	showSecret.MarkFlagRequired("zone")
+	RootCmd.AddCommand(showSecret)
 }
 
-func showSecret(address, zone string) error {
+func displaySecret(address, zone string) error {
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{
 		Host:     viper.GetString("mongodb.host"),

@@ -6,8 +6,19 @@ type NetboxPrefix struct {
 	Family struct {
 		Value int `json:"value"`
 	}
+	Vrf struct {
+		ID int `json:"id"`
+	}
+	Tenant struct {
+		ID int `json:"id"`
+	}
+	Role struct {
+		ID int `json:"id"`
+	}
 	CustomFields struct {
+		Infra   string `json:"infra"`
 		K8sUuid string `json:"k8s_uuid"`
+		K8sZone string `json:"k8s_zone"`
 	} `json:"custom_fields"`
 }
 

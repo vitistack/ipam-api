@@ -14,20 +14,20 @@ import (
 )
 
 var (
-	resetAddress string
-	resetZone    string
-	newSecret    string
+	replaceSecretAddress string
+	replaceSecretZone    string
+	newSecret            string
 )
 
-var resetSecret = &cobra.Command{
-	Use:   "reset-secret",
-	Short: "Reset address secret",
+var replaceSecret = &cobra.Command{
+	Use:   "replace-secret",
+	Short: "Replace address secret",
 	Run: func(cmd *cobra.Command, args []string) {
-		if resetAddress == "" {
+		if replaceSecretAddress == "" {
 			fmt.Println("Missing --address argument")
 			return
 		}
-		if resetZone == "" {
+		if replaceSecretZone == "" {
 			fmt.Println("Missing --zone argument")
 			return
 		}
@@ -35,23 +35,23 @@ var resetSecret = &cobra.Command{
 			fmt.Println("Missing --new argument")
 			return
 		}
-		if err := resetSecretForAddress(resetAddress, resetZone, newSecret); err != nil {
+		if err := setNewSecret(replaceSecretAddress, replaceSecretZone, newSecret); err != nil {
 			fmt.Println("Error:", err)
 		}
 	},
 }
 
 func init() {
-	resetSecret.Flags().StringVar(&resetAddress, "address", "", "Address (required)")
-	resetSecret.Flags().StringVar(&resetZone, "zone", "", "Zone (required)")
-	resetSecret.Flags().StringVar(&newSecret, "new", "", "Zone (required)")
-	resetSecret.MarkFlagRequired("address")
-	resetSecret.MarkFlagRequired("zone")
-	resetSecret.MarkFlagRequired("new")
-	RootCmd.AddCommand(resetSecret)
+	replaceSecret.Flags().StringVar(&replaceSecretAddress, "address", "", "Address (required)")
+	replaceSecret.Flags().StringVar(&replaceSecretZone, "zone", "", "Zone (required)")
+	replaceSecret.Flags().StringVar(&newSecret, "new", "", "Zone (required)")
+	replaceSecret.MarkFlagRequired("address")
+	replaceSecret.MarkFlagRequired("zone")
+	replaceSecret.MarkFlagRequired("new")
+	RootCmd.AddCommand(replaceSecret)
 }
 
-func resetSecretForAddress(address, zone, newSecret string) error {
+func setNewSecret(address, zone, newSecret string) error {
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{
 		Host:     viper.GetString("mongodb.host"),

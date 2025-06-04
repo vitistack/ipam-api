@@ -15,7 +15,7 @@ func Register(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse
 		return apicontracts.IpamApiResponse{}, err
 	}
 
-	payload := apicontracts.GetNextPrefixPayload(request)
+	payload := apicontracts.GetNextPrefixPayload(request, container)
 
 	nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(container.ID), payload)
 
@@ -29,7 +29,7 @@ func Register(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse
 		return apicontracts.IpamApiResponse{}, err
 	}
 
-	updatePayload := apicontracts.GetUpdatePrefixPayload(nextPrefix, addressDocument)
+	updatePayload := apicontracts.GetUpdatePrefixPayload(nextPrefix, addressDocument, request)
 	err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(nextPrefix.ID), updatePayload)
 
 	if err != nil {
@@ -38,8 +38,6 @@ func Register(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse
 
 	return apicontracts.IpamApiResponse{
 		Message: "Address registered successfully",
-		Secret:  request.Secret,
-		Zone:    request.Zone,
 		Address: nextPrefix.Prefix,
 	}, nil
 
@@ -53,8 +51,6 @@ func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, 
 
 	return apicontracts.IpamApiResponse{
 		Message: "Address updated successfully",
-		Secret:  request.Secret,
-		Zone:    request.Zone,
 		Address: request.Address,
 	}, nil
 }
@@ -67,8 +63,6 @@ func SetServiceExpiration(request apicontracts.IpamApiRequest) (apicontracts.Ipa
 
 	return apicontracts.IpamApiResponse{
 		Message: "Service expiration set successfully",
-		Secret:  request.Secret,
-		Zone:    request.Zone,
 		Address: request.Address,
 	}, nil
 }
