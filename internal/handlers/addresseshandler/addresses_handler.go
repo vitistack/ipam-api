@@ -14,6 +14,7 @@ import (
 )
 
 // RegisterAddress godoc
+//
 //	@Summary	Register an address
 //	@Schemes
 //	@Description	Register an address in Vitistack IPAM API
@@ -59,6 +60,7 @@ func RegisterAddress(ginContext *gin.Context) {
 }
 
 // ExpireAddress godoc
+//
 //	@Summary	Set expiration for a service
 //	@Schemes
 //	@Description	Set expiration for a service
@@ -111,6 +113,9 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 	err = validate.Struct(*request)
 
 	if err != nil {
+		if err.Error() == "Key: 'IpamApiRequest.IpFamily' Error:Field validation for 'IpFamily' failed on the 'oneof' tag" {
+			return errors.New("invalid ip family, must be either 'ipv4' or 'ipv6'")
+		}
 		return err
 	}
 

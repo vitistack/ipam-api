@@ -67,14 +67,14 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
-	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
+	encryptedRequestSecret, err := utils.DeterministicEncrypt(request.Secret)
 
 	if err != nil {
 		return fmt.Errorf("failed to encrypted secret: %w", err)
 	}
 
 	filter := bson.M{
-		"secret":  encryptedSecret,
+		"secret":  encryptedRequestSecret,
 		"zone":    request.Zone,
 		"address": request.Address,
 	}
@@ -84,27 +84,31 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return fmt.Errorf("address not found: %w", err)
+			return errors.New("no matching address found with the provivded secret, zone and address")
 		}
 		return fmt.Errorf("failed to read address document: %w", err)
 	}
 
 	if request.NewSecret != "" {
-		if registeredAddress.Secret == request.Secret && len(registeredAddress.Services) > 1 {
-			return fmt.Errorf("multiple services registered. unable to change secret")
-		} else if registeredAddress.Secret != request.Secret {
+		if registeredAddress.Secret == encryptedRequestSecret && len(registeredAddress.Services) > 1 {
+			return errors.New("multiple services registered. unable to change secret")
+		}
+		if registeredAddress.Secret != encryptedRequestSecret {
 			return errors.New("secret mismatch. unable to change secret")
-		} else {
-			update := bson.M{
-				"$set": bson.M{
-					"secret": request.NewSecret,
-				},
-			}
+		}
+		encryptedNewSecret, err := utils.DeterministicEncrypt(request.NewSecret)
+		if err != nil {
+			return fmt.Errorf("failed to encrypt new secret: %w", err)
+		}
+		update := bson.M{
+			"$set": bson.M{
+				"secret": encryptedNewSecret,
+			},
+		}
 
-			_, err = collection.UpdateOne(context.Background(), filter, update)
-			if err != nil {
-				return fmt.Errorf("failed to update secret: %w", err)
-			}
+		_, err = collection.UpdateOne(context.Background(), filter, update)
+		if err != nil {
+			return fmt.Errorf("failed to update secret: %w", err)
 		}
 
 	}
@@ -169,7 +173,7 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	err = collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return fmt.Errorf("address not found: %w", err)
+			return errors.New("no matching address found with the provivded secret, zone and address")
 		}
 		return fmt.Errorf("failed to read address document: %w", err)
 	}
