@@ -22,14 +22,6 @@ var showSecret = &cobra.Command{
 	Use:   "show-secret",
 	Short: "Show address secret",
 	Run: func(cmd *cobra.Command, args []string) {
-		if address == "" {
-			fmt.Println("Missing --address argument")
-			return
-		}
-		if zone == "" {
-			fmt.Println("Missing --zone argument")
-			return
-		}
 		if err := displaySecret(address, zone); err != nil {
 			fmt.Println("Error:", err)
 		}

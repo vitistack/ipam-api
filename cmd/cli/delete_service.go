@@ -29,15 +29,6 @@ var deleteService = &cobra.Command{
 	Use:   "delete-service",
 	Short: "Delete service from address",
 	Run: func(cmd *cobra.Command, args []string) {
-		if deleteServiceAddress == "" {
-			fmt.Println("Missing --address argument")
-			return
-		}
-		if deleteServiceZone == "" {
-			fmt.Println("Missing --zone argument")
-			return
-		}
-
 		expireAddress := apicontracts.IpamApiRequest{
 			Address: deleteServiceAddress,
 			Zone:    deleteServiceZone,
@@ -49,13 +40,11 @@ var deleteService = &cobra.Command{
 			},
 		}
 
-		if err := setServiceExpirationOnAddress(expireAddress); err != nil {
+		err := setServiceExpirationOnAddress(expireAddress)
+
+		if err != nil {
 			fmt.Println("Error:", err)
 		}
-
-		// if err != nil {
-		// 	fmt.Println("Error:", err)
-		// }
 	},
 }
 
@@ -68,6 +57,10 @@ func init() {
 	deleteService.Flags().StringVar(&deleteClusterId, "cluster-id", "", "Cluster ID (required)")
 	deleteService.MarkFlagRequired("address")
 	deleteService.MarkFlagRequired("zone")
+	deleteService.MarkFlagRequired("secret")
+	deleteService.MarkFlagRequired("service-name")
+	deleteService.MarkFlagRequired("namespace-id")
+	deleteService.MarkFlagRequired("cluster-id")
 
 	RootCmd.AddCommand(deleteService)
 }

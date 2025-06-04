@@ -25,14 +25,6 @@ var showServices = &cobra.Command{
 	Use:   "show-services",
 	Short: "Show address services",
 	Run: func(cmd *cobra.Command, args []string) {
-		if showServicesAddress == "" {
-			fmt.Println("Missing --address argument")
-			return
-		}
-		if showServicesZone == "" {
-			fmt.Println("Missing --zone argument")
-			return
-		}
 		if err := displayServices(showServicesAddress, showServicesZone); err != nil {
 			fmt.Println("Error:", err)
 		}

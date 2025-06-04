@@ -23,18 +23,6 @@ var replaceSecret = &cobra.Command{
 	Use:   "replace-secret",
 	Short: "Replace address secret",
 	Run: func(cmd *cobra.Command, args []string) {
-		if replaceSecretAddress == "" {
-			fmt.Println("Missing --address argument")
-			return
-		}
-		if replaceSecretZone == "" {
-			fmt.Println("Missing --zone argument")
-			return
-		}
-		if newSecret == "" {
-			fmt.Println("Missing --new argument")
-			return
-		}
 		if err := setNewSecret(replaceSecretAddress, replaceSecretZone, newSecret); err != nil {
 			fmt.Println("Error:", err)
 		}
