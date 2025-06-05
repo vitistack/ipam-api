@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/cmd/ipam-api/settings"
 
+	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/internal/webserver"
@@ -23,6 +24,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s", err.Error())
 	}
+
+	if err := logger.InitLogger("./logs"); err != nil {
+		log.Fatalf("Logger init failed: %v", err)
+	}
+
+	logger.Log.Infow("Logger ready")
+	logger.Log.Errorw("test", "test1", "test1")
 
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{

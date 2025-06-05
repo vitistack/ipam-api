@@ -4,9 +4,11 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/services/addressesservice"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/internal/utils"
@@ -55,6 +57,7 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
+	logger.Log.Infow("address registrered", "source", strings.Split(ginContext.Request.RemoteAddr, ":")[0], "address", request.Address, "response", ginContext.Request.Response)
 	ginContext.JSON(http.StatusOK, response)
 
 }
