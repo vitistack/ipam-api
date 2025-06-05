@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/pkg/clients/mongodb"
 	"github.com/vitistack/ipam-api/pkg/models/mongodbtypes"
@@ -15,7 +16,7 @@ import (
 )
 
 func StartCleanupWorker() {
-	log.Println("Starting cleanup worker...")
+	logger.Log.Info("Starting cleanup worker...")
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
@@ -23,7 +24,7 @@ func StartCleanupWorker() {
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	for range ticker.C {
-		log.Println("running cleanup")
+		logger.Log.Info("cleanup worker running")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 		CleanupExpiredServices(ctx, collection)

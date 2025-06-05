@@ -4,11 +4,9 @@ import (
 	"errors"
 	"net/http"
 	"slices"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/services/addressesservice"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/internal/utils"
@@ -34,6 +32,7 @@ func RegisterAddress(ginContext *gin.Context) {
 	err := ginContext.ShouldBindJSON(&request)
 
 	if err != nil {
+		ginContext.Error(err)
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
 		return
 	}
@@ -41,6 +40,7 @@ func RegisterAddress(ginContext *gin.Context) {
 	err = ValidateRequest(&request)
 
 	if err != nil {
+		ginContext.Error(err)
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -53,11 +53,11 @@ func RegisterAddress(ginContext *gin.Context) {
 	}
 
 	if err != nil {
+		ginContext.Error(err)
 		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
-	logger.Log.Infow("address registrered", "source", strings.Split(ginContext.Request.RemoteAddr, ":")[0], "address", request.Address, "response", ginContext.Request.Response)
 	ginContext.JSON(http.StatusOK, response)
 
 }
@@ -82,6 +82,7 @@ func ExpireAddress(ginContext *gin.Context) {
 	err := ginContext.ShouldBindJSON(&prefixRequest)
 
 	if err != nil {
+		ginContext.Error(err)
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
 		return
 	}
@@ -89,6 +90,7 @@ func ExpireAddress(ginContext *gin.Context) {
 	err = ValidateRequest(&prefixRequest)
 
 	if err != nil {
+		ginContext.Error(err)
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -96,6 +98,7 @@ func ExpireAddress(ginContext *gin.Context) {
 	response, err := addressesservice.SetServiceExpiration(prefixRequest)
 
 	if err != nil {
+		ginContext.Error(err)
 		ginContext.JSON(http.StatusNotFound, gin.H{"message": "Could not deregister service: " + err.Error()})
 		return
 	}

@@ -33,8 +33,11 @@ func ZapErrorLogger() gin.HandlerFunc {
 		for _, err := range c.Errors {
 			logger.HTTP.Errorw("request error",
 				"error", err.Err,
+				// "error_msg", err.Error(),
 				"path", c.Request.URL.Path,
 				"status", c.Writer.Status(),
+				"method", c.Request.Method,
+				"ip", c.ClientIP(),
 			)
 		}
 	}

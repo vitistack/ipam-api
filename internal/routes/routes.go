@@ -10,8 +10,8 @@ import (
 
 func SetupRoutes(server *gin.Engine) {
 
-	docs.SwaggerInfo.Title = "oss-ipam-api API"
-	docs.SwaggerInfo.Description = "This the oss-ipam-api API server."
+	docs.SwaggerInfo.Title = "IPAM-API"
+	docs.SwaggerInfo.Description = "This the Vitistack IPAM-API server."
 	docs.SwaggerInfo.Version = "1.0"
 	docs.SwaggerInfo.Host = "localhost:3000"
 	docs.SwaggerInfo.BasePath = "/v2"

@@ -26,11 +26,10 @@ func main() {
 	}
 
 	if err := logger.InitLogger("./logs"); err != nil {
-		log.Fatalf("Logger init failed: %v", err)
+		log.Fatalf("logger init failed: %v", err)
 	}
 
-	logger.Log.Infow("Logger ready")
-	logger.Log.Errorw("test", "test1", "test1")
+	defer logger.Sync()
 
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{
@@ -65,6 +64,7 @@ func main() {
 	// Wait for termination signal
 	sig := <-sigChan
 	log.Printf("Received signal: %s. IPAM-API shutting down...", sig)
+	logger.Log.Infof("Received signal: %s. IPAM-API shutting down...", sig)
 	serverCancel()
 
 }

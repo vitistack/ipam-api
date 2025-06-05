@@ -35,7 +35,7 @@ func InitLogger(logDir string) error {
 	})
 
 	appCore := zapcore.NewTee(
-		zapcore.NewCore(appEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
+		//zapcore.NewCore(appEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
 		zapcore.NewCore(appEncoder, zapcore.AddSync(appWriter), zapcore.InfoLevel),
 	)
 
@@ -57,7 +57,7 @@ func InitLogger(logDir string) error {
 	})
 
 	httpCore := zapcore.NewTee(
-		zapcore.NewCore(httpEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
+		// zapcore.NewCore(httpEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
 		zapcore.NewCore(httpEncoder, zapcore.AddSync(httpWriter), zapcore.InfoLevel),
 	)
 
