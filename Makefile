@@ -13,11 +13,11 @@ KUBECTL := kubectl
 .PHONY: build-api build-cli
 build-api: check-tools ## Build the Go application.
 	@echo "Building the Go application..."
-	@go build -o ./bin/$(PROJECT_NAME)-api ./cmd/$(PROJECT_NAME)/main.go
+	@go build -o ./bin/api ./cmd/$(PROJECT_NAME)/main.go
 
 build-cli: check-tools ## Build the Go application.
 	@echo "Building the Go application..."
-	@go build -o ./bin/$(PROJECT_NAME)-cli ./cmd/cli/main.go
+	@go build -o ./bin/cli ./cmd/cli/main.go
 
 deps: ## Download and verify dependencies
 	@echo "Downloading dependencies..."
