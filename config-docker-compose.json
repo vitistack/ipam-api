@@ -9,7 +9,12 @@
   },
   "netbox": {
     "url": "http://netbox:8080",
-    "token": "0123456789abcdef0123456789abcdef01234567"
+    "token": "0123456789abcdef0123456789abcdef01234567",
+    "prefix_containers": {
+      "internet": "10.0.0.0/8",
+      "helsenett_private": "172.16.0.0/12",
+      "helsenett_public": "192.168.0.0/16"
+    }
   },
   "encryption_secrets": {
     "path": "secrets.json"

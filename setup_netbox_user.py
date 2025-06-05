@@ -4,13 +4,12 @@ NetBox User and Token Setup Script
 This script helps create a new user and API token in NetBox
 """
 
-import requests
+import urllib.request
+import urllib.parse
+import urllib.error
 import json
 import sys
-from urllib3.packages.urllib3.exceptions import InsecureRequestWarning
-
-# Disable SSL warnings for local development
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import ssl
 
 # NetBox configuration
 NETBOX_URL = "http://localhost:8000"
@@ -24,6 +23,11 @@ def create_user_and_token(username, email, password, first_name="", last_name=""
         "Content-Type": "application/json",
         "Accept": "application/json"
     }
+    
+    # Create SSL context that doesn't verify certificates (for local development)
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
     
     try:
         # First, create the user
@@ -42,43 +46,55 @@ def create_user_and_token(username, email, password, first_name="", last_name=""
             user_data["password"] = password
         
         print(f"Creating user '{username}'...")
-        user_response = requests.post(
-            f"{NETBOX_URL}/api/users/users/",
-            headers=headers,
-            json=user_data,
-            verify=False
-        )
         
-        if user_response.status_code == 201:
-            user = user_response.json()
-            user_id = user["id"]
-            print(f"✅ User '{username}' created successfully (ID: {user_id})")
-        elif user_response.status_code == 400:
-            # User might already exist, try to get existing user
-            print(f"User '{username}' might already exist, trying to find existing user...")
-            users_response = requests.get(
-                f"{NETBOX_URL}/api/users/users/?username={username}",
-                headers=headers,
-                verify=False
-            )
-            if users_response.status_code == 200:
-                users = users_response.json()["results"]
-                if users:
-                    user_id = users[0]["id"]
-                    print(f"✅ Found existing user '{username}' (ID: {user_id})")
+        # Prepare the request
+        url = f"{NETBOX_URL}/api/users/users/"
+        data = json.dumps(user_data).encode('utf-8')
+        req = urllib.request.Request(url, data=data, headers=headers, method='POST')
+        
+        try:
+            with urllib.request.urlopen(req, context=ssl_context) as response:
+                if response.status == 201:
+                    user = json.loads(response.read().decode('utf-8'))
+                    user_id = user["id"]
+                    print(f"✅ User '{username}' created successfully (ID: {user_id})")
                 else:
-                    print(f"❌ Failed to create or find user '{username}'")
-                    print(f"Response: {user_response.text}")
+                    print(f"❌ Failed to create user '{username}'")
+                    print(f"Status: {response.status}")
+                    return None
+        except urllib.error.HTTPError as e:
+            if e.code == 400:
+                # User might already exist, try to get existing user
+                print(f"User '{username}' might already exist, trying to find existing user...")
+                
+                search_url = f"{NETBOX_URL}/api/users/users/?username={username}"
+                search_req = urllib.request.Request(search_url, headers=headers)
+                
+                try:
+                    with urllib.request.urlopen(search_req, context=ssl_context) as search_response:
+                        if search_response.status == 200:
+                            users_data = json.loads(search_response.read().decode('utf-8'))
+                            users = users_data["results"]
+                            if users:
+                                user_id = users[0]["id"]
+                                print(f"✅ Found existing user '{username}' (ID: {user_id})")
+                            else:
+                                print(f"❌ Failed to create or find user '{username}'")
+                                print(f"Response: {e.read().decode('utf-8')}")
+                                return None
+                        else:
+                            print(f"❌ Failed to create user '{username}'")
+                            print(f"Response: {e.read().decode('utf-8')}")
+                            return None
+                except urllib.error.HTTPError as search_e:
+                    print(f"❌ Failed to search for user '{username}'")
+                    print(f"Response: {search_e.read().decode('utf-8')}")
                     return None
             else:
                 print(f"❌ Failed to create user '{username}'")
-                print(f"Response: {user_response.text}")
+                print(f"Status: {e.code}")
+                print(f"Response: {e.read().decode('utf-8')}")
                 return None
-        else:
-            print(f"❌ Failed to create user '{username}'")
-            print(f"Status: {user_response.status_code}")
-            print(f"Response: {user_response.text}")
-            return None
         
         # Create API token for the user
         print(f"Creating API token for user '{username}'...")
@@ -88,31 +104,34 @@ def create_user_and_token(username, email, password, first_name="", last_name=""
             "write_enabled": True
         }
         
-        token_response = requests.post(
-            f"{NETBOX_URL}/api/users/tokens/",
-            headers=headers,
-            json=token_data,
-            verify=False
-        )
+        token_url = f"{NETBOX_URL}/api/users/tokens/"
+        token_json = json.dumps(token_data).encode('utf-8')
+        token_req = urllib.request.Request(token_url, data=token_json, headers=headers, method='POST')
         
-        if token_response.status_code == 201:
-            token = token_response.json()
-            print(f"✅ API token created successfully!")
-            print(f"🔑 Token: {token['key']}")
-            print(f"📝 Description: {token['description']}")
-            return {
-                "username": username,
-                "user_id": user_id,
-                "token": token['key'],
-                "token_id": token['id']
-            }
-        else:
+        try:
+            with urllib.request.urlopen(token_req, context=ssl_context) as token_response:
+                if token_response.status == 201:
+                    token = json.loads(token_response.read().decode('utf-8'))
+                    print(f"✅ API token created successfully!")
+                    print(f"🔑 Token: {token['key']}")
+                    print(f"📝 Description: {token['description']}")
+                    return {
+                        "username": username,
+                        "user_id": user_id,
+                        "token": token['key'],
+                        "token_id": token['id']
+                    }
+                else:
+                    print(f"❌ Failed to create API token")
+                    print(f"Status: {token_response.status}")
+                    return None
+        except urllib.error.HTTPError as e:
             print(f"❌ Failed to create API token")
-            print(f"Status: {token_response.status_code}")
-            print(f"Response: {token_response.text}")
+            print(f"Status: {e.code}")
+            print(f"Response: {e.read().decode('utf-8')}")
             return None
             
-    except requests.exceptions.ConnectionError:
+    except urllib.error.URLError:
         print("❌ Cannot connect to NetBox. Make sure it's running on http://localhost:8000")
         return None
     except Exception as e:
@@ -126,14 +145,25 @@ def test_token(token):
         "Accept": "application/json"
     }
     
+    # Create SSL context that doesn't verify certificates (for local development)
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    
     try:
-        response = requests.get(f"{NETBOX_URL}/api/", headers=headers, verify=False)
-        if response.status_code == 200:
-            print("✅ Token test successful! The token is working correctly.")
-            return True
-        else:
-            print(f"❌ Token test failed. Status: {response.status_code}")
-            return False
+        url = f"{NETBOX_URL}/api/"
+        req = urllib.request.Request(url, headers=headers)
+        
+        with urllib.request.urlopen(req, context=ssl_context) as response:
+            if response.status == 200:
+                print("✅ Token test successful! The token is working correctly.")
+                return True
+            else:
+                print(f"❌ Token test failed. Status: {response.status}")
+                return False
+    except urllib.error.HTTPError as e:
+        print(f"❌ Token test failed. Status: {e.code}")
+        return False
     except Exception as e:
         print(f"❌ Token test failed: {str(e)}")
         return False
@@ -155,7 +185,7 @@ def main():
     
     first_name = input("Enter first name (optional): ").strip()
     last_name = input("Enter last name (optional): ").strip()
-    password = input("Enter password (optional, will be auto-generated if empty): ").strip()
+    password = input("Enter password: ").strip()
     
     # Create user and token
     result = create_user_and_token(username, email, password, first_name, last_name)
