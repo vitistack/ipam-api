@@ -7,16 +7,16 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=secretpassword
     volumes:
-      - mongo_data:/data/db
+      - ./hack/data/mongodb:/data/db:rw
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_DB: netbox
       POSTGRES_USER: netbox
       POSTGRES_PASSWORD: netboxpassword
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./hack/data/postgresdb:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
@@ -29,7 +29,7 @@ services:
     image: redis:7-alpine
     command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
+      - ./hack/data/redis:/data
     ports:
       - "6379:6379"
     healthcheck:
@@ -61,7 +61,7 @@ services:
     ports:
       - "8000:8080"
     volumes:
-      - netbox_media:/opt/netbox/netbox/media
+      - ./hack/data/netbox:/opt/netbox/netbox/media
 
   ipam-api:
     build: .
@@ -78,9 +78,3 @@ services:
     depends_on:
       - mongodb
       - netbox
-
-volumes:
-  mongo_data:
-  postgres_data:
-  redis_data:
-  netbox_media:

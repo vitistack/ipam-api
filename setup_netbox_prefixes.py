@@ -4,13 +4,12 @@ NetBox Prefix Containers and Custom Fields Setup Script
 This script sets up NetBox with three prefix containers and custom fields
 """
 
-import requests
+import urllib.request
+import urllib.parse
+import urllib.error
 import json
 import sys
-import urllib3
-
-# Disable SSL warnings for local development
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import ssl
 
 # NetBox configuration
 NETBOX_URL = "http://localhost:8000"
@@ -27,19 +26,61 @@ def make_api_request(method, endpoint, data=None):
     url = f"{NETBOX_URL}/api{endpoint}"
     
     try:
-        if method.upper() == "GET":
-            response = requests.get(url, headers=headers, verify=False)
-        elif method.upper() == "POST":
-            response = requests.post(url, headers=headers, json=data, verify=False)
-        elif method.upper() == "PUT":
-            response = requests.put(url, headers=headers, json=data, verify=False)
-        elif method.upper() == "PATCH":
-            response = requests.patch(url, headers=headers, json=data, verify=False)
-        else:
-            raise ValueError(f"Unsupported HTTP method: {method}")
+        # Create SSL context that doesn't verify certificates (for local development)
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
         
-        return response
-    except requests.exceptions.ConnectionError:
+        # Prepare request data
+        request_data = None
+        if data is not None:
+            request_data = json.dumps(data).encode('utf-8')
+        
+        # Create request object
+        req = urllib.request.Request(url, data=request_data, headers=headers, method=method.upper())
+        
+        # Make the request
+        with urllib.request.urlopen(req, context=ssl_context) as response:
+            response_data = response.read().decode('utf-8')
+            
+            # Create a response-like object for compatibility
+            class Response:
+                def __init__(self, status_code, text, data):
+                    self.status_code = status_code
+                    self.text = text
+                    self._json_data = data
+                
+                def json(self):
+                    return self._json_data
+            
+            # Parse JSON response if possible
+            try:
+                json_data = json.loads(response_data) if response_data else {}
+            except json.JSONDecodeError:
+                json_data = {}
+            
+            return Response(response.status, response_data, json_data)
+            
+    except urllib.error.HTTPError as e:
+        # Handle HTTP errors (4xx, 5xx)
+        error_data = e.read().decode('utf-8') if e.fp else ''
+        try:
+            json_data = json.loads(error_data) if error_data else {}
+        except json.JSONDecodeError:
+            json_data = {}
+        
+        class ErrorResponse:
+            def __init__(self, status_code, text, data):
+                self.status_code = status_code
+                self.text = text
+                self._json_data = data
+            
+            def json(self):
+                return self._json_data
+        
+        return ErrorResponse(e.code, error_data, json_data)
+        
+    except urllib.error.URLError as e:
         print("❌ Cannot connect to NetBox. Make sure it's running on http://localhost:8000")
         return None
     except Exception as e:

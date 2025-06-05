@@ -5,3 +5,6 @@ secrets.json
 !config.json.example
 bin/*
 logs/*
+
+hack/data/*
+!hack/data/.gitkeep
