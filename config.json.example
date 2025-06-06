@@ -8,10 +8,5 @@
   "netbox": {
     "url": "https://<url>",
     "token": "<token>",
-    "prefix_containers": {
-      "internet": "<subnet>/<prefix>",
-      "helsenett_private": "<subnet>/<prefix>",
-      "helsenett_public": "<subnet>/<prefix>"
-    }
   }
 }

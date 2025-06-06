@@ -21,9 +21,17 @@ func InitConfig() error {
 	secretsViper := viper.New()
 	secretsViper.SetConfigFile(secretsPath)
 	secretsViper.SetConfigType("json")
+	secretsViper.AddConfigPath(".") // Add current directory to search path
 
 	if err := secretsViper.ReadInConfig(); err != nil {
-		return fmt.Errorf("failed to read encryption secrets: %w", err)
+		//return fmt.Errorf("failed to read encryption secrets: %w", err)
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// Config file not found; ignore error if desired
+			return fmt.Errorf("failed to read encryption secrets, file not found : %w", err)
+		} else {
+			// Config file was found but another error was produced
+			return fmt.Errorf("failed to read encryption secrets: %w", err)
+		}
 	}
 
 	// Merge secrets into main viper

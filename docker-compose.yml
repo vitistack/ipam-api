@@ -1,16 +1,72 @@
-version: "3.9"
 services:
   mongodb:
-    # image: mongo:latest
     image: mongo:7
-    container_name: oss-ipam-api-mongodb
     ports:
       - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=secretpassword
     volumes:
-      - mongo_data:/data/db
+      - ./hack/data/mongodb:/data/db:rw
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: netbox
+      POSTGRES_USER: netbox
+      POSTGRES_PASSWORD: netboxpassword
+    volumes:
+      - ./hack/data/postgresdb:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U netbox -d netbox" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - ./hack/data/redis:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  netbox:
+    image: netboxcommunity/netbox:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ALLOWED_HOSTS: "*"
+      DB_HOST: postgres
+      DB_NAME: netbox
+      DB_USER: netbox
+      DB_PASSWORD: netboxpassword
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECRET_KEY: "81ac046f1c98e961f5ae67fa5b02f3a1f790d503b7957a29553558bf1e4da9c9"
+      SUPERUSER_NAME: admin
+      SUPERUSER_EMAIL: admin@example.com
+      SUPERUSER_PASSWORD: admin
+      SUPERUSER_API_TOKEN: "0123456789abcdef0123456789abcdef01234567"
+    ports:
+      - "8000:8080"
+    volumes:
+      - ./hack/data/netbox:/opt/netbox/netbox/media
+    healthcheck:
+      test: [ "CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8080/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ipam-api:
     build: .
@@ -18,9 +74,13 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./config.json:/app/config.json
+      - type: bind
+        source: ./config-docker-compose.json
+        target: /app/config.json
+      - type: bind
+        source: ./secrets.json
+        target: /app/secrets.json
     depends_on:
-      - mongodb
-
-volumes:
-  mongo_data:
+      # - mongodb
+      netbox:
+        condition: service_healthy
