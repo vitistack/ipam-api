@@ -333,13 +333,6 @@ def create_custom_fields():
     """Create custom_fields"""
     print("🔧 Creating custom_fields...")
 
-    # "name": "k8s_uuid",
-    # "label": "Kubernetes UUID",
-    # "type": "text",
-    # "object_types": ["ipam.prefix"],
-    # "description": "Kubernetes UUID for the prefix",
-    # "required": False,
-
     custom_fields = [
         {
             "display": "Domain",
@@ -635,35 +628,6 @@ def create_prefix_containers(vrfs, roles, tenants):
     return created_prefixes
 
 
-# def update_config_file(prefixes):
-#     """Update the configuration file with the new prefix containers"""
-#     print("📝 Updating configuration file...")
-
-#     try:
-#         config_path = '/Users/rogerwesterbo/dev/github/viti/ipam-api/config-docker-compose.json'
-#         with open(config_path, 'r') as f:
-#             config = json.load(f)
-
-#         # Ensure netbox section exists
-#         if 'netbox' not in config:
-#             config['netbox'] = {}
-
-#         # Update prefix containers
-#         config['netbox']['prefix_containers'] = {
-#             "internet": "10.0.0.0/8",
-#             "helsenett_private": "172.16.0.0/12",
-#             "helsenett_public": "192.168.0.0/16"
-#         }
-
-#         with open(config_path, 'w') as f:
-#             json.dump(config, f, indent=2)
-
-#         print("✅ Configuration file updated successfully!")
-
-#     except Exception as e:
-#         print(f"❌ Failed to update configuration file: {str(e)}")
-
-
 def verify_setup():
     """Verify that everything was set up correctly"""
     print("🔍 Verifying setup...")
@@ -778,10 +742,6 @@ def main():
 
     # Create prefix containers
     prefixes = create_prefix_containers(vrfs, roles, tenants)
-    print()
-
-    # Update config file
-    # update_config_file(prefixes)
     print()
 
     # Verify setup
