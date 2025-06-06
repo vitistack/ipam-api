@@ -449,7 +449,7 @@ def create_k8s_custom_fields():
 
     # First create a choice set for k8s_zone
     k8s_zone_choice_set = {
-        "name": "k8s_zones",
+        "name": "k8s_zone_choices",
         "description": "Kubernetes zone choices",
         "extra_choices": [
             ["inet", "Internet"],
@@ -469,7 +469,7 @@ def create_k8s_custom_fields():
         choice_set_id = response.json()["id"]
     elif response and response.status_code == 400:
         print("  ℹ️  k8s_zone choice set might already exist")
-        print(f"     Response: {response.text}")
+        # print(f"     Response: {response.text}")
         # Try to get existing choice set
         existing_response = make_api_request(
             "GET", "/extras/custom-field-choice-sets/?name=k8s_zones"
@@ -478,7 +478,7 @@ def create_k8s_custom_fields():
             results = existing_response.json()["results"]
             if results:
                 choice_set_id = results[0]["id"]
-                print(f"     Using existing choice set ID: {choice_set_id}")
+                print(f"  ✅ Using existing choice set ID: {choice_set_id}")
     else:
         print(f"  ❌ Failed to create k8s_zone choice set")
         if response:
@@ -668,28 +668,65 @@ def verify_setup():
     """Verify that everything was set up correctly"""
     print("🔍 Verifying setup...")
 
+    # Check tenant groups
+    response = make_api_request("GET", "/tenancy/tenant-groups/")
+    if response and response.status_code == 200:
+        tenant_groups = response.json().get("results", [])
+        dcn_groups = [tg for tg in tenant_groups if tg["name"] == "DCN"]
+        print(f"  Tenant groups found: {len(dcn_groups)}/1")
+        for tg in dcn_groups:
+            print(f"    - {tg['name']}")
+
+    # Check tenants
+    response = make_api_request("GET", "/tenancy/tenants/")
+    if response and response.status_code == 200:
+        tenants = response.json().get("results", [])
+        nhn_tenants = [t for t in tenants if t["name"] == "NHN"]
+        print(f"  Tenants found: {len(nhn_tenants)}/1")
+        for t in nhn_tenants:
+            print(f"    - {t['name']}")
+
     # Check vrfs
     response = make_api_request("GET", "/ipam/vrfs/")
     if response and response.status_code == 200:
-        vrfs = response.json()["results"]
-        vrfs = [v for v in vrfs if v["name"] in ["nhc"]]
-        print(f"  VRFs found: {len(vrfs)}/1")
-        for vrf in vrfs:
+        vrfs = response.json().get("results", [])
+        nhc_vrfs = [v for v in vrfs if v["name"] == "nhc"]
+        print(f"  VRFs found: {len(nhc_vrfs)}/1")
+        for vrf in nhc_vrfs:
             print(f"    - {vrf['name']}")
+
+    # Check roles
+    response = make_api_request("GET", "/ipam/roles/")
+    if response and response.status_code == 200:
+        roles = response.json().get("results", [])
+        datacenter_roles = [r for r in roles if r["name"] == "datacenter"]
+        print(f"  Roles found: {len(datacenter_roles)}/1")
+        for r in datacenter_roles:
+            print(f"    - {r['name']}")
 
     # Check custom fields
     response = make_api_request("GET", "/extras/custom-fields/")
     if response and response.status_code == 200:
-        vrfs = response.json()["results"]
-        k8s_fields = [f for f in vrfs if f["name"] in ["k8s_uuid", "k8s_zone"]]
-        print(f"  Custom fields found: {len(k8s_fields)}/2")
-        for field in k8s_fields:
-            print(f"    - {field['name']}: {field['label']}")
+        fields = response.json().get("results", [])
+        expected_fields = ["k8s_uuid", "k8s_zone", "domain", "env", "infra", "purpose"]
+        found_fields = [f for f in fields if f["name"] in expected_fields]
+        print(f"  Custom fields found: {len(found_fields)}/{len(expected_fields)}")
+        for field in found_fields:
+            print(f"    - {field['name']}: {field.get('label', '')}")
+
+    # Check custom field choice sets
+    response = make_api_request("GET", "/extras/custom-field-choice-sets/")
+    if response and response.status_code == 200:
+        choice_sets = response.json().get("results", [])
+        k8s_zone_sets = [cs for cs in choice_sets if cs["name"] == "k8s_zone_choices"]
+        print(f"  Custom field choice sets found: {len(k8s_zone_sets)}/1")
+        for cs in k8s_zone_sets:
+            print(f"    - {cs['name']}")
 
     # Check prefixes
     response = make_api_request("GET", "/ipam/prefixes/")
     if response and response.status_code == 200:
-        prefixes = response.json()["results"]
+        prefixes = response.json().get("results", [])
         container_prefixes = [
             p
             for p in prefixes
@@ -755,7 +792,18 @@ def main():
     print("🎉 Setup completed!")
     print("=" * 60)
     print("Your NetBox now has:")
-    print("✅ Custom fields: k8s_uuid (text) and k8s_zone (select)")
+    print("✅ Tenant group: DCN")
+    print("✅ Tenant: NHN")
+    print("✅ VRF: nhc")
+    print("✅ Role: datacenter")
+    print("✅ Custom fields:")
+    print("   - k8s_uuid (text)")
+    print("   - k8s_zone (select)")
+    print("   - domain (text, required)")
+    print("   - env (text, required)")
+    print("   - infra (text, required)")
+    print("   - purpose (text, required)")
+    print("✅ Custom field choice set: k8s_zone_choices")
     print("✅ Three prefix containers:")
     print("   - 10.0.0.0/8 (inet)")
     print("   - 172.16.0.0/12 (hnet-private)")
