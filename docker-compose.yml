@@ -20,7 +20,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U netbox -d netbox"]
+      test: [ "CMD-SHELL", "pg_isready -U netbox -d netbox" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -62,6 +62,11 @@ services:
       - "8000:8080"
     volumes:
       - ./hack/data/netbox:/opt/netbox/netbox/media
+    healthcheck:
+      test: [ "CMD", "curl", "-s", "-o", "/dev/null", "http://localhost:8080/" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ipam-api:
     build: .
@@ -76,5 +81,6 @@ services:
         source: ./secrets.json
         target: /app/secrets.json
     depends_on:
-      - mongodb
-      - netbox
+      # - mongodb
+      netbox:
+        condition: service_healthy
