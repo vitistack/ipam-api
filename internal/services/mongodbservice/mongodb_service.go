@@ -84,7 +84,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return errors.New("no matching address found with the provivded secret, zone and address")
+			return errors.New("no matching address found with the provided secret, zone and address")
 		}
 		return fmt.Errorf("failed to read address document: %w", err)
 	}
@@ -100,9 +100,24 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 		if err != nil {
 			return fmt.Errorf("failed to encrypt new secret: %w", err)
 		}
+
+		if registeredAddress.Services[0].ServiceName != request.Service.ServiceName ||
+			registeredAddress.Services[0].NamespaceId != request.Service.NamespaceId ||
+			registeredAddress.Services[0].ClusterId != request.Service.ClusterId {
+			return errors.New("service mismatch. unable to change secret")
+		}
+
+		var currentServices []mongodbtypes.Service
+		currentServices = append(currentServices, mongodbtypes.Service{
+			ServiceName:         request.Service.ServiceName,
+			NamespaceId:         request.Service.NamespaceId,
+			ClusterId:           request.Service.ClusterId,
+			RetentionPeriodDays: request.Service.RetentionPeriodDays})
+
 		update := bson.M{
 			"$set": bson.M{
-				"secret": encryptedNewSecret,
+				"secret":   encryptedNewSecret,
+				"services": currentServices,
 			},
 		}
 
@@ -110,7 +125,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 		if err != nil {
 			return fmt.Errorf("failed to update secret: %w", err)
 		}
-
+		return nil
 	}
 
 	// Loop through the services array and remove the service that matches the request
@@ -233,4 +248,44 @@ func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service)
 		}
 	}
 	return false
+}
+
+func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
+	client := mongodb.GetClient()
+	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
+
+	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
+	if err != nil {
+		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypt secret: %w", err)
+	}
+
+	filter := bson.M{
+		"secret": encryptedSecret,
+		"zone":   request.Zone,
+	}
+
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return mongodbtypes.Address{}, fmt.Errorf("failed to query address documents: %w", err)
+	}
+
+	for cursor.Next(context.Background()) {
+		var registeredAddress mongodbtypes.Address
+		if err := cursor.Decode(&registeredAddress); err != nil {
+			return mongodbtypes.Address{}, fmt.Errorf("failed to decode address document: %w", err)
+		}
+		for _, service := range registeredAddress.Services {
+			if service.ServiceName == request.Service.ServiceName &&
+				service.NamespaceId == request.Service.NamespaceId &&
+				service.ClusterId == request.Service.ClusterId {
+				return registeredAddress, nil
+			}
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		return mongodbtypes.Address{}, fmt.Errorf("cursor error: %w", err)
+	}
+
+	return mongodbtypes.Address{}, nil
 }

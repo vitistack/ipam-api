@@ -530,8 +530,24 @@ def create_prefix_containers(vrfs, roles, tenants):
     tenant = next((tenant["id"] for tenant in tenants if tenant["name"] == "NHN"), None)
     prefix_containers = [
         {
-            "prefix": "10.0.0.0/8",
-            "description": "Internet prefix container",
+            "prefix": "83.118.168.0/22",
+            "description": "Internet IPv4 prefix container",
+            "is_pool": False,
+            "vrf": vrf,
+            "role": role,
+            "status": "container",
+            "tenant": tenant,
+            "custom_fields": {
+                "k8s_zone": "inet",
+                "domain": "na",
+                "env": "na",
+                "infra": "na",
+                "purpose": "na",
+            },
+        },
+        {
+            "prefix": "2a05:1234::/64",
+            "description": "Internet IPv6 prefix container",
             "is_pool": False,
             "vrf": vrf,
             "role": role,
@@ -547,7 +563,7 @@ def create_prefix_containers(vrfs, roles, tenants):
         },
         {
             "prefix": "172.16.0.0/12",
-            "description": "Helsenett Private prefix container",
+            "description": "Helsenett Private IPv4 prefix container",
             "is_pool": False,
             "vrf": vrf,
             "role": role,
@@ -562,8 +578,8 @@ def create_prefix_containers(vrfs, roles, tenants):
             },
         },
         {
-            "prefix": "192.168.0.0/16",
-            "description": "Helsenett Public prefix container",
+            "prefix": "91.186.80.0/20",
+            "description": "Helsenett Public IPv4 prefix container",
             "is_pool": False,
             "vrf": vrf,
             "role": role,
@@ -694,7 +710,7 @@ def verify_setup():
         container_prefixes = [
             p
             for p in prefixes
-            if p["prefix"] in ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+            if p["prefix"] in ["83.118.168.0/22", "172.16.0.0/12", "91.186.80.0/20", "2a05:1234::/64"]
         ]
         print(f"  Prefix containers found: {len(container_prefixes)}/3")
         for prefix in container_prefixes:
@@ -764,10 +780,11 @@ def main():
     print("   - infra (text, required)")
     print("   - purpose (text, required)")
     print("✅ Custom field choice set: k8s_zone_choices")
-    print("✅ Three prefix containers:")
-    print("   - 10.0.0.0/8 (inet)")
+    print("✅ Four prefix containers:")
+    print("   - 83.118.168.0/22 (inet)")
+    print("   - 2a05:1234::/64 (inet)")
     print("   - 172.16.0.0/12 (hnet-private)")
-    print("   - 192.168.0.0/16 (hnet-public)")
+    print("   - 91.186.80.0/20 (hnet-public)")
     # print("✅ Updated configuration file")
     print()
     print("💡 Access NetBox at: http://localhost:8000")

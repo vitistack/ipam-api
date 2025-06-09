@@ -93,7 +93,7 @@ func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	err = collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return errors.New("no matching address found with the provivded secret, zone and address")
+			return errors.New("no matching address found with the provided secret, zone and address")
 		}
 		return fmt.Errorf("failed to read address document: %w", err)
 	}

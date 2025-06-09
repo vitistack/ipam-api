@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/vitistack/ipam-api/internal/services/addressesservice"
+	"github.com/vitistack/ipam-api/internal/services/mongodbservice"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
@@ -46,10 +47,23 @@ func RegisterAddress(ginContext *gin.Context) {
 	}
 
 	var response apicontracts.IpamApiResponse
+	httpStatus := http.StatusOK
+	allreadyRegistered, err := mongodbservice.ServiceAlreadyRegistered(request)
+
+	if err != nil {
+		ginContext.Error(err)
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
 	if request.Address != "" {
+		response, err = addressesservice.Update(request)
+	} else if allreadyRegistered.Address != "" && request.Address == "" {
+		request.Address = allreadyRegistered.Address
 		response, err = addressesservice.Update(request)
 	} else {
 		response, err = addressesservice.Register(request)
+		httpStatus = http.StatusCreated
 	}
 
 	if err != nil {
@@ -58,7 +72,7 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
-	ginContext.JSON(http.StatusOK, response)
+	ginContext.JSON(httpStatus, response)
 
 }
 
