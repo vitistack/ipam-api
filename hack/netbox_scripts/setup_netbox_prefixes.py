@@ -520,10 +520,10 @@ def create_k8s_custom_fields():
 
 
 def create_prefix_containers(vrfs, roles, tenants):
-    """Create the three prefix containers"""
+    """Create the prefix containers"""
     print("🏗️  Creating prefix containers...")
 
-    # Define the three prefix containers
+    # Define the prefix containers
 
     role = next((role["id"] for role in roles if role["name"] == "datacenter"), None)
     vrf = next((vrf["id"] for vrf in vrfs if vrf["name"] == "nhc"), None)
@@ -786,7 +786,6 @@ def main():
     print("   - 2a05:1234::/64 (inet)")
     print("   - 172.16.0.0/12 (hnet-private)")
     print("   - 91.186.80.0/20 (hnet-public)")
-    # print("✅ Updated configuration file")
     print()
     print("💡 Access NetBox at: http://localhost:8000")
     print("   Username: admin")
