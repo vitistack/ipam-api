@@ -40,6 +40,7 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 		"secret":    encryptedSecret,
 		"zone":      request.Zone,
 		"address":   nextPrefix.Prefix,
+		"ip_family": request.IpFamily,
 		"netbox_id": nextPrefix.ID,
 		"services":  []apicontracts.Service{service},
 	}
@@ -74,9 +75,10 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 	}
 
 	filter := bson.M{
-		"secret":  encryptedRequestSecret,
-		"zone":    request.Zone,
-		"address": request.Address,
+		"secret":    encryptedRequestSecret,
+		"zone":      request.Zone,
+		"address":   request.Address,
+		"ip_family": request.IpFamily,
 	}
 
 	var registeredAddress mongodbtypes.Address
@@ -179,9 +181,10 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	}
 
 	filter := bson.M{
-		"secret":  encryptedSecret,
-		"zone":    request.Zone,
-		"address": request.Address,
+		"secret":    encryptedSecret,
+		"zone":      request.Zone,
+		"address":   request.Address,
+		"ip_family": request.IpFamily,
 	}
 
 	var registeredAddress mongodbtypes.Address
@@ -260,8 +263,9 @@ func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes
 	}
 
 	filter := bson.M{
-		"secret": encryptedSecret,
-		"zone":   request.Zone,
+		"secret":    encryptedSecret,
+		"zone":      request.Zone,
+		"ip_family": request.IpFamily,
 	}
 
 	cursor, err := collection.Find(context.Background(), filter)
