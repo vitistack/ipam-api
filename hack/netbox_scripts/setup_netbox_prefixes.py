@@ -461,7 +461,7 @@ def create_k8s_custom_fields():
         print("  ✅ k8s_zone choice set created successfully")
         choice_set_id = response.json()["id"]
     elif response and response.status_code == 400:
-        print("  ℹ️  k8s_zone choice set might already exist")
+        print("  ℹ️  k8s_zone choice set already exist")
         # print(f"     Response: {response.text}")
         # Try to get existing choice set
         existing_response = make_api_request(
@@ -495,8 +495,8 @@ def create_k8s_custom_fields():
         print("  ✅ k8s_uuid custom field created successfully")
     elif response and response.status_code == 400:
         # Field might already exist
-        print("  ℹ️  k8s_uuid custom field might already exist")
-        print(f"     Response: {response.text}")
+        print("  ℹ️  k8s_uuid custom field already exist")
+        # print(f"     Response: {response.text}")
     else:
         print(f"  ❌ Failed to create k8s_uuid custom field")
         if response:
@@ -509,8 +509,8 @@ def create_k8s_custom_fields():
         if response and response.status_code == 201:
             print("  ✅ k8s_zone custom field created successfully")
         elif response and response.status_code == 400:
-            print("  ℹ️  k8s_zone custom field might already exist")
-            print(f"     Response: {response.text}")
+            print("  ℹ️  k8s_zone custom field already exist")
+            # print(f"     Response: {response.text}")
         else:
             print(f"  ❌ Failed to create k8s_zone custom field")
             if response:
@@ -710,7 +710,8 @@ def verify_setup():
         container_prefixes = [
             p
             for p in prefixes
-            if p["prefix"] in ["83.118.168.0/22", "172.16.0.0/12", "91.186.80.0/20", "2a05:1234::/64"]
+            if p["prefix"]
+            in ["83.118.168.0/22", "172.16.0.0/12", "91.186.80.0/20", "2a05:1234::/64"]
         ]
         print(f"  Prefix containers found: {len(container_prefixes)}/3")
         for prefix in container_prefixes:
