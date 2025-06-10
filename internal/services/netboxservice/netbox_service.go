@@ -306,3 +306,56 @@ func WaitForNetbox(maxRetries int, delay time.Duration) error {
 
 	return fmt.Errorf("could not reach Netbox after %d attempts", maxRetries)
 }
+
+func PrefixAvailable(request apicontracts.IpamApiRequest) (bool, error) {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+
+	restyClient := resty.New()
+	var result responses.NetboxResponse[responses.NetboxPrefix]
+	resp, err := restyClient.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetResult(&result).
+		SetQueryParam("present_in_vrf", "nhc").
+		SetQueryParam("prefix", request.Address).
+		Get(netboxURL + "/api/ipam/prefixes/")
+
+	if err != nil {
+		return false, err
+	}
+
+	if resp.IsError() {
+		return false, errors.New(resp.String())
+	}
+
+	if len(result.Results) == 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func RegisterPrefix(payload apicontracts.CreatePrefixPayload) (responses.NetboxPrefix, error) {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+
+	restyClient := resty.New()
+	var newPrefix responses.NetboxPrefix
+	resp, err := restyClient.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetBody(payload).
+		SetResult(&newPrefix).
+		Post(netboxURL + "/api/ipam/prefixes/")
+
+	if err != nil {
+		return responses.NetboxPrefix{}, err
+	}
+
+	if resp.IsError() {
+		return responses.NetboxPrefix{}, errors.New(resp.String())
+	}
+
+	return newPrefix, nil
+}

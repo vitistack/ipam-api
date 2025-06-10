@@ -48,7 +48,7 @@ func RegisterAddress(ginContext *gin.Context) {
 
 	var response apicontracts.IpamApiResponse
 	httpStatus := http.StatusOK
-	allreadyRegistered, err := mongodbservice.ServiceAlreadyRegistered(request)
+	alreadyRegistered, err := mongodbservice.AddressAlreadyRegistered(request)
 
 	if err != nil {
 		ginContext.Error(err)
@@ -56,13 +56,16 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
-	if request.Address != "" {
+	if alreadyRegistered.Address == "" && request.Address != "" {
+		response, err = addressesservice.RegisterSpecific(request)
+		httpStatus = http.StatusCreated
+	} else if request.Address != "" {
 		response, err = addressesservice.Update(request)
-	} else if allreadyRegistered.Address != "" && request.Address == "" {
-		request.Address = allreadyRegistered.Address
+	} else if alreadyRegistered.Address != "" && request.Address == "" {
+		request.Address = alreadyRegistered.Address
 		response, err = addressesservice.Update(request)
 	} else {
-		response, err = addressesservice.Register(request)
+		response, err = addressesservice.RegisterNextAvailable(request)
 		httpStatus = http.StatusCreated
 	}
 

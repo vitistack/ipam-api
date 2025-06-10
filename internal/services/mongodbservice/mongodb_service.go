@@ -25,14 +25,14 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypt secret: %w", err)
 	}
 
-	denyCleanup := request.Service.DenyExternalCleanup
+	// denyCleanup := request.Service.DenyExternalCleanup
 
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
 		NamespaceId:         request.Service.NamespaceId,
 		ClusterId:           request.Service.ClusterId,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
-		DenyExternalCleanup: denyCleanup,
+		DenyExternalCleanup: request.Service.DenyExternalCleanup,
 		ExpiresAt:           nil,
 	}
 
@@ -249,7 +249,7 @@ func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service)
 	return false
 }
 
-func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
+func AddressAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
@@ -260,6 +260,7 @@ func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes
 
 	filter := bson.M{
 		"secret":    encryptedSecret,
+		"address":   request.Address,
 		"zone":      request.Zone,
 		"ip_family": request.IpFamily,
 	}

@@ -47,6 +47,14 @@ type NextPrefixPayload struct {
 	CustomFields CustomFields `json:"custom_fields"`
 }
 
+type CreatePrefixPayload struct {
+	Prefix       string       `json:"prefix,omitempty"`
+	VrfId        int          `json:"vrf"`
+	TenantId     int          `json:"tenant"`
+	RoleId       int          `json:"role"`
+	CustomFields CustomFields `json:"custom_fields"`
+}
+
 type UpdatePrefixPayload struct {
 	Prefix       string       `json:"prefix"`
 	CustomFields CustomFields `json:"custom_fields"`
@@ -70,6 +78,23 @@ func GetNextPrefixPayload(request IpamApiRequest, container responses.NetboxPref
 		VrfId:        container.Vrf.ID,
 		TenantId:     container.Tenant.ID,
 		RoleId:       container.Role.ID,
+		CustomFields: CustomFields{
+			Domain:  "na",
+			Env:     "na",
+			Infra:   container.CustomFields.Infra,
+			Purpose: "na",
+			K8sZone: request.Zone,
+		},
+	}
+
+}
+
+func GetCreatePrefixPayload(request IpamApiRequest, container responses.NetboxPrefix) CreatePrefixPayload {
+	return CreatePrefixPayload{
+		Prefix:   request.Address,
+		VrfId:    container.Vrf.ID,
+		TenantId: container.Tenant.ID,
+		RoleId:   container.Role.ID,
 		CustomFields: CustomFields{
 			Domain:  "na",
 			Env:     "na",
