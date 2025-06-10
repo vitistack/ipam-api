@@ -71,6 +71,7 @@ services:
   ipam-api:
     build: .
     container_name: ipam-api
+    image: ipam-api
     ports:
       - "3000:3000"
     volumes:
