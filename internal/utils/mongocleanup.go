@@ -17,7 +17,7 @@ import (
 
 func StartCleanupWorker() {
 	logger.Log.Info("Starting cleanup worker...")
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	client := mongodb.GetClient()
@@ -60,15 +60,17 @@ func CleanupRegistrationsWithoutServices(ctx context.Context, collection *mongo.
 	for _, prefix := range registrations {
 		// Delete the prefix in Netbox
 		err := netboxservice.DeleteNetboxPrefix(strconv.Itoa(prefix.NetboxID))
+
 		if err != nil {
 			log.Printf("could not delete prefix from netbox: %v", err)
 		}
-
+		logger.Log.Infof("Released prefix %s from Netbox", prefix.Address)
 		// Delete from MongoDB
 		_, err = collection.DeleteOne(ctx, bson.M{"_id": prefix.ID})
 		if err != nil {
 			log.Printf("could not delete registration from mongodb: %v", err)
 		}
+		logger.Log.Infof("Released prefix %s from mongodb", prefix.Address)
 
 	}
 }

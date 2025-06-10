@@ -1,7 +1,10 @@
 package addressesservice
 
 import (
+	"errors"
+	"net"
 	"strconv"
+	"strings"
 
 	"github.com/vitistack/ipam-api/internal/services/mongodbservice"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
@@ -45,6 +48,26 @@ func RegisterNextAvailable(request apicontracts.IpamApiRequest) (apicontracts.Ip
 }
 
 func RegisterSpecific(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
+	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+	zonePrefixes := netboxservice.Cache.Get(zone)
+
+	validZonePrefix := false
+	for _, prefix := range zonePrefixes {
+		_, ipNet, err := net.ParseCIDR(prefix.Prefix)
+		if err != nil {
+			continue
+		}
+		ip := net.ParseIP(strings.Split(request.Address, "/")[0]) // Get the base IP without CIDR notation
+
+		if ipNet.Contains(ip) {
+			validZonePrefix = true
+			break
+		}
+	}
+
+	if !validZonePrefix {
+		return apicontracts.IpamApiResponse{}, errors.New("the requested address is not valid for the provided zone")
+	}
 
 	container, err := netboxservice.GetAvailablePrefixContainer(request)
 
