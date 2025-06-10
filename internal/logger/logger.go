@@ -35,7 +35,7 @@ func InitLogger(logDir string) error {
 	})
 
 	appCore := zapcore.NewTee(
-		//zapcore.NewCore(appEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
+		zapcore.NewCore(appEncoder, zapcore.AddSync(os.Stdout), zapcore.InfoLevel),
 		zapcore.NewCore(appEncoder, zapcore.AddSync(appWriter), zapcore.InfoLevel),
 	)
 

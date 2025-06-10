@@ -114,7 +114,8 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 			ServiceName:         request.Service.ServiceName,
 			NamespaceId:         request.Service.NamespaceId,
 			ClusterId:           request.Service.ClusterId,
-			RetentionPeriodDays: request.Service.RetentionPeriodDays})
+			RetentionPeriodDays: request.Service.RetentionPeriodDays,
+			DenyExternalCleanup: request.Service.DenyExternalCleanup})
 
 		update := bson.M{
 			"$set": bson.M{
@@ -206,13 +207,7 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 		if !(service.NamespaceId == request.Service.NamespaceId &&
 			service.ServiceName == request.Service.ServiceName &&
 			service.ClusterId == request.Service.ClusterId) {
-			newServices = append(newServices, mongodbtypes.Service{
-				ServiceName:         service.ServiceName,
-				NamespaceId:         service.NamespaceId,
-				ClusterId:           service.ClusterId,
-				RetentionPeriodDays: service.RetentionPeriodDays,
-				ExpiresAt:           service.ExpiresAt,
-			})
+			newServices = append(newServices, service)
 		}
 	}
 
@@ -225,6 +220,7 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 		NamespaceId:         request.Service.NamespaceId,
 		ClusterId:           request.Service.ClusterId,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		DenyExternalCleanup: request.Service.DenyExternalCleanup,
 		ExpiresAt:           expiresAt})
 
 	// Update mongodb

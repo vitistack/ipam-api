@@ -2,12 +2,15 @@ package netboxservice
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/viper"
 
+	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/responses"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
@@ -274,4 +277,32 @@ func (c *NetboxCache) Get(key string) []responses.NetboxPrefix {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.prefixes[key]
+}
+
+func WaitForNetbox(maxRetries int, delay time.Duration) error {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+
+	client := resty.New()
+
+	for i := 1; i <= maxRetries; i++ {
+		resp, err := client.R().
+			SetHeader("Authorization", "Token "+netboxToken).
+			SetHeader("Accept", "application/json").
+			Get(netboxURL + "/api/ipam/prefixes/")
+
+		if err == nil && resp.IsSuccess() {
+			return nil
+		}
+
+		if err != nil {
+			logger.Log.Infof("Attempt %d: error reaching NetBox: %v", i, err)
+		} else {
+			logger.Log.Infof("Attempt %d: NetBox responded with status %d. Retrying...", i, resp.StatusCode())
+		}
+
+		time.Sleep(delay)
+	}
+
+	return fmt.Errorf("could not reach Netbox after %d attempts", maxRetries)
 }

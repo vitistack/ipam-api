@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/cmd/ipam-api/settings"
@@ -39,6 +40,13 @@ func main() {
 	}
 
 	mongodb.InitClient(mongoConfig) // check if running before starting webserver
+
+	logger.Log.Info("Waiting for Netbox to become available...")
+	if err := netboxservice.WaitForNetbox(5, 3*time.Second); err != nil {
+		logger.Log.Fatalf("Netbox is not available: %v", err)
+	}
+
+	logger.Log.Info("Netbox is available. Caching prefix containers...")
 
 	err = netboxservice.Cache.FetchPrefixContainers()
 

@@ -39,13 +39,14 @@ func InitConfig() error {
 		return fmt.Errorf("failed to merge encryption secrets config: %w", err)
 	}
 
+	viper.Set("mongodb.collection", "addresses") // Set default collection name
+
 	required := []string{
 		"mongodb.username",
 		"mongodb.password",
 		"mongodb.host",
 		"mongodb.port",
 		"mongodb.database",
-		"mongodb.collection",
 		"netbox.url",
 		"netbox.token",
 		"encryption_secrets.path",
