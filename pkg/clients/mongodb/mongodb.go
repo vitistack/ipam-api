@@ -3,10 +3,10 @@ package mongodb
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
+	"github.com/vitistack/ipam-api/internal/logger"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -32,11 +32,11 @@ func InitClient(config MongoConfig) *mongo.Client {
 		var err error
 		clientInstance, err = mongo.Connect(options.Client().ApplyURI(uri))
 		if err != nil {
-			log.Fatalf("MongoDB connection error: %v", err)
+			logger.Log.Fatalf("MongoDB connection error: %v", err)
 		}
 
 		if err := clientInstance.Ping(ctx, nil); err != nil {
-			log.Fatalf("MongoDB ping failed: %v", err)
+			logger.Log.Fatalf("MongoDB ping failed: %v", err)
 
 		}
 	})

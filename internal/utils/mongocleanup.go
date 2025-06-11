@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"log"
 	"strconv"
 	"time"
 
@@ -43,7 +42,7 @@ func CleanupExpiredServices(ctx context.Context, collection *mongo.Collection) {
 
 	_, err := collection.UpdateMany(ctx, bson.M{}, update)
 	if err != nil {
-		log.Printf("could not delete service: %v", err)
+		logger.Log.Errorf("could not delete service: %v", err)
 		return
 	}
 
@@ -52,7 +51,7 @@ func CleanupExpiredServices(ctx context.Context, collection *mongo.Collection) {
 func CleanupRegistrationsWithoutServices(ctx context.Context, collection *mongo.Collection) {
 	registrations, err := GetPrefixesWithNoServices(ctx, collection)
 	if err != nil {
-		log.Printf("mongodb query failed: %v", err)
+		logger.Log.Errorf("mongodb query failed: %v", err)
 		return
 	}
 
@@ -63,13 +62,13 @@ func CleanupRegistrationsWithoutServices(ctx context.Context, collection *mongo.
 		if err != nil {
 			logger.Log.Errorf("could not delete prefix from Netbox: %v", err)
 		}
-		logger.Log.Infof("Released prefix %s from Netbox", prefix.Address)
+		logger.Log.Infof("Deleted prefix %s from Netbox", prefix.Address)
 		// Delete from MongoDB
 		_, err = collection.DeleteOne(ctx, bson.M{"_id": prefix.ID})
 		if err != nil {
-			logger.Log.Errorf("could not delete registration from MongoDB: %v", err)
+			logger.Log.Errorf("could not delete prefix from MongoDB: %v", err)
 		}
-		logger.Log.Infof("Released prefix %s from MongoDB", prefix.Address)
+		logger.Log.Infof("Deleted prefix %s from MongoDB", prefix.Address)
 
 	}
 }
