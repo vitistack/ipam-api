@@ -260,7 +260,6 @@ func AddressAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes
 
 	filter := bson.M{
 		"secret":    encryptedSecret,
-		"address":   request.Address,
 		"zone":      request.Zone,
 		"ip_family": request.IpFamily,
 	}
