@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: oss-ipam-api
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  namespace: oss-ipam-api
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oss-ipam-api-mongodb
+  namespace: oss-ipam-api
+  labels:
+    app: oss-ipam-api-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oss-ipam-api-mongodb
+  template:
+    metadata:
+      labels:
+        app: oss-ipam-api-mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:7
+          args: ["--bind_ip_all"]
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongodb-data
+              mountPath: /data/db
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: admin
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: supersecret
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+            runAsUser: 999
+            seccompProfile:
+              type: RuntimeDefault
+      volumes:
+        - name: mongodb-data
+          emptyDir: {}
+
+        # - name: mongodb-data
+        #   persistentVolumeClaim:
+        #     claimName: mongodb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oss-ipam-api-mongodb
+  namespace: oss-ipam-api
+spec:
+  selector:
+    app: oss-ipam-api-mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017

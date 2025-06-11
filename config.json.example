@@ -1,0 +1,12 @@
+{
+  "mongodb": {
+    "username": "<username",
+    "password": "<password>",
+    "host": "localhost",
+    "port": 27017
+  },
+  "netbox": {
+    "url": "https://<url>",
+    "token": "<token>",
+  }
+}

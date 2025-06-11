@@ -1,0 +1,209 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/": {
+            "post": {
+                "description": "Register an address in Vitistack IPAM API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Register an address",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.IpamApiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.IpamApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Set expiration for a service",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Set expiration for a service",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.IpamApiRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.IpamApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "apicontracts.HTTPError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "apicontracts.IpamApiRequest": {
+            "type": "object",
+            "required": [
+                "ip_family",
+                "secret",
+                "zone"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "ip_family": {
+                    "type": "string",
+                    "enum": [
+                        "ipv4",
+                        "ipv6"
+                    ],
+                    "example": "ipv4"
+                },
+                "new_secret": {
+                    "type": "string"
+                },
+                "secret": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "minLength": 8,
+                    "example": "a_secret_value"
+                },
+                "service": {
+                    "$ref": "#/definitions/apicontracts.Service"
+                },
+                "zone": {
+                    "type": "string",
+                    "example": "inet"
+                }
+            }
+        },
+        "apicontracts.IpamApiResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "secret": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "apicontracts.Service": {
+            "type": "object",
+            "required": [
+                "cluster_id",
+                "namespace_id",
+                "service_name"
+            ],
+            "properties": {
+                "cluster_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "deny_external_cleanup": {
+                    "type": "boolean"
+                },
+                "expires_at": {
+                    "type": "string",
+                    "example": "2025-06-03 14:39:31.546230273"
+                },
+                "namespace_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "retention_period_days": {
+                    "type": "integer"
+                },
+                "service_name": {
+                    "type": "string",
+                    "example": "service1"
+                }
+            }
+        }
+    }
+}
