@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/responses"
 	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/pkg/clients/mongodb"
@@ -234,7 +235,7 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	if err != nil {
 		return fmt.Errorf("failed to update services array: %w", err)
 	}
-
+	logger.Log.Infof("Service expiration set for service %s successfully in MongoDB", request.Service.ServiceName)
 	return nil
 }
 
@@ -249,7 +250,7 @@ func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service)
 	return false
 }
 
-func AddressAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
+func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 

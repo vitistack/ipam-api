@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/services/addressesservice"
 	"github.com/vitistack/ipam-api/internal/services/mongodbservice"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
@@ -41,6 +42,7 @@ func RegisterAddress(ginContext *gin.Context) {
 	err = ValidateRequest(&request)
 
 	if err != nil {
+		logger.Log.Errorf("Request validation failed: %v", err)
 		ginContext.Error(err)
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -48,7 +50,7 @@ func RegisterAddress(ginContext *gin.Context) {
 
 	var response apicontracts.IpamApiResponse
 	httpStatus := http.StatusOK
-	alreadyRegistered, err := mongodbservice.AddressAlreadyRegistered(request)
+	alreadyRegistered, err := mongodbservice.ServiceAlreadyRegistered(request)
 
 	if err != nil {
 		ginContext.Error(err)

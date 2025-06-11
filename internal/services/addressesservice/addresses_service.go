@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/services/mongodbservice"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
@@ -40,6 +41,7 @@ func RegisterNextAvailable(request apicontracts.IpamApiRequest) (apicontracts.Ip
 		return apicontracts.IpamApiResponse{}, err
 	}
 
+	logger.Log.Infof("Address %s registered successfully in Netbox and MongoDB", request.Address)
 	return apicontracts.IpamApiResponse{
 		Message: "Address registered successfully",
 		Address: nextPrefix.Prefix,
@@ -92,9 +94,11 @@ func RegisterSpecific(request apicontracts.IpamApiRequest) (apicontracts.IpamApi
 	err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(prefix.ID), updatePayload)
 
 	if err != nil {
+		logger.Log.Infof("Failed to update %s in Netbox: %v", request.Address, err.Error())
 		return apicontracts.IpamApiResponse{}, err
 	}
 
+	logger.Log.Infof("Address %s registered successfully in Netbox and MongoDB", request.Address)
 	return apicontracts.IpamApiResponse{
 		Message: "Address registered successfully",
 		Address: request.Address,
@@ -108,6 +112,7 @@ func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, 
 		return apicontracts.IpamApiResponse{}, err
 	}
 
+	logger.Log.Infof("Address %s updated successfully in MongoDB", request.Address)
 	return apicontracts.IpamApiResponse{
 		Message: "Address updated successfully",
 		Address: request.Address,

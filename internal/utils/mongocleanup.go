@@ -17,14 +17,13 @@ import (
 
 func StartCleanupWorker() {
 	logger.Log.Info("Starting cleanup worker...")
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	for range ticker.C {
-		logger.Log.Info("cleanup worker running")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 		CleanupExpiredServices(ctx, collection)

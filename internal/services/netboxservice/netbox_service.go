@@ -61,6 +61,7 @@ func GetPrefixes(query string) ([]responses.NetboxPrefix, error) {
 	restyClient := resty.New()
 	var netboxResponse responses.NetboxResponse[responses.NetboxPrefix]
 	url := netboxURL + "/api/ipam/prefixes/" + query
+
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
@@ -120,6 +121,7 @@ func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPre
 		Post(netboxURL + "/api/ipam/prefixes/" + containerId + "/available-prefixes/")
 
 	if resp.IsError() {
+		logger.Log.Errorf("Error fetching next prefix from container %s: %s", containerId, resp.String())
 		return responses.NetboxPrefix{}, errors.New(resp.String())
 	}
 
@@ -145,6 +147,7 @@ func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayloa
 	}
 
 	if resp.IsError() {
+		logger.Log.Errorf("Error updating prefix %s in Netbox: %s", prefixId, resp.String())
 		return errors.New(resp.String())
 	}
 	return nil
@@ -164,10 +167,12 @@ func DeleteNetboxPrefix(prefixId string) error {
 		Delete(netboxURL + "/api/ipam/prefixes/" + prefixId + "/")
 
 	if err != nil {
+		logger.Log.Errorf("Error deleting prefix %s in Netbox: %v", prefixId, err)
 		return err
 	}
 
 	if resp.IsError() {
+		logger.Log.Errorf("Error deleting prefix %s in Netbox: %s", prefixId, resp.String())
 		return errors.New(resp.String())
 	}
 	return nil
@@ -203,7 +208,8 @@ func GetAvailablePrefixContainer(request apicontracts.IpamApiRequest) (responses
 
 		return prefix, nil
 	}
-	return responses.NetboxPrefix{}, errors.New("no available prefix found. add more prefixes in netbox")
+	logger.Log.Infof("No available prefix found for zone %s", zone)
+	return responses.NetboxPrefix{}, fmt.Errorf("no available prefix found for zone %s", zone)
 }
 
 func GetK8sZones() ([]string, error) {
@@ -220,10 +226,12 @@ func GetK8sZones() ([]string, error) {
 		Get(netboxURL + "/api/extras/custom-field-choice-sets/?q=k8s_zone_choices")
 
 	if err != nil {
+		logger.Log.Errorf("Error fetching k8s zones from Netbox: %v", err)
 		return nil, err
 	}
 
 	if resp.IsError() {
+		logger.Log.Errorf("Error fetching k8s zones from Netbox: %s", resp.String())
 		return nil, errors.New(resp.String())
 	}
 
@@ -253,7 +261,8 @@ func (c *NetboxCache) FetchPrefixContainers() error {
 
 		prefixes, err := GetPrefixes("?cf_k8s_zone=" + zone)
 		if err != nil {
-			return errors.New("error fetching prefixes for zone " + zone + " : " + err.Error())
+			logger.Log.Errorf("Error fetching prefixes for zone %s: %v", zone, err)
+			return fmt.Errorf("error fetching prefixes for zone %s: %v", zone, err)
 		}
 
 		for _, prefix := range prefixes {
@@ -279,32 +288,35 @@ func (c *NetboxCache) Get(key string) []responses.NetboxPrefix {
 	return c.prefixes[key]
 }
 
-func WaitForNetbox(maxRetries int, delay time.Duration) error {
+func WaitForNetbox() error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
-
+	delay := 10 * time.Second
 	client := resty.New()
 
-	for i := 1; i <= maxRetries; i++ {
+	netboxAvailable := false
+
+	for !netboxAvailable {
 		resp, err := client.R().
 			SetHeader("Authorization", "Token "+netboxToken).
 			SetHeader("Accept", "application/json").
 			Get(netboxURL + "/api/ipam/prefixes/")
 
 		if err == nil && resp.IsSuccess() {
+			netboxAvailable = true
 			return nil
 		}
 
 		if err != nil {
-			logger.Log.Infof("Attempt %d: error reaching NetBox: %v", i, err)
+			logger.Log.Infof("Error reaching NetBox: %v. Retrying in %v...", err, delay)
 		} else {
-			logger.Log.Infof("Attempt %d: NetBox responded with status %d. Retrying...", i, resp.StatusCode())
+			logger.Log.Infof("Netbox responded with status %d. Retrying in %v...", resp.StatusCode(), delay)
 		}
 
 		time.Sleep(delay)
 	}
 
-	return fmt.Errorf("could not reach Netbox after %d attempts", maxRetries)
+	return nil
 }
 
 func PrefixAvailable(request apicontracts.IpamApiRequest) (bool, error) {
