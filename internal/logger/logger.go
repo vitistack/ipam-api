@@ -3,12 +3,12 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -48,23 +48,38 @@ func InitLogger(logDir string) error {
 		zapcore.NewCore(appEncoder, zapcore.AddSync(appWriter), zapcore.InfoLevel),
 	}
 
-	// splunkConfig := SplunkConfig{Url: viper.GetString("splunk.url"), Token: viper.GetString("splunk.token")}
+	// --- Splunk config ---
+	splunkEnabled := viper.GetBool("splunk.enable")
+	splunkURL := viper.GetString("splunk.url")
+	splunkToken := viper.GetString("splunk.token")
+	splunkIndex := viper.GetString("splunk.index")
 
-	// if splunkConfig.Url != "" && splunkConfig.Token != "" {
-	// 	splunkWriter := &SplunkHECWriter{
-	// 		URL:        splunkConfig.Url,
-	// 		Token:      splunkConfig.Token,
-	// 		Index:      "vitistack",
-	// 		Source:     "ipam-api",
-	// 		SourceType: "ipam-api:app",
-	// 		Client:     &http.Client{Timeout: 5 * time.Second},
-	// 	}
-	// 	splunkCore := zapcore.NewCore(appEncoder, zapcore.AddSync(splunkWriter), zapcore.InfoLevel)
-	// 	appCores = append(appCores, splunkCore)
-	// }
+	// App specific
+	splunkSourceApp := viper.GetString("splunk.source_app")
+	if splunkSourceApp == "" {
+		splunkSourceApp = "ipam-api"
+	}
+	splunkSourcetypeApp := viper.GetString("splunk.sourcetype_app")
+	if splunkSourcetypeApp == "" {
+		splunkSourcetypeApp = "ipam-api:app"
+	}
+
+	// If Splunk configured, add Splunk core for App
+	if splunkEnabled && splunkURL != "" && splunkToken != "" && splunkIndex != "" {
+		splunkWriter := NewSplunkHECWriter(
+			splunkURL,
+			splunkToken,
+			splunkIndex,
+			splunkSourceApp,
+			splunkSourcetypeApp,
+			5*time.Second,
+		)
+
+		splunkCore := zapcore.NewCore(appEncoder, zapcore.AddSync(splunkWriter), zapcore.InfoLevel)
+		appCores = append(appCores, splunkCore)
+	}
 
 	appCore := zapcore.NewTee(appCores...)
-
 	baseLogger = zap.New(appCore, zap.AddCaller())
 	Log = baseLogger.Sugar()
 
@@ -86,21 +101,32 @@ func InitLogger(logDir string) error {
 		zapcore.NewCore(httpEncoder, zapcore.AddSync(httpWriter), zapcore.InfoLevel),
 	}
 
-	// if splunkConfig.Url != "" && splunkConfig.Token != "" {
-	// 	splunkWriter := &SplunkHECWriter{
-	// 		URL:        splunkConfig.Url,
-	// 		Token:      splunkConfig.Token,
-	// 		Index:      "vitistack",
-	// 		Source:     "ipam-api",
-	// 		SourceType: "ipam-api:http",
-	// 		Client:     &http.Client{Timeout: 5 * time.Second},
-	// 	}
-	// 	splunkCore := zapcore.NewCore(httpEncoder, zapcore.AddSync(splunkWriter), zapcore.InfoLevel)
-	// 	httpCores = append(httpCores, splunkCore)
-	// }
+	// HTTP specific
+	splunkSourceHTTP := viper.GetString("splunk.source_http")
+	if splunkSourceHTTP == "" {
+		splunkSourceHTTP = "ipam-api"
+	}
+	splunkSourcetypeHTTP := viper.GetString("splunk.sourcetype_http")
+	if splunkSourcetypeHTTP == "" {
+		splunkSourcetypeHTTP = "ipam-api:http"
+	}
+
+	// If Splunk configured, add Splunk core for HTTP
+	if splunkEnabled && splunkURL != "" && splunkToken != "" && splunkIndex != "" {
+		splunkWriter := NewSplunkHECWriter(
+			splunkURL,
+			splunkToken,
+			splunkIndex,
+			splunkSourceHTTP,
+			splunkSourcetypeHTTP,
+			5*time.Second,
+		)
+
+		splunkCore := zapcore.NewCore(httpEncoder, zapcore.AddSync(splunkWriter), zapcore.InfoLevel)
+		httpCores = append(httpCores, splunkCore)
+	}
 
 	httpCore := zapcore.NewTee(httpCores...)
-
 	httpLogger = zap.New(httpCore, zap.AddCaller())
 	HTTP = httpLogger.Named("http").Sugar()
 
@@ -124,49 +150,84 @@ func getWriter(path string) *os.File {
 	return f
 }
 
-// SplunkHECWriter implements zapcore.WriteSyncer
 type SplunkHECWriter struct {
 	URL        string
 	Token      string
 	Index      string
 	Source     string
 	SourceType string
-	Client     *http.Client
+	Client     *resty.Client
+}
+
+func NewSplunkHECWriter(url, token, index, source, sourcetype string, timeout time.Duration) *SplunkHECWriter {
+	return &SplunkHECWriter{
+		URL:        url,
+		Token:      token,
+		Index:      index,
+		Source:     source,
+		SourceType: sourcetype,
+		Client: resty.New().
+			SetTimeout(timeout),
+	}
 }
 
 func (w *SplunkHECWriter) Write(p []byte) (n int, err error) {
+	var logTimestamp int64
+	var logEntry map[string]interface{}
+
+	// Unmarshal original Zap event
+	if err := json.Unmarshal(p, &logEntry); err != nil {
+		logTimestamp = time.Now().Unix()
+	} else {
+		// Extract timestamp
+		if tsStr, ok := logEntry["timestamp"].(string); ok {
+			t, err := time.Parse(time.RFC3339, tsStr)
+			if err == nil {
+				logTimestamp = t.Unix()
+			} else {
+				logTimestamp = time.Now().Unix()
+			}
+		} else {
+			logTimestamp = time.Now().Unix()
+		}
+
+		// Remove timestamp from event payload
+		delete(logEntry, "timestamp")
+	}
+
+	// Marshal cleaned event payload back to []byte
+	cleanedEvent, err := json.Marshal(logEntry)
+	if err != nil {
+		// fallback — use original p as event
+		cleanedEvent = p
+	}
+
+	// Build Splunk payload
 	payload := map[string]interface{}{
-		"event":      json.RawMessage(p),
-		"time":       time.Now().Unix(),
-		"host":       "ipam-api",
+		"event":      json.RawMessage(cleanedEvent),
+		"time":       logTimestamp,
+		"host":       "ipam-api", // could also be dynamic
 		"source":     w.Source,
 		"sourcetype": w.SourceType,
 		"index":      w.Index,
 	}
 
-	client := resty.New().
-		SetTimeout(5 * time.Second)
-
-	resp, err := client.R().
+	// Send to Splunk HEC using Resty
+	resp, err := w.Client.R().
 		SetHeader("Authorization", "Splunk "+w.Token).
 		SetHeader("Content-Type", "application/json").
 		SetBody(payload).
 		Post(w.URL + "/services/collector/event")
 
 	if err != nil {
-		// Fail silently — we do not want to block the app if Splunk is down
+		// Fail silently — do not block app
 		return len(p), nil
 	}
 
 	if resp.StatusCode() != 200 {
-		// Optional: log if Splunk returns error (but do not propagate error)
+		// Optionally log here
 		return len(p), nil
 	}
 
 	return len(p), nil
-}
-
-func (w *SplunkHECWriter) Sync() error {
-	// Nothing to sync for HTTP writer
-	return nil
 }
