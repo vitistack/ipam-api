@@ -1,7 +1,7 @@
 {
   "mongodb": {
     "username": "admin",
-    "password": "secretpassword",
+    "password_path": "mongodb.secret",
     "host": "mongodb",
     "port": 27017,
     "database": "vitistack-ipam-api",
@@ -9,7 +9,7 @@
   },
   "netbox": {
     "url": "http://netbox:8080",
-    "token": "0123456789abcdef0123456789abcdef01234567"
+    "token_path": "netbox.secret"
   },
   "encryption_secrets": {
     "path": "secrets.json"
