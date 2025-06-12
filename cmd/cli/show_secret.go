@@ -36,6 +36,17 @@ func init() {
 	RootCmd.AddCommand(showSecret)
 }
 
+// displaySecret retrieves and displays the decrypted secret associated with a given address and zone
+// from a MongoDB collection. It initializes the MongoDB client using configuration values from Viper,
+// queries the collection for the specified address and zone, decrypts the stored secret, and prints it.
+// Returns an error if the address is not found or if decryption fails.
+//
+// Parameters:
+//   - address: The address to look up in the database.
+//   - zone: The zone associated with the address.
+//
+// Returns:
+//   - error: An error if the address is not found, decryption fails, or any database operation fails.
 func displaySecret(address, zone string) error {
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{

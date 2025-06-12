@@ -65,6 +65,21 @@ func init() {
 	RootCmd.AddCommand(deleteService)
 }
 
+// setServiceExpirationOnAddress sets an expiration date for a specific service associated with an address in the MongoDB database.
+// It performs the following steps:
+//  1. Initializes the MongoDB client using configuration from viper.
+//  2. Encrypts the provided secret deterministically.
+//  3. Finds the address document matching the encrypted secret, zone, and address.
+//  4. Checks if the specified service exists for the address.
+//  5. Removes the existing instance of the service from the address's services array.
+//  6. Adds the service back with an updated expiration date based on the retention period.
+//  7. Updates the address document in MongoDB with the modified services array.
+//
+// Parameters:
+//   - request: apicontracts.IpamApiRequest containing the secret, zone, address, and service details.
+//
+// Returns:
+//   - error: An error if any step fails, or nil on success.
 func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 
 	mongoConfig := mongodb.MongoConfig{
@@ -145,6 +160,9 @@ func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	return nil
 }
 
+// serviceExists checks if a target Service exists within a slice of Service objects.
+// It returns true if a Service with matching NamespaceId, ServiceName, and ClusterId is found,
+// otherwise it returns false.
 func serviceExists(services []mongodbtypes.Service, target mongodbtypes.Service) bool {
 	for _, s := range services {
 		if s.NamespaceId == target.NamespaceId &&
