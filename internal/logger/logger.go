@@ -43,8 +43,18 @@ func InitLogger(logDir string) error {
 		EncodeCaller: zapcore.ShortCallerEncoder,
 	})
 
+	terminalEncoder := zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+		TimeKey:      "timestamp",
+		LevelKey:     "level",
+		MessageKey:   "message",
+		CallerKey:    "caller",
+		EncodeTime:   zapcore.ISO8601TimeEncoder,
+		EncodeLevel:  zapcore.CapitalColorLevelEncoder,
+		EncodeCaller: zapcore.ShortCallerEncoder,
+	})
+
 	appCores := []zapcore.Core{
-		zapcore.NewCore(appEncoder, zapcore.AddSync(os.Stderr), zapcore.InfoLevel),
+		zapcore.NewCore(terminalEncoder, zapcore.AddSync(os.Stderr), zapcore.InfoLevel),
 		zapcore.NewCore(appEncoder, zapcore.AddSync(appWriter), zapcore.InfoLevel),
 	}
 
@@ -100,6 +110,7 @@ func InitLogger(logDir string) error {
 	})
 
 	httpCores := []zapcore.Core{
+		zapcore.NewCore(terminalEncoder, zapcore.AddSync(os.Stderr), zapcore.InfoLevel),
 		zapcore.NewCore(httpEncoder, zapcore.AddSync(httpWriter), zapcore.InfoLevel),
 	}
 
