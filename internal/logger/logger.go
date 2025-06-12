@@ -55,13 +55,9 @@ func InitLogger(logDir string) error {
 	splunkIndex := viper.GetString("splunk.index")
 
 	// App specific
-	splunkSourceApp := viper.GetString("splunk.source_app")
-	if splunkSourceApp == "" {
-		splunkSourceApp = "ipam-api"
-	}
-	splunkSourcetypeApp := viper.GetString("splunk.sourcetype_app")
-	if splunkSourcetypeApp == "" {
-		splunkSourcetypeApp = "ipam-api:app"
+	splunkSource := viper.GetString("splunk.source")
+	if splunkSource == "" {
+		splunkSource = "ipam-api"
 	}
 
 	// If Splunk configured, add Splunk core for App
@@ -70,8 +66,8 @@ func InitLogger(logDir string) error {
 			splunkURL,
 			splunkToken,
 			splunkIndex,
-			splunkSourceApp,
-			splunkSourcetypeApp,
+			splunkSource,
+			splunkSource,
 			5*time.Second,
 		)
 

@@ -7,3 +7,4 @@ bin/*
 logs/*
 hack/data/*
 !hack/data/.gitkeep
+*.secret
