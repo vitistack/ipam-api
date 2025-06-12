@@ -41,6 +41,18 @@ func init() {
 	RootCmd.AddCommand(showServices)
 }
 
+// displayServices retrieves and displays information about a specific address and zone from MongoDB.
+// It initializes the MongoDB client using configuration from Viper, queries the database for the
+// address and zone, decrypts the stored secret, and prints the result in either JSON or a human-readable
+// format. If the address is not found or any error occurs during the process (database, decryption, or
+// marshaling), an error is returned.
+//
+// Parameters:
+//   - address: the address to look up in the database.
+//   - zone: the zone associated with the address.
+//
+// Returns:
+//   - error: if any operation fails, an error describing the failure is returned; otherwise, nil.
 func displayServices(address, zone string) error {
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{

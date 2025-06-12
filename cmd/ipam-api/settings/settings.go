@@ -2,6 +2,7 @@ package settings
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 )
@@ -24,7 +25,6 @@ func InitConfig() error {
 	secretsViper.AddConfigPath(".") // Add current directory to search path
 
 	if err := secretsViper.ReadInConfig(); err != nil {
-		//return fmt.Errorf("failed to read encryption secrets: %w", err)
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error if desired
 			return fmt.Errorf("failed to read encryption secrets, file not found : %w", err)
@@ -41,15 +41,46 @@ func InitConfig() error {
 
 	viper.Set("mongodb.collection", "addresses") // Set default collection name
 
+	if viper.GetString("mongodb.password_path") != "" {
+		secretPath := viper.GetString("mongodb.password_path")
+		secret, err := os.ReadFile(secretPath)
+		if err != nil {
+			return fmt.Errorf("failed to read mongodb password from file: %w", err)
+		}
+		viper.Set("mongodb.password", string(secret))
+	}
+
+	if viper.GetString("netbox.token_path") != "" {
+		secretPath := viper.GetString("netbox.token_path")
+		secret, err := os.ReadFile(secretPath)
+		if err != nil {
+			return fmt.Errorf("failed to read Netbox token from file: %w", err)
+		}
+		viper.Set("netbox.token", string(secret))
+	}
+
+	if viper.GetString("splunk.token_path") != "" {
+		secretPath := viper.GetString("splunk.token_path")
+		secret, err := os.ReadFile(secretPath)
+		if err != nil {
+			return fmt.Errorf("failed to read Splunk token from file: %w", err)
+		}
+		viper.Set("splunk.token", string(secret))
+	}
+
 	required := []string{
 		"mongodb.username",
-		"mongodb.password",
+		"mongodb.password_path",
 		"mongodb.host",
 		"mongodb.port",
 		"mongodb.database",
 		"netbox.url",
-		"netbox.token",
+		"netbox.token_path",
 		"encryption_secrets.path",
+		"splunk.enable",
+		"splunk.url",
+		"splunk.token_path",
+		"splunk.index",
 		"enc_key",
 		"enc_iv",
 	}

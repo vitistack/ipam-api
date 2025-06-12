@@ -24,7 +24,17 @@ var Cache = &NetboxCache{
 	prefixes: make(map[string][]responses.NetboxPrefix),
 }
 
-// GetPrefixContainer retrieves a prefix container from Netbox using the provided prefix.
+// GetPrefixContainer retrieves a Netbox prefix container matching the specified prefix string.
+// It sends a GET request to the Netbox API using the configured URL and token, filtering by the given prefix and
+// requiring the status to be "container". If exactly one matching container is found, it is returned.
+// Returns an error if the request fails, if the response indicates an error, or if multiple or no containers are found.
+//
+// Parameters:
+//   - prefix: The prefix string to search for.
+//
+// Returns:
+//   - responses.NetboxPrefix: The matching Netbox prefix container.
+//   - error: An error if the request fails or if the result is not exactly one container.
 func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -54,6 +64,16 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	return container, nil
 }
 
+// GetPrefixes retrieves a list of Netbox prefixes based on the provided query string.
+// It sends a GET request to the Netbox API using the configured URL and token,
+// and returns a slice of NetboxPrefix objects or an error if the request fails.
+//
+// Parameters:
+//   - query: The query string to append to the Netbox prefixes API endpoint.
+//
+// Returns:
+//   - []responses.NetboxPrefix: A slice of NetboxPrefix objects returned by the Netbox API.
+//   - error: An error if the request fails or the API returns an error response.
 func GetPrefixes(query string) ([]responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -79,6 +99,17 @@ func GetPrefixes(query string) ([]responses.NetboxPrefix, error) {
 	return netboxResponse.Results, nil
 }
 
+// CheckPrefixContainerAvailability queries the NetBox API to check for available prefixes
+// within a specified prefix container. It takes the containerId as a string and returns
+// the first available NetboxPrefix found, or an error if none are available or if the
+// request fails.
+//
+// Parameters:
+//   - containerId: The ID of the prefix container to check for available prefixes.
+//
+// Returns:
+//   - responses.NetboxPrefix: The first available prefix found in the container.
+//   - error: An error if the request fails or no prefixes are found.
 func CheckPrefixContainerAvailability(containerId string) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -106,7 +137,17 @@ func CheckPrefixContainerAvailability(containerId string) (responses.NetboxPrefi
 	return result.Results[0], nil
 }
 
-// GetNextPrefixFromContainer retrieves the next available prefix from Netbox for a given container ID.
+// Sends a POST request to the NetBox API to create a new available prefix within the specified container.
+// The request includes authorization and content headers, a payload as the request body, and stores the result in newPrefix.
+// Parameters:
+//   - netboxToken: API token for NetBox authentication.
+//   - payload: The request body containing prefix details.
+//   - netboxURL: Base URL of the NetBox instance.
+//   - containerId: Identifier of the prefix container in NetBox.
+//
+// Returns:
+//   - resp: The HTTP response from the NetBox API.
+//   - error: Any error encountered during the request (currently ignored in this snippet).
 func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPrefixPayload) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -128,7 +169,15 @@ func GetNextPrefixFromContainer(containerId string, payload apicontracts.NextPre
 	return newPrefix, nil
 }
 
-// UpdateNetboxPrefix updates a prefix in Netbox with the provided ID and payload.
+// UpdateNetboxPrefix updates a prefix in Netbox with the specified prefixId using the provided payload.
+// It sends a PUT request to the Netbox API and returns an error if the request fails or if the response indicates an error.
+//
+// Parameters:
+//   - prefixId: The ID of the prefix to update in Netbox.
+//   - payload: The data to update the prefix with, conforming to apicontracts.UpdatePrefixPayload.
+//
+// Returns:
+//   - error: An error if the update fails, or nil if successful.
 func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayload) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -153,7 +202,9 @@ func UpdateNetboxPrefix(prefixId string, payload apicontracts.UpdatePrefixPayloa
 	return nil
 }
 
-// DeleteNetboxPrefix deletes a prefix in Netbox with the provided ID.
+// DeleteNetboxPrefix deletes a prefix in Netbox identified by the given prefixId.
+// It sends a DELETE request to the Netbox API using the configured URL and token.
+// Returns an error if the request fails or if Netbox responds with an error.
 func DeleteNetboxPrefix(prefixId string) error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -178,6 +229,17 @@ func DeleteNetboxPrefix(prefixId string) error {
 	return nil
 }
 
+// GetAvailablePrefixContainer attempts to find and return an available prefix container for the specified IPAM API request.
+// It determines the zone based on the request's zone and IP family, retrieves cached prefixes for that zone,
+// and queries the NetBox API for available prefixes within each cached prefix.
+// If an available prefix is found, it is returned; otherwise, an error is returned indicating no available prefix was found.
+//
+// Parameters:
+//   - request: apicontracts.IpamApiRequest containing the zone and IP family information.
+//
+// Returns:
+//   - responses.NetboxPrefix: The first available prefix found for the specified zone.
+//   - error: An error if no available prefix is found or if an error occurs during the process.
 func GetAvailablePrefixContainer(request apicontracts.IpamApiRequest) (responses.NetboxPrefix, error) {
 	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
 	zonePrefixes := Cache.Get(zone)
@@ -212,6 +274,9 @@ func GetAvailablePrefixContainer(request apicontracts.IpamApiRequest) (responses
 	return responses.NetboxPrefix{}, fmt.Errorf("no available prefix found for zone %s", zone)
 }
 
+// GetK8sZones retrieves the list of Kubernetes zones from the Netbox API.
+// It sends a GET request to the Netbox custom field choice sets endpoint, filtering for "k8s_zone_choices".
+// The function returns a slice of zone names as strings, or an error if the request fails or the response is invalid.
 func GetK8sZones() ([]string, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -244,7 +309,9 @@ func GetK8sZones() ([]string, error) {
 	return zones, nil
 }
 
-// Fetches Zones and prefixes from Netbox
+// FetchPrefixContainers retrieves Kubernetes zones from Netbox, fetches associated IPv4 and IPv6 prefixes for each zone,
+// and updates the NetboxCache with the collected prefix data. It organizes prefixes by zone and IP family (IPv4/IPv6).
+// Returns an error if fetching zones or prefixes fails.
 func (c *NetboxCache) FetchPrefixContainers() error {
 	zones, err := GetK8sZones()
 	if err != nil {
@@ -288,6 +355,10 @@ func (c *NetboxCache) Get(key string) []responses.NetboxPrefix {
 	return c.prefixes[key]
 }
 
+// WaitForNetbox continuously attempts to connect to the NetBox API using the configured URL and token.
+// It sends a GET request to the /api/ipam/prefixes/ endpoint, retrying every 10 seconds until a successful response is received.
+// If an error occurs or a non-successful status code is returned, it logs the issue and retries.
+// The function returns nil once NetBox becomes available.
 func WaitForNetbox() error {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -319,6 +390,19 @@ func WaitForNetbox() error {
 	return nil
 }
 
+// PrefixAvailable checks if a given IP prefix is available in NetBox.
+//
+// It sends a GET request to the NetBox API, querying for the specified prefix
+// within the "nhc" VRF. If no matching prefix is found in the response, the
+// function returns true, indicating the prefix is available. If the prefix
+// exists or an error occurs during the request, it returns false and an error.
+//
+// Parameters:
+//   - request: an IpamApiRequest containing the prefix address to check.
+//
+// Returns:
+//   - bool: true if the prefix is available, false otherwise.
+//   - error: any error encountered during the API request or response handling.
 func PrefixAvailable(request apicontracts.IpamApiRequest) (bool, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
@@ -348,6 +432,15 @@ func PrefixAvailable(request apicontracts.IpamApiRequest) (bool, error) {
 	return false, nil
 }
 
+// RegisterPrefix sends a request to the NetBox API to create a new IP prefix using the provided payload.
+// It returns the created NetboxPrefix object on success, or an error if the request fails.
+//
+// Parameters:
+//   - payload: apicontracts.CreatePrefixPayload containing the details of the prefix to be created.
+//
+// Returns:
+//   - responses.NetboxPrefix: The created prefix object returned by NetBox.
+//   - error: An error if the request fails or the API returns an error response.
 func RegisterPrefix(payload apicontracts.CreatePrefixPayload) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")

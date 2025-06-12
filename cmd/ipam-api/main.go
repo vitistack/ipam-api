@@ -49,7 +49,7 @@ func main() {
 	err = netboxservice.Cache.FetchPrefixContainers()
 
 	if err != nil {
-		log.Fatalf("%s", err.Error())
+		logger.Log.Fatalf("Failed to fetch prefix containers: %v", err)
 	}
 
 	// Set up signal handling for graceful shutdown
@@ -69,7 +69,6 @@ func main() {
 
 	// Wait for termination signal
 	sig := <-sigChan
-	log.Printf("Received signal: %s. IPAM-API shutting down...", sig)
 	logger.Log.Infof("Received signal: %s. IPAM-API shutting down...", sig)
 	serverCancel()
 

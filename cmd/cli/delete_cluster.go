@@ -32,6 +32,17 @@ func init() {
 	RootCmd.AddCommand(deleteClusterCmd)
 }
 
+// setExpiresForCluster sets the expiration date for all services associated with the given clusterId
+// in the MongoDB collection. It finds all address documents containing services with the specified
+// clusterId, updates the ExpiresAt field to the current time, and sets RetentionPeriodDays to 0 for
+// those services. Returns an error if no addresses are found, if there are issues querying or updating
+// the database, or if decoding fails.
+//
+// Parameters:
+//   - clusterId: The ID of the cluster whose services' expiration should be set.
+//
+// Returns:
+//   - error: An error if the operation fails, or nil on success.
 func setExpiresForCluster(clusterId string) error {
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{

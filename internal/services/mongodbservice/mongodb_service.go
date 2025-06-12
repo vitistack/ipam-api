@@ -18,6 +18,18 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+// RegisterAddress creates a new address document in the MongoDB collection using the provided
+// IpamApiRequest and NetboxPrefix. It encrypts the secret from the request, constructs the
+// address document, and inserts it into the database. The function returns the newly created
+// mongodbtypes.Address or an error if the operation fails.
+//
+// Parameters:
+//   - request: apicontracts.IpamApiRequest containing the address and service details.
+//   - nextPrefix: responses.NetboxPrefix representing the prefix to assign.
+//
+// Returns:
+//   - mongodbtypes.Address: The newly created address document.
+//   - error: An error if the operation fails, otherwise nil.
 func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
 
 	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
@@ -25,8 +37,6 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 	if err != nil {
 		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypt secret: %w", err)
 	}
-
-	// denyCleanup := request.Service.DenyExternalCleanup
 
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
@@ -65,6 +75,20 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 
 }
 
+// UpdateAddressDocument updates an address document in the MongoDB collection based on the provided IpamApiRequest.
+// It performs the following operations:
+//   - Encrypts the provided secret deterministically.
+//   - Searches for an address document matching the encrypted secret, zone, address, and IP family.
+//   - If a new secret is provided in the request, it validates that only one service is registered and that the service matches,
+//     then updates the secret and services array accordingly.
+//   - If no new secret is provided, it updates the services array by removing the matching service (if present) and adding the updated service.
+//   - Returns an error if the document is not found, if there are mismatches, or if any MongoDB operation fails.
+//
+// Parameters:
+//   - request: apicontracts.IpamApiRequest containing the details for the update operation.
+//
+// Returns:
+//   - error: An error if the update fails or validation does not pass; otherwise, nil.
 func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
@@ -172,6 +196,20 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 	return nil
 }
 
+// SetServiceExpirationOnAddress sets an expiration date for a specific service associated with an address in MongoDB.
+// It performs the following steps:
+//  1. Encrypts the provided secret deterministically.
+//  2. Finds the address document in MongoDB matching the encrypted secret, zone, address, and IP family.
+//  3. Checks if the specified service exists for the address.
+//  4. Removes the existing instance of the service from the services array.
+//  5. Adds the service back with an updated expiration date based on the retention period.
+//  6. Updates the address document in MongoDB with the modified services array.
+//
+// Parameters:
+//   - request: apicontracts.IpamApiRequest containing the secret, zone, address, IP family, and service details.
+//
+// Returns:
+//   - error: An error if the operation fails at any step, or nil if successful.
 func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
@@ -239,6 +277,9 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	return nil
 }
 
+// ServiceExists checks if a target Service exists within a slice of Service objects.
+// It returns true if there is a Service in the slice that matches the NamespaceId,
+// ServiceName, and ClusterId of the target Service; otherwise, it returns false.
 func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service) bool {
 	for _, s := range services {
 		if s.NamespaceId == target.NamespaceId &&
@@ -250,6 +291,13 @@ func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service)
 	return false
 }
 
+// ServiceAlreadyRegistered checks if a service, identified by the provided IpamApiRequest,
+// is already registered in the MongoDB collection. It encrypts the secret from the request
+// and queries the collection for an address document matching the encrypted secret, zone,
+// and IP family. If a matching address is found and contains a service with the same
+// ServiceName, NamespaceId, and ClusterId as in the request, it returns the registered
+// address and a nil error. If no such service is found, it returns an empty Address and nil error.
+// Returns an error if encryption, querying, or decoding fails.
 func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))

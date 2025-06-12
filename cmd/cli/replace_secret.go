@@ -39,6 +39,14 @@ func init() {
 	RootCmd.AddCommand(replaceSecret)
 }
 
+// setNewSecret updates the secret for a specific address and zone in the MongoDB database.
+// It retrieves the address document, encrypts the new secret deterministically, and updates the document.
+// Parameters:
+//   - address: the address identifier to locate the document.
+//   - zone: the zone associated with the address.
+//   - newSecret: the new secret value to be encrypted and stored.
+//
+// Returns an error if the address is not found, encryption fails, or the update operation fails.
 func setNewSecret(address, zone, newSecret string) error {
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{
