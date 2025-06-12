@@ -77,10 +77,6 @@ func InitConfig() error {
 		"netbox.url",
 		"netbox.token_path",
 		"encryption_secrets.path",
-		"splunk.enable",
-		"splunk.url",
-		"splunk.token_path",
-		"splunk.index",
 		"enc_key",
 		"enc_iv",
 	}
