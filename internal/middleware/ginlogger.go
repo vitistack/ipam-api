@@ -14,7 +14,7 @@ func ZapLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
-		query := c.Request.URL.RawQuery
+		// query := c.Request.URL.RawQuery
 
 		var requestBody string
 		if c.Request.Body != nil {
@@ -35,7 +35,7 @@ func ZapLogger() gin.HandlerFunc {
 			"status", c.Writer.Status(),
 			"method", c.Request.Method,
 			"path", path,
-			"query", query,
+			// "query", query,
 			"ip", c.ClientIP(),
 			"response_time", responseTime.String(),
 			"response_time_ms", responseTimeMs,
