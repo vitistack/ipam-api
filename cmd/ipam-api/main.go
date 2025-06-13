@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/cmd/ipam-api/settings"
@@ -45,12 +46,21 @@ func main() {
 		logger.Log.Fatalf("Netbox is not available: %v", err)
 	}
 
-	logger.Log.Info("Netbox is available. Caching prefix containers...")
-	err = netboxservice.Cache.FetchPrefixContainers()
+	go func() {
+		logger.Log.Info("Netbox is available. Caching prefix containers...")
+		err = netboxservice.Cache.FetchPrefixContainers()
 
-	if err != nil {
-		logger.Log.Fatalf("Failed to fetch prefix containers: %v", err)
-	}
+		if err != nil {
+			logger.Log.Fatalf("Failed to fetch prefix containers: %v", err)
+		}
+		ticker := time.NewTicker(10 * time.Minute)
+		for range ticker.C {
+			err := netboxservice.Cache.FetchPrefixContainers()
+			if err != nil {
+				logger.Log.Errorf("Failed to refresh prefix containers: %v", err)
+			}
+		}
+	}()
 
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
