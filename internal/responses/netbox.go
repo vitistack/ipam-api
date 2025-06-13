@@ -38,6 +38,12 @@ type NetboxChoiceSet struct {
 	Name         string     `json:"name"`
 }
 
+type NetboxTag struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
 type NetboxResponse[T any] struct {
 	Count    int    `json:"count"`
 	Next     string `json:"next"`

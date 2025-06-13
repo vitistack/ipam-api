@@ -450,12 +450,12 @@ func RegisterPrefix(payload apicontracts.CreatePrefixPayload) (responses.NetboxP
 	netboxToken := viper.GetString("netbox.token")
 
 	restyClient := resty.New()
-	var newPrefix responses.NetboxPrefix
+	var result responses.NetboxPrefix
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
 		SetBody(payload).
-		SetResult(&newPrefix).
+		SetResult(&result).
 		Post(netboxURL + "/api/ipam/prefixes/")
 
 	if err != nil {
@@ -466,5 +466,29 @@ func RegisterPrefix(payload apicontracts.CreatePrefixPayload) (responses.NetboxP
 		return responses.NetboxPrefix{}, errors.New(resp.String())
 	}
 
-	return newPrefix, nil
+	return result, nil
+}
+
+func GetTagId(tagName string) (int, error) {
+	netboxURL := viper.GetString("netbox.url")
+	netboxToken := viper.GetString("netbox.token")
+
+	restyClient := resty.New()
+	var result responses.NetboxResponse[responses.NetboxTag]
+	resp, err := restyClient.R().
+		SetHeader("Authorization", "Token "+netboxToken).
+		SetHeader("Accept", "application/json").
+		SetQueryParam("name", tagName).
+		SetResult(&result).
+		Get(netboxURL + "/api/extras/tags/")
+
+	if err != nil {
+		return 0, err
+	}
+
+	if resp.IsError() || len(result.Results) == 0 {
+		return 0, fmt.Errorf("tag %s not found", tagName)
+	}
+
+	return result.Results[0].ID, nil
 }
