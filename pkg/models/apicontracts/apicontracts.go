@@ -3,6 +3,7 @@ package apicontracts
 import (
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/internal/responses"
 	"github.com/vitistack/ipam-api/pkg/models/mongodbtypes"
 )
@@ -45,6 +46,7 @@ type NextPrefixPayload struct {
 	TenantId     int          `json:"tenant"`
 	RoleId       int          `json:"role"`
 	CustomFields CustomFields `json:"custom_fields"`
+	Tags         []int        `json:"tags,omitempty"`
 }
 
 type CreatePrefixPayload struct {
@@ -53,11 +55,13 @@ type CreatePrefixPayload struct {
 	TenantId     int          `json:"tenant"`
 	RoleId       int          `json:"role"`
 	CustomFields CustomFields `json:"custom_fields"`
+	Tags         []int        `json:"tags,omitempty"`
 }
 
 type UpdatePrefixPayload struct {
 	Prefix       string       `json:"prefix"`
 	CustomFields CustomFields `json:"custom_fields"`
+	Tags         []int        `json:"tags,omitempty"`
 }
 
 type HTTPError struct {
@@ -65,6 +69,15 @@ type HTTPError struct {
 	Code    int    `json:"code"`
 }
 
+// GetNextPrefixPayload constructs a NextPrefixPayload based on the provided IpamApiRequest and NetboxPrefix container.
+// It determines the prefix length according to the IP family (IPv4 or IPv6), collects constraint tags from configuration,
+// and populates the payload with relevant VRF, tenant, role, tags, and custom fields information.
+// Parameters:
+//   - request: IpamApiRequest containing request details such as IP family and zone.
+//   - container: responses.NetboxPrefix containing network prefix context.
+//
+// Returns:
+//   - NextPrefixPayload: The constructed payload for the next prefix allocation.
 func GetNextPrefixPayload(request IpamApiRequest, container responses.NetboxPrefix) NextPrefixPayload {
 	var prefixLength int
 	if request.IpFamily == "ipv4" {
@@ -73,11 +86,18 @@ func GetNextPrefixPayload(request IpamApiRequest, container responses.NetboxPref
 		prefixLength = 128
 	}
 
+	tags := []int{}
+	if viper.IsSet("netbox.constraint_tag_id") {
+		tagId := viper.GetInt("netbox.constraint_tag_id")
+		tags = append(tags, tagId)
+	}
+
 	return NextPrefixPayload{
 		PrefixLength: prefixLength,
 		VrfId:        container.Vrf.ID,
 		TenantId:     container.Tenant.ID,
 		RoleId:       container.Role.ID,
+		Tags:         tags,
 		CustomFields: CustomFields{
 			Domain:  "na",
 			Env:     "na",
@@ -89,12 +109,29 @@ func GetNextPrefixPayload(request IpamApiRequest, container responses.NetboxPref
 
 }
 
+// GetCreatePrefixPayload constructs a CreatePrefixPayload object using the provided IpamApiRequest and NetboxPrefix container.
+// It sets the prefix, VRF ID, tenant ID, role ID, and tags (optionally including a constraint tag from configuration).
+// Custom fields such as domain, environment, infra, purpose, and Kubernetes zone are also populated.
+// Parameters:
+//   - request: IpamApiRequest containing address and zone information.
+//   - container: responses.NetboxPrefix containing VRF, tenant, role, and custom fields.
+//
+// Returns:
+//   - CreatePrefixPayload: The payload ready for prefix creation.
 func GetCreatePrefixPayload(request IpamApiRequest, container responses.NetboxPrefix) CreatePrefixPayload {
+	tags := []int{}
+	if viper.IsSet("netbox.constraint_tag_id") {
+		tagId := viper.GetInt("netbox.constraint_tag_id")
+		tags = append(tags, tagId)
+
+	}
+
 	return CreatePrefixPayload{
 		Prefix:   request.Address,
 		VrfId:    container.Vrf.ID,
 		TenantId: container.Tenant.ID,
 		RoleId:   container.Role.ID,
+		Tags:     tags,
 		CustomFields: CustomFields{
 			Domain:  "na",
 			Env:     "na",
@@ -106,9 +143,28 @@ func GetCreatePrefixPayload(request IpamApiRequest, container responses.NetboxPr
 
 }
 
+// GetUpdatePrefixPayload constructs an UpdatePrefixPayload object using the provided Netbox prefix,
+// MongoDB address, and API request data. It sets the prefix, tags (optionally including a constraint tag
+// from configuration), and custom fields such as domain, environment, infrastructure, purpose, Kubernetes
+// UUID, and Kubernetes zone.
+//
+// Parameters:
+//   - nextPrefix: The NetboxPrefix object containing prefix and custom field information.
+//   - mongoPrefix: The MongoDB address object, used to extract the unique identifier.
+//   - request: The IpamApiRequest containing request-specific data such as the zone.
+//
+// Returns:
+//   - An UpdatePrefixPayload populated with the relevant data from the inputs.
 func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Address, request IpamApiRequest) UpdatePrefixPayload {
+	tags := []int{}
+	if viper.IsSet("netbox.constraint_tag_id") {
+		tagId := viper.GetInt("netbox.constraint_tag_id")
+		tags = append(tags, tagId)
+	}
+
 	return UpdatePrefixPayload{
 		Prefix: nextPrefix.Prefix,
+		Tags:   tags,
 		CustomFields: CustomFields{
 			Domain:  "na",
 			Env:     "na",

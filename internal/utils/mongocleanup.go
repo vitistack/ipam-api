@@ -61,14 +61,17 @@ func CleanupRegistrationsWithoutServices(ctx context.Context, collection *mongo.
 
 		if err != nil {
 			logger.Log.Errorf("could not delete prefix from Netbox: %v", err)
+		} else {
+			logger.Log.Infof("Deleted prefix %s from Netbox", prefix.Address)
 		}
-		logger.Log.Infof("Deleted prefix %s from Netbox", prefix.Address)
+
 		// Delete from MongoDB
 		_, err = collection.DeleteOne(ctx, bson.M{"_id": prefix.ID})
 		if err != nil {
 			logger.Log.Errorf("could not delete prefix from MongoDB: %v", err)
+		} else {
+			logger.Log.Infof("Deleted prefix %s from MongoDB", prefix.Address)
 		}
-		logger.Log.Infof("Deleted prefix %s from MongoDB", prefix.Address)
 
 	}
 }

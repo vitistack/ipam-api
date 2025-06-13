@@ -51,7 +51,7 @@ func RegisterNextAvailable(request apicontracts.IpamApiRequest) (apicontracts.Ip
 		return apicontracts.IpamApiResponse{}, err
 	}
 
-	logger.Log.Infof("Address %s registered successfully in Netbox and MongoDB", request.Address)
+	logger.Log.Infof("Address %s registered successfully", nextPrefix.Prefix)
 	return apicontracts.IpamApiResponse{
 		Message: "Address registered successfully",
 		Address: nextPrefix.Prefix,
@@ -144,7 +144,7 @@ func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, 
 		return apicontracts.IpamApiResponse{}, err
 	}
 
-	logger.Log.Infof("Address %s updated successfully in MongoDB", request.Address)
+	logger.Log.Infof("Address %s updated successfully", request.Address)
 	return apicontracts.IpamApiResponse{
 		Message: "Address updated successfully",
 		Address: request.Address,

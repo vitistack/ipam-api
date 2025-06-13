@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/viper"
+	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 )
 
 func InitConfig() error {
@@ -85,6 +86,14 @@ func InitConfig() error {
 		if !viper.IsSet(key) {
 			return fmt.Errorf("missing required config key: %s", key)
 		}
+	}
+
+	if viper.GetString("netbox.constraint_tag") != "" {
+		constraintTagId, err := netboxservice.GetTagId(viper.GetString("netbox.constraint_tag"))
+		if err != nil {
+			return fmt.Errorf("failed to get constraint tag ID: %w", err)
+		}
+		viper.Set("netbox.constraint_tag_id", constraintTagId)
 	}
 
 	return nil
