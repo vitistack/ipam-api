@@ -64,29 +64,29 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	return container, nil
 }
 
-// GetPrefixes retrieves a list of Netbox prefixes based on the provided query string.
+// GetPrefixes retrieves a list of Netbox prefixes based on the provided query parameters.
 // It sends a GET request to the Netbox API using the configured URL and token,
 // and returns a slice of NetboxPrefix objects or an error if the request fails.
 //
 // Parameters:
-//   - query: The query string to append to the Netbox prefixes API endpoint.
+//   - queryParams: map[string]string of query parameters to append to the Netbox prefixes API endpoint.
 //
 // Returns:
 //   - []responses.NetboxPrefix: A slice of NetboxPrefix objects returned by the Netbox API.
 //   - error: An error if the request fails or the API returns an error response.
-func GetPrefixes(query string) ([]responses.NetboxPrefix, error) {
+func GetPrefixes(queryParams map[string]string) ([]responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
 	restyClient := resty.New()
 	var netboxResponse responses.NetboxResponse[responses.NetboxPrefix]
-	url := netboxURL + "/api/ipam/prefixes/" + query
 
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
 		SetResult(&netboxResponse).
-		Get(url)
+		SetQueryParams(queryParams).
+		Get(netboxURL + "/api/ipam/prefixes/")
 
 	if err != nil {
 		return []responses.NetboxPrefix{}, err
@@ -326,7 +326,11 @@ func (c *NetboxCache) FetchPrefixContainers() error {
 		zonePrefixes[ipv4Zone] = []responses.NetboxPrefix{}
 		zonePrefixes[ipv6Zone] = []responses.NetboxPrefix{}
 
-		prefixes, err := GetPrefixes("?cf_k8s_zone=" + zone)
+		queryParams := map[string]string{
+			"cf_k8s_zone": zone,
+			"status":      "container"}
+
+		prefixes, err := GetPrefixes(queryParams)
 		if err != nil {
 			logger.Log.Errorf("Error fetching prefixes for zone %s: %v", zone, err)
 			return fmt.Errorf("error fetching prefixes for zone %s: %v", zone, err)

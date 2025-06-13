@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -144,12 +145,15 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 		return err
 	}
 
+	if request.Service.RetentionPeriodDays > 30 {
+		return errors.New("retention period cannot be more than 30 days")
+	}
+
 	if request.Zone == "" || request.Secret == "" {
 		return errors.New("both 'zone' and 'secret' are required")
 	}
-
 	if !slices.Contains(netboxZones, request.Zone) {
-		return errors.New("invalid zone")
+		return errors.New("invalid zone '" + request.Zone + "', must be one of: " + strings.Join(netboxZones, ", "))
 	}
 
 	if request.Address != "" {

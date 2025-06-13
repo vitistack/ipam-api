@@ -16,7 +16,7 @@ import (
 
 func StartCleanupWorker() {
 	logger.Log.Info("Starting cleanup worker...")
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
 	client := mongodb.GetClient()
