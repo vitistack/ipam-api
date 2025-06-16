@@ -89,14 +89,14 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 //
 // Returns:
 //   - error: An error if the update fails or validation does not pass; otherwise, nil.
-func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
+func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	encryptedRequestSecret, err := utils.DeterministicEncrypt(request.Secret)
 
 	if err != nil {
-		return fmt.Errorf("failed to encrypted secret: %w", err)
+		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypted secret: %w", err)
 	}
 
 	filter := bson.M{
@@ -106,32 +106,37 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 		"ip_family": request.IpFamily,
 	}
 
+	if request.Address != "" {
+		filter["address"] = request.Address
+	}
+
 	var registeredAddress mongodbtypes.Address
+
 	err = collection.FindOne(context.Background(), filter).Decode(&registeredAddress)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return errors.New("no matching address found with the provided secret, zone and address")
+			return mongodbtypes.Address{}, errors.New("no matching address found with the provided secret, zone and address")
 		}
-		return fmt.Errorf("failed to read address document: %w", err)
+		return mongodbtypes.Address{}, fmt.Errorf("failed to read address document: %w", err)
 	}
 
 	if request.NewSecret != "" {
 		if registeredAddress.Secret == encryptedRequestSecret && len(registeredAddress.Services) > 1 {
-			return errors.New("multiple services registered. unable to change secret")
+			return mongodbtypes.Address{}, errors.New("multiple services registered. unable to change secret")
 		}
 		if registeredAddress.Secret != encryptedRequestSecret {
-			return errors.New("secret mismatch. unable to change secret")
+			return mongodbtypes.Address{}, errors.New("secret mismatch. unable to change secret")
 		}
 		encryptedNewSecret, err := utils.DeterministicEncrypt(request.NewSecret)
 		if err != nil {
-			return fmt.Errorf("failed to encrypt new secret: %w", err)
+			return mongodbtypes.Address{}, fmt.Errorf("failed to encrypt new secret: %w", err)
 		}
 
 		if registeredAddress.Services[0].ServiceName != request.Service.ServiceName ||
 			registeredAddress.Services[0].NamespaceId != request.Service.NamespaceId ||
 			registeredAddress.Services[0].ClusterId != request.Service.ClusterId {
-			return errors.New("service mismatch. unable to change secret")
+			return mongodbtypes.Address{}, errors.New("service mismatch. unable to change secret")
 		}
 
 		var currentServices []mongodbtypes.Service
@@ -149,11 +154,19 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 			},
 		}
 
-		_, err = collection.UpdateOne(context.Background(), filter, update)
+		result, err := collection.UpdateOne(context.Background(), filter, update)
 		if err != nil {
-			return fmt.Errorf("failed to update secret: %w", err)
+			return mongodbtypes.Address{}, fmt.Errorf("failed to update secret: %w", err)
 		}
-		return nil
+
+		var address mongodbtypes.Address
+		err = collection.FindOne(context.Background(), bson.M{"_id": result.UpsertedID.(bson.ObjectID)}).Decode(&address)
+
+		if err != nil {
+			return mongodbtypes.Address{}, fmt.Errorf("failed to update services array: %w", err)
+		}
+
+		return address, nil
 	}
 
 	// Loop through the services array and remove the service that matches the request
@@ -189,11 +202,19 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) error {
 	}
 
 	_, err = collection.UpdateOne(context.Background(), filter, update)
+
 	if err != nil {
-		return fmt.Errorf("failed to update services array: %w", err)
+		return mongodbtypes.Address{}, fmt.Errorf("failed to update services array: %w", err)
 	}
 
-	return nil
+	var address mongodbtypes.Address
+	err = collection.FindOne(context.Background(), filter).Decode(&address)
+
+	if err != nil {
+		return mongodbtypes.Address{}, fmt.Errorf("failed to update services array: %w", err)
+	}
+
+	return address, nil
 }
 
 // SetServiceExpirationOnAddress sets an expiration date for a specific service associated with an address in MongoDB.

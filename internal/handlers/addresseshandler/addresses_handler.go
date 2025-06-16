@@ -10,7 +10,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/vitistack/ipam-api/internal/logger"
 	"github.com/vitistack/ipam-api/internal/services/addressesservice"
-	"github.com/vitistack/ipam-api/internal/services/mongodbservice"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/internal/utils"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
@@ -51,7 +50,6 @@ func RegisterAddress(ginContext *gin.Context) {
 
 	var response apicontracts.IpamApiResponse
 	httpStatus := http.StatusOK
-	alreadyRegistered, err := mongodbservice.ServiceAlreadyRegistered(request)
 
 	if err != nil {
 		ginContext.Error(err)
@@ -59,18 +57,40 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
-	if alreadyRegistered.Address == "" && request.Address != "" {
-		response, err = addressesservice.RegisterSpecific(request)
-		httpStatus = http.StatusCreated
-	} else if request.Address != "" {
-		response, err = addressesservice.Update(request)
-	} else if alreadyRegistered.Address != "" && request.Address == "" {
-		request.Address = alreadyRegistered.Address
-		response, err = addressesservice.Update(request)
-	} else {
-		response, err = addressesservice.RegisterNextAvailable(request)
-		httpStatus = http.StatusCreated
+	response, err = addressesservice.RegisterAddress(request)
+	if err != nil {
+		logger.Log.Errorf("Failed to register address: %v", err)
+		ginContext.Error(err)
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": "Could not register address: " + err.Error()})
+		return
 	}
+
+	// if alreadyRegistered.Address != "" && request.Address == "" {
+	// 	logger.Log.Warnln("Registered in mongodb and no address in request -> Update()")
+	// 	request.Address = alreadyRegistered.Address
+	// 	// If the address is already registered in MongoDB, we update it with the request address
+	// 	response, err = addressesservice.Update(request)
+	// } else if request.Address == "" {
+	// 	logger.Log.Warnln("No address provided -> RegisterAddress()")
+	// 	response, err = addressesservice.RegisterAddress(request)
+	// 	httpStatus = http.StatusCreated
+	// } else if alreadyRegistered.Address != "" && request.Address != "" {
+	// 	logger.Log.Warnln("Registered in mongodb and address in request -> RegisterAddress()")
+	// 	response, err = addressesservice.RegisterAddress(request)
+	// 	httpStatus = http.StatusCreated
+	// } else if alreadyRegistered.Address != "" && request.Address != "" {
+	// 	logger.Log.Warnln("Registered in mongodb and address in request -> RegisterAddress()")
+	// 	response, err = addressesservice.RegisterAddress(request)
+	// 	httpStatus = http.StatusCreated
+	// } else if alreadyRegistered.Address == "" && request.Address != "" {
+	// 	logger.Log.Warnln("Not registered in mongodb and address in request -> RegisterAddress()")
+	// 	// If the address is not registered in MongoDB, we register it with the request address
+	// 	response, err = addressesservice.RegisterAddress(request)
+	// 	httpStatus = http.StatusCreated
+	// } else {
+	// 	logger.Log.Warnln("default case -> Update()")
+	// 	response, err = addressesservice.Update(request)
+	// }
 
 	if err != nil {
 		ginContext.Error(err)

@@ -12,6 +12,74 @@ import (
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
+// RegisterAddress handles the registration of an IP address based on the provided request.
+// It determines the appropriate registration flow depending on the state of the address in MongoDB
+// and Netbox, as well as whether a specific address is provided in the request.
+// The function performs the following logic:
+//   - Checks if the service is already registered in MongoDB.
+//   - If the address is available in Netbox and provided in the request, it registers the specific address.
+//   - If the address is already registered in MongoDB and no address is provided, it updates the existing registration.
+//   - If the address is not registered in MongoDB and no address is provided, it registers the next available address.
+//   - By default, it updates the address registration.
+//
+// Returns an IpamApiResponse and an error if any operation fails.
+func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
+	alreadyRegistered, err := mongodbservice.ServiceAlreadyRegistered(request)
+	var response apicontracts.IpamApiResponse
+
+	if err != nil {
+		logger.Log.Errorf("Service already registered check failed: %v", err)
+		return apicontracts.IpamApiResponse{}, err
+	}
+
+	// Available in Netbox and address provided
+	availableInNetbox, err := netboxservice.PrefixAvailable(request)
+	if err != nil {
+		return apicontracts.IpamApiResponse{}, err
+	}
+
+	// Available in Netbox and address provided
+	if availableInNetbox && request.Address != "" {
+		response, err = RegisterSpecific(request)
+		if err != nil {
+			logger.Log.Errorf("Failed to register specific address: %v", err)
+			return apicontracts.IpamApiResponse{}, err
+		}
+		return response, nil
+	}
+
+	// Already registered in MongoDB and no address provided
+	if alreadyRegistered.Address != "" && request.Address == "" {
+		request.Address = alreadyRegistered.Address
+		response, err = Update(request)
+		if err != nil {
+			logger.Log.Errorf("Failed to register update address: %v", err)
+			return apicontracts.IpamApiResponse{}, err
+		}
+		return response, nil
+	}
+
+	// Not registered in MongoDB and no address provided
+	if alreadyRegistered.Address == "" && request.Address == "" {
+		response, err = RegisterNextAvailable(request)
+		if err != nil {
+			logger.Log.Errorf("Failed to register next available address: %v", err)
+			return apicontracts.IpamApiResponse{}, err
+		}
+		return response, nil
+	}
+
+	// Update as default
+	response, err = Update(request)
+	if err != nil {
+		logger.Log.Errorf("Failed to update address: %v", err)
+		return apicontracts.IpamApiResponse{}, err
+	}
+
+	return response, nil
+
+}
+
 // RegisterNextAvailable registers the next available address prefix for a given IPAM API request.
 // It performs the following steps:
 //  1. Retrieves the available prefix container from Netbox based on the request.
@@ -139,7 +207,7 @@ func RegisterSpecific(request apicontracts.IpamApiRequest) (apicontracts.IpamApi
 //   - apicontracts.IpamApiResponse: Response with a success message and the updated address.
 //   - error: Error encountered during the update operation, if any.
 func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
-	err := mongodbservice.UpdateAddressDocument(request)
+	address, err := mongodbservice.UpdateAddressDocument(request)
 	if err != nil {
 		return apicontracts.IpamApiResponse{}, err
 	}
@@ -147,7 +215,7 @@ func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, 
 	logger.Log.Infof("Address %s updated successfully", request.Address)
 	return apicontracts.IpamApiResponse{
 		Message: "Address updated successfully",
-		Address: request.Address,
+		Address: address.Address,
 	}, nil
 }
 
