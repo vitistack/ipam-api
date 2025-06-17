@@ -154,19 +154,12 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 			},
 		}
 
-		result, err := collection.UpdateOne(context.Background(), filter, update)
+		_, err = collection.UpdateOne(context.Background(), filter, update)
 		if err != nil {
-			return mongodbtypes.Address{}, fmt.Errorf("failed to update secret: %w", err)
+			return mongodbtypes.Address{}, fmt.Errorf("failed to update address: %w", err)
 		}
 
-		var address mongodbtypes.Address
-		err = collection.FindOne(context.Background(), bson.M{"_id": result.UpsertedID.(bson.ObjectID)}).Decode(&address)
-
-		if err != nil {
-			return mongodbtypes.Address{}, fmt.Errorf("failed to update services array: %w", err)
-		}
-
-		return address, nil
+		return registeredAddress, nil
 	}
 
 	// Loop through the services array and remove the service that matches the request
@@ -204,17 +197,10 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 	_, err = collection.UpdateOne(context.Background(), filter, update)
 
 	if err != nil {
-		return mongodbtypes.Address{}, fmt.Errorf("failed to update services array: %w", err)
+		return mongodbtypes.Address{}, fmt.Errorf("failed to update address: %w", err)
 	}
 
-	var address mongodbtypes.Address
-	err = collection.FindOne(context.Background(), filter).Decode(&address)
-
-	if err != nil {
-		return mongodbtypes.Address{}, fmt.Errorf("failed to update services array: %w", err)
-	}
-
-	return address, nil
+	return registeredAddress, nil
 }
 
 // SetServiceExpirationOnAddress sets an expiration date for a specific service associated with an address in MongoDB.
