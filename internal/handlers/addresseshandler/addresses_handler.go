@@ -51,12 +51,6 @@ func RegisterAddress(ginContext *gin.Context) {
 	var response apicontracts.IpamApiResponse
 	httpStatus := http.StatusOK
 
-	if err != nil {
-		ginContext.Error(err)
-		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
-	}
-
 	response, err = addressesservice.RegisterAddress(request)
 	if err != nil {
 		logger.Log.Errorf("Failed to register address: %v", err)
@@ -91,12 +85,6 @@ func RegisterAddress(ginContext *gin.Context) {
 	// 	logger.Log.Warnln("default case -> Update()")
 	// 	response, err = addressesservice.Update(request)
 	// }
-
-	if err != nil {
-		ginContext.Error(err)
-		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		return
-	}
 
 	ginContext.JSON(httpStatus, response)
 

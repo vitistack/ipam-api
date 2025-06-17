@@ -7,7 +7,8 @@ type NetboxPrefix struct {
 		Value int `json:"value"`
 	}
 	Vrf struct {
-		ID int `json:"id"`
+		ID   int    `json:"id"`
+		Name string `json:"name"`
 	}
 	Tenant struct {
 		ID int `json:"id"`

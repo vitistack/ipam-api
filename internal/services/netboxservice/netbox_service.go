@@ -35,7 +35,7 @@ var Cache = &NetboxCache{
 // Returns:
 //   - responses.NetboxPrefix: The matching Netbox prefix container.
 //   - error: An error if the request fails or if the result is not exactly one container.
-func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
+func GetPrefixContainer(queryParams map[string]string) (responses.NetboxPrefix, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
@@ -44,8 +44,9 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
+		SetQueryParams(queryParams).
 		SetResult(&result).
-		Get(netboxURL + "/api/ipam/prefixes/?prefix=" + string(prefix) + "&status=container")
+		Get(netboxURL + "/api/ipam/prefixes/")
 
 	if err != nil {
 		return responses.NetboxPrefix{}, err
@@ -55,6 +56,10 @@ func GetPrefixContainer(prefix string) (responses.NetboxPrefix, error) {
 		return responses.NetboxPrefix{}, err
 	}
 
+	// rJson, _ := json.MarshalIndent(result, "", "  ")
+
+	// fmt.Println("GetPrefixContainer response:", string(rJson))
+	fmt.Println("GetPrefixContainer queryParams:", queryParams)
 	if len(result.Results) != 1 {
 		return responses.NetboxPrefix{}, errors.New("multiple or no containers matching prefix found")
 	}
@@ -407,18 +412,18 @@ func WaitForNetbox() error {
 // Returns:
 //   - bool: true if the prefix is available, false otherwise.
 //   - error: any error encountered during the API request or response handling.
-func PrefixAvailable(request apicontracts.IpamApiRequest) (bool, error) {
+func PrefixAvailable(queryParams map[string]string) (bool, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
+	fmt.Println("PrefixAvailable queryParams:", queryParams)
 	restyClient := resty.New()
 	var result responses.NetboxResponse[responses.NetboxPrefix]
 	resp, err := restyClient.R().
 		SetHeader("Authorization", "Token "+netboxToken).
 		SetHeader("Accept", "application/json").
 		SetResult(&result).
-		SetQueryParam("present_in_vrf", "nhc").
-		SetQueryParam("prefix", request.Address).
+		SetQueryParams(queryParams).
 		Get(netboxURL + "/api/ipam/prefixes/")
 
 	if err != nil {
