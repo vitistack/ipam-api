@@ -30,7 +30,8 @@ jobs:
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v*}"
           echo "Version $VERSION"
-          make build
+          make build-api
+          make build-cli
           touch cmd/isbuilt
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
