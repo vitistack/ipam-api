@@ -17,7 +17,7 @@ build-api: check-tools ## Build the Go application.
 
 build-cli: check-tools ## Build the Go application.
 	@echo "Building the Go application..."
-	@go build -o ./bin/cli ./cmd/cli/main.go
+	@go build -o ./bin/cli ./cmd/cli/
 
 deps: ## Download and verify dependencies
 	@echo "Downloading dependencies..."
