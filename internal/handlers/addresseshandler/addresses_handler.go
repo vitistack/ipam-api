@@ -59,33 +59,6 @@ func RegisterAddress(ginContext *gin.Context) {
 		return
 	}
 
-	// if alreadyRegistered.Address != "" && request.Address == "" {
-	// 	logger.Log.Warnln("Registered in mongodb and no address in request -> Update()")
-	// 	request.Address = alreadyRegistered.Address
-	// 	// If the address is already registered in MongoDB, we update it with the request address
-	// 	response, err = addressesservice.Update(request)
-	// } else if request.Address == "" {
-	// 	logger.Log.Warnln("No address provided -> RegisterAddress()")
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else if alreadyRegistered.Address != "" && request.Address != "" {
-	// 	logger.Log.Warnln("Registered in mongodb and address in request -> RegisterAddress()")
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else if alreadyRegistered.Address != "" && request.Address != "" {
-	// 	logger.Log.Warnln("Registered in mongodb and address in request -> RegisterAddress()")
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else if alreadyRegistered.Address == "" && request.Address != "" {
-	// 	logger.Log.Warnln("Not registered in mongodb and address in request -> RegisterAddress()")
-	// 	// If the address is not registered in MongoDB, we register it with the request address
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else {
-	// 	logger.Log.Warnln("default case -> Update()")
-	// 	response, err = addressesservice.Update(request)
-	// }
-
 	ginContext.JSON(httpStatus, response)
 
 }
