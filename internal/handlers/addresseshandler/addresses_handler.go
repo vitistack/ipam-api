@@ -2,6 +2,7 @@ package addresseshandler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -134,7 +135,7 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 		return errors.New("both 'zone' and 'secret' are required")
 	}
 	if !slices.Contains(netboxZones, request.Zone) {
-		return errors.New("invalid zone '" + request.Zone + "', must be one of: " + strings.Join(netboxZones, ", "))
+		return fmt.Errorf("invalid zone '%s', must be one of: '%s'", request.Zone, strings.Join(netboxZones, "', '"))
 	}
 
 	if request.Address != "" {
@@ -147,6 +148,13 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 		if prefixIpFamily != request.IpFamily {
 			return errors.New("invalid ip familiy for the provided address")
 		}
+	}
+
+	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+	zonePrefixes := netboxservice.Cache.Get(zone)
+
+	if len(zonePrefixes) == 0 {
+		return fmt.Errorf("no prefixes found for zone %s with IP family %s", request.Zone, request.IpFamily)
 	}
 
 	if request.IpFamily == "ipv6" && request.Zone != "inet" {
