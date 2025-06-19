@@ -157,9 +157,5 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 		return fmt.Errorf("no prefixes found for zone %s with IP family %s", request.Zone, request.IpFamily)
 	}
 
-	if request.IpFamily == "ipv6" && request.Zone != "inet" {
-		return errors.New("IPv6 is only available for zone 'inet'")
-	}
-
 	return nil
 }
