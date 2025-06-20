@@ -24,9 +24,10 @@ type NetboxPrefix struct {
 }
 
 func (n NetboxPrefix) GetIpFamily() int {
-	if n.Family.Value == 4 {
+	switch n.Family.Value {
+	case 4:
 		return 4
-	} else if n.Family.Value == 6 {
+	case 6:
 		return 6
 	}
 	return 0
