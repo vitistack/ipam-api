@@ -16,8 +16,8 @@ build-api: check-tools ## Build the Go application.
 	@go build -o ./bin/ipam-api ./cmd/$(PROJECT_NAME)/main.go
 
 build-cli: check-tools ## Build the Go application.
-	@echo "Building the ipam-cli..."
-	@go build -o ./bin/ipam-cli ./cmd/cli/
+	@echo "Building the Go application..."
+	@go build -o ./bin/cli ./cmd/cli/
 
 deps: ## Download and verify dependencies
 	@echo "Downloading dependencies..."
