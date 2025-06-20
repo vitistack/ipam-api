@@ -13,11 +13,11 @@ KUBECTL := kubectl
 .PHONY: build-api build-cli
 build-api: check-tools ## Build the Go application.
 	@echo "Building the ipam-api..."
-	@go build -o ./bin/api ./cmd/$(PROJECT_NAME)/main.go
+	@go build -o ./bin/ipam-api ./cmd/$(PROJECT_NAME)/main.go
 
 build-cli: check-tools ## Build the Go application.
 	@echo "Building the ipam-cli..."
-	@go build -o ./bin/cli ./cmd/cli/
+	@go build -o ./bin/ipam-cli ./cmd/cli/
 
 deps: ## Download and verify dependencies
 	@echo "Downloading dependencies..."
