@@ -107,7 +107,8 @@ jobs:
           export HELM_VERSION=${VERSION#v*}
           ./yq e -i '.version = strenv(HELM_VERSION),.appVersion = strenv(VERSION)' chart/ipam-api/Chart.yaml
           ./yq e -i '.image.tag = strenv(VERSION),.image.repository = "ghcr.io/vitistack/ipam-api"' chart/ipam-api/values.yaml
-          helm package chart/ipam-api | login -u ${{ github.actor }} ghcr.io --password-stdin
+          helm package chart/ipam-api 
+          echo  ${{ secrets.GITHUB_TOKEN }} | helm registry login -u ${{ github.actor }} ghcr.io --password-stdin
           helm push ipam-api-${HELM_VERSION}.tgz oci://ghcr.io/vitistack/ipam-api/helm/
         env:
           VERSION: ${{ github.ref_name }}
