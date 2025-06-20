@@ -2,6 +2,7 @@ package addresseshandler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -58,33 +59,6 @@ func RegisterAddress(ginContext *gin.Context) {
 		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": "Could not register address: " + err.Error()})
 		return
 	}
-
-	// if alreadyRegistered.Address != "" && request.Address == "" {
-	// 	logger.Log.Warnln("Registered in mongodb and no address in request -> Update()")
-	// 	request.Address = alreadyRegistered.Address
-	// 	// If the address is already registered in MongoDB, we update it with the request address
-	// 	response, err = addressesservice.Update(request)
-	// } else if request.Address == "" {
-	// 	logger.Log.Warnln("No address provided -> RegisterAddress()")
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else if alreadyRegistered.Address != "" && request.Address != "" {
-	// 	logger.Log.Warnln("Registered in mongodb and address in request -> RegisterAddress()")
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else if alreadyRegistered.Address != "" && request.Address != "" {
-	// 	logger.Log.Warnln("Registered in mongodb and address in request -> RegisterAddress()")
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else if alreadyRegistered.Address == "" && request.Address != "" {
-	// 	logger.Log.Warnln("Not registered in mongodb and address in request -> RegisterAddress()")
-	// 	// If the address is not registered in MongoDB, we register it with the request address
-	// 	response, err = addressesservice.RegisterAddress(request)
-	// 	httpStatus = http.StatusCreated
-	// } else {
-	// 	logger.Log.Warnln("default case -> Update()")
-	// 	response, err = addressesservice.Update(request)
-	// }
 
 	ginContext.JSON(httpStatus, response)
 
@@ -161,7 +135,7 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 		return errors.New("both 'zone' and 'secret' are required")
 	}
 	if !slices.Contains(netboxZones, request.Zone) {
-		return errors.New("invalid zone '" + request.Zone + "', must be one of: " + strings.Join(netboxZones, ", "))
+		return fmt.Errorf("invalid zone '%s', must be one of: '%s'", request.Zone, strings.Join(netboxZones, "', '"))
 	}
 
 	if request.Address != "" {
@@ -176,8 +150,11 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 		}
 	}
 
-	if request.IpFamily == "ipv6" && request.Zone != "inet" {
-		return errors.New("IPv6 is only available for zone 'inet'")
+	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+	zonePrefixes := netboxservice.Cache.Get(zone)
+
+	if len(zonePrefixes) == 0 {
+		return fmt.Errorf("no prefixes found for zone %s with IP family %s", request.Zone, request.IpFamily)
 	}
 
 	return nil

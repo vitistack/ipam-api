@@ -416,7 +416,6 @@ func PrefixAvailable(queryParams map[string]string) (bool, error) {
 	netboxURL := viper.GetString("netbox.url")
 	netboxToken := viper.GetString("netbox.token")
 
-	fmt.Println("PrefixAvailable queryParams:", queryParams)
 	restyClient := resty.New()
 	var result responses.NetboxResponse[responses.NetboxPrefix]
 	resp, err := restyClient.R().

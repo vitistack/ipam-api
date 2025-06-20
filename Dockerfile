@@ -1,4 +1,3 @@
-# Build stage
 FROM golang:1.24.4 AS builder
 
 WORKDIR /app
@@ -8,9 +7,10 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o ipam-api cmd/ipam-api/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -o ipam-cli ./cmd/cli
-# Final minimal image
+
 FROM alpine
-# FROM gcr.io/distroless/static:nonroot
+RUN apk add --no-cache bash
+
 WORKDIR /app
 COPY config-docker-compose.json ./
 

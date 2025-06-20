@@ -30,13 +30,15 @@ func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiR
 
 	availableInNetbox := false
 	if request.Address != "" {
-		vrf := "nhc"
-		if request.Zone == "inet" {
-			vrf = "inet"
-		}
+		zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+		zonePrefixes := netboxservice.Cache.Get(zone)
+
+		// Assuming all prefixes in the zone have the same VRF ID.
+		// zonePrefixes length is validated in ValidateRequest function.
+		vrfId := zonePrefixes[0].Vrf.ID
 		queryParams := map[string]string{
-			"prefix":         request.Address,
-			"present_in_vrf": vrf,
+			"prefix":            request.Address,
+			"present_in_vrf_id": strconv.Itoa(vrfId),
 		}
 		availableInNetbox, err = netboxservice.PrefixAvailable(queryParams)
 		if err != nil {
