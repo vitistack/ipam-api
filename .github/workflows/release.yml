@@ -109,6 +109,6 @@ jobs:
           ./yq e -i '.image.tag = strenv(VERSION),.image.repository = "ghcr.io/vitistack/ipam-api"' chart/ipam-api/values.yaml
           helm package chart/ipam-api 
           echo  ${{ secrets.GITHUB_TOKEN }} | helm registry login -u ${{ github.actor }} ghcr.io --password-stdin
-          helm push ipam-api-${HELM_VERSION}.tgz oci://ghcr.io/vitistack/ipam-api/helm/
+          helm push ipam-api-${HELM_VERSION}.tgz oci://ghcr.io/vitistack/helm/
         env:
           VERSION: ${{ github.ref_name }}
