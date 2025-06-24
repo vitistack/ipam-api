@@ -63,7 +63,7 @@ func displaySecret(address, zone string) error {
 	defer cancel()
 
 	filter := bson.M{
-		"address": address,
+		"address": utils.NormalizeCIDR(address),
 		"zone":    zone,
 	}
 
