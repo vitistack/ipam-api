@@ -94,6 +94,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	encryptedRequestSecret, err := utils.DeterministicEncrypt(request.Secret)
+	encryptedNewSecret, err := utils.DeterministicEncrypt(request.NewSecret)
 
 	if err != nil {
 		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypted secret: %w", err)
@@ -121,7 +122,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 		return mongodbtypes.Address{}, fmt.Errorf("failed to read address document: %w", err)
 	}
 
-	if request.NewSecret != "" {
+	if request.NewSecret != "" && encryptedRequestSecret != encryptedNewSecret {
 		if registeredAddress.Secret == encryptedRequestSecret && len(registeredAddress.Services) > 1 {
 			return mongodbtypes.Address{}, errors.New("multiple services registered. unable to change secret")
 		}
