@@ -7,7 +7,8 @@
 replicaCount: 1
 
 ipamApi:
-  image: ncr.sky.nhn.no/vitistack/ipam-api:v0.0.1-rc10
+  image: ncr.sky.nhn.no/vitistack/ipam-api
+  tag: v0.0.1-rc10
 
 encryption:
   encKey: {}
@@ -69,10 +70,12 @@ podAnnotations: {}
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -101,12 +104,13 @@ ingress:
       paths:
         - path: /
           pathType: ImplementationSpecific
-  tls: 
+  tls:
     - secretName: ipam-api-test-tls
       hosts:
         - ipam-api.test.vitistack.io
 
-resources: {}
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following

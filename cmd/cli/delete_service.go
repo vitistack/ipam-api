@@ -98,10 +98,12 @@ func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 		return fmt.Errorf("failed to encrypt secret: %w", err)
 	}
 
+	// address := utils.NormalizeCIDR(request.Address)
+
 	filter := bson.M{
 		"secret":  encryptedSecret,
 		"zone":    request.Zone,
-		"address": request.Address,
+		"address": utils.NormalizeCIDR(request.Address),
 	}
 
 	var registeredAddress mongodbtypes.Address

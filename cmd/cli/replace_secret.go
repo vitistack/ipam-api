@@ -63,7 +63,7 @@ func setNewSecret(address, zone, newSecret string) error {
 	defer cancel()
 
 	findOneFilter := bson.M{
-		"address": address,
+		"address": utils.NormalizeCIDR(address),
 		"zone":    zone,
 	}
 

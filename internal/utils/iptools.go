@@ -21,3 +21,10 @@ func IPFamilyFromPrefix(prefix string) (string, error) {
 
 	return "ipv6", nil
 }
+
+func NormalizeCIDR(input string) string {
+	if !strings.Contains(input, "/") {
+		return input + "/32"
+	}
+	return input
+}

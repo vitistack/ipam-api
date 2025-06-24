@@ -18,7 +18,7 @@ var (
 
 var deleteClusterCmd = &cobra.Command{
 	Use:   "delete-cluster",
-	Short: "Set exiresAt == time.Now() for services linked to a cluster id",
+	Short: "Set expiresAt == time.Now() for services linked to a cluster id",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := setExpiresForCluster(clusterID); err != nil {
 			fmt.Println("Error:", err)

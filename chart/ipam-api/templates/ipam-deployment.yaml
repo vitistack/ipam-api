@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: ipam-deployment
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: { { .Values.replicaCount } }
   selector:
     matchLabels:
       app: ipam
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: ipam-api
-          image: {{ .Values.ipamApi.image }}
+          image: "{{ .Values.ipamApi.image }}:{{ .Values.ipamApi.tag | default .Chart.AppVersion }}"
           ports:
             - containerPort: 8080
           volumeMounts:
@@ -41,7 +41,7 @@ spec:
           secret:
             secretName: ipam-encrypt-json-secret
         - name: mongo-secret
-          secret: 
+          secret:
             secretName: ipam-secret-mongo
         - name: netbox-secret
           secret:
