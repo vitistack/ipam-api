@@ -174,6 +174,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 				NamespaceId:         service.NamespaceId,
 				ClusterId:           service.ClusterId,
 				RetentionPeriodDays: service.RetentionPeriodDays,
+				DenyExternalCleanup: service.DenyExternalCleanup,
 				ExpiresAt:           service.ExpiresAt,
 			})
 		}
@@ -185,6 +186,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 		NamespaceId:         request.Service.NamespaceId,
 		ClusterId:           request.Service.ClusterId,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
+		DenyExternalCleanup: request.Service.DenyExternalCleanup,
 		ExpiresAt:           nil,
 	}))
 
