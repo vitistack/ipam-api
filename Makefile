@@ -10,7 +10,9 @@ HELM := helm
 KUBECTL := kubectl
 
 ##@ Build
-.PHONY: build-api build-cli
+.PHONY: build build-api build-cli
+build: build-api build-cli
+
 build-api: check-tools ## Build the Go application.
 	@echo "Building the ipam-api..."
 	@go build -o ./bin/ipam-api ./cmd/$(PROJECT_NAME)/main.go
@@ -18,6 +20,11 @@ build-api: check-tools ## Build the Go application.
 build-cli: check-tools ## Build the Go application.
 	@echo "Building the ipam-cli..."
 	@go build -o ./bin/ipam-cli ./cmd/cli/
+
+test: check-tools ## Run tests
+	@echo "Running tests..."
+	@go test -v ./...
+	@echo "Tests complete!"
 
 deps: ## Download and verify dependencies
 	@echo "Downloading dependencies..."
@@ -45,7 +52,7 @@ format: ## Format Go code
 	@go fmt ./...
 	@echo "Code formatted!"
 
-security-scan: ## Run security scan
+go-security-scan: ## Run security scan
 	@echo "Running security scan..."
 	@command -v gosec >/dev/null 2>&1 || { echo "Installing gosec..."; go install github.com/securego/gosec/v2/cmd/gosec@latest; }
 	@gosec ./...
