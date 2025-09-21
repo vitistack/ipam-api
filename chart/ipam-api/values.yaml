@@ -31,7 +31,7 @@ mongodb:
   image:
     registry: ncr.sky.nhn.no/dockerhub
     repository: bitnami/mongodb
-    tag: 7.0.5
+    tag: 8.0.11
     pullSecrets: []
   architecture: standalone
   auth:
