@@ -28,19 +28,14 @@ ipamConfig:
   encryptionSecretsPath: secrets.json
 
 mongodb:
-  image:
-    registry: ncr.sky.nhn.no/dockerhub
-    repository: bitnami/mongodb
-    tag: 7.0.5
-    pullSecrets: []
-  architecture: standalone
-  auth:
-    rootUser: ""
-    rootPassword: ""
+  namespace: mongodb
+  replicaCount: 2
+  version: "7.0.24"
+  volumes:
+    data: 10Gi
+    logs: 2Gi  
   service:
     port: 27017
-  persistence:
-    storageClass: "cephfs"
 
 secrets:
   mongodb: supersecret
@@ -100,14 +95,14 @@ ingress:
     cert-manager.io/cluster-issuer: internpki
 
   hosts:
-    - host: ipam-api.test.vitistack.io
+    - host: ipam-api.vitistack.io
       paths:
         - path: /
           pathType: ImplementationSpecific
   tls:
-    - secretName: ipam-api-test-tls
+    - secretName: ipam-api-tls
       hosts:
-        - ipam-api.test.vitistack.io
+        - ipam-api.vitistack.io
 
 resources:
   {}
