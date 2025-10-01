@@ -20,6 +20,8 @@ spec:
           db: admin
         - name: userAdminAnyDatabase
           db: admin
+        - db: "admin"
+          name: "readWrite"
       scramCredentialsSecretName: my-scram
   additionalMongodConfig:
     net:
@@ -37,6 +39,14 @@ spec:
                       limits:
                         cpu: "2"
                         memory: "2Gi"
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop: ["ALL"]
+                      runAsNonRoot: true
+                      runAsUser: 999
+                      seccompProfile:
+                        type: RuntimeDefault
                   - name: mongodb-agent
                     resources:
                       requests:
@@ -45,6 +55,14 @@ spec:
                       limits:
                         cpu: "500m"
                         memory: "500Mi"
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop: ["ALL"]
+                      runAsNonRoot: true
+                      runAsUser: 999
+                      seccompProfile:
+                        type: RuntimeDefault
         volumeClaimTemplates:
           - metadata:
               name: data-volume
