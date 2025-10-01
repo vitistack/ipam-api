@@ -18,9 +18,9 @@ encryption:
 
 ipamConfig:
   mongodb:
-    username: {}
-    password: {}
-    host: ipam-system-mongodb
+    username: admin
+    password: supersecret
+    host: ipam-api-svc.mongodb.svc.cluster.local
     port: 27017
     database: vitistack-ipam-api
     collection: addresses
