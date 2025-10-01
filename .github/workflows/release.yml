@@ -59,7 +59,6 @@ jobs:
           images: ghcr.io/vitistack/ipam-api
           tags: |
             type=semver,pattern={{version}}
-            type=semver,pattern=v{{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
@@ -107,8 +106,8 @@ jobs:
         run: |
           export HELM_VERSION=${VERSION#v*}
           ./yq e -i '.version = strenv(HELM_VERSION),.appVersion = strenv(VERSION)' chart/ipam-api/Chart.yaml
-          ./yq e -i '.ipamApi.tag = strenv(VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.prod.yaml
-          ./yq e -i '.ipamApi.tag = strenv(VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.test.yaml
+          ./yq e -i '.ipamApi.tag = strenv(HELM_VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.prod.yaml
+          ./yq e -i '.ipamApi.tag = strenv(HELM_VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.test.yaml
           helm package chart/ipam-api 
           echo  ${{ secrets.GITHUB_TOKEN }} | helm registry login -u ${{ github.actor }} ghcr.io --password-stdin
           helm push ipam-api-${HELM_VERSION}.tgz oci://ghcr.io/vitistack/helm/
