@@ -20,8 +20,8 @@ spec:
           db: admin
         - name: userAdminAnyDatabase
           db: admin
-        - db: "admin"
-          name: "readWrite"
+        - name: "readWriteAnyDatabase"
+          db: "admin"
       scramCredentialsSecretName: my-scram
   additionalMongodConfig:
     net:
