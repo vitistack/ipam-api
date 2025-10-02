@@ -77,8 +77,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64
-          #   platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -108,7 +108,7 @@ jobs:
           ./yq e -i '.version = strenv(HELM_VERSION),.appVersion = strenv(VERSION)' chart/ipam-api/Chart.yaml
           ./yq e -i '.ipamApi.tag = strenv(HELM_VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.prod.yaml
           ./yq e -i '.ipamApi.tag = strenv(HELM_VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.test.yaml
-          helm package chart/ipam-api 
+          helm package chart/ipam-api
           echo  ${{ secrets.GITHUB_TOKEN }} | helm registry login -u ${{ github.actor }} ghcr.io --password-stdin
           helm push ipam-api-${HELM_VERSION}.tgz oci://ghcr.io/vitistack/helm/
         env:
