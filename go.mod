@@ -3,13 +3,20 @@ module github.com/vitistack/ipam-api
 go 1.24.7
 
 require (
-	github.com/gin-gonic/gin v1.10.1
+	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	go.mongodb.org/mongo-driver/v2 v2.3.0
 	go.uber.org/zap v1.27.0
+)
+
+require (
+	github.com/goccy/go-yaml v1.18.0 // indirect
+	github.com/quic-go/qpack v0.5.1 // indirect
+	github.com/quic-go/quic-go v0.54.0 // indirect
+	go.uber.org/mock v0.5.0 // indirect
 )
 
 require (
