@@ -27,6 +27,9 @@ ipamConfig:
   netbox:
     url: https://ipam.dcn.nhn.no
     token: {}
+  splunk:
+    enable: true
+    url: https://splunk-hec.nhn.no
   encryptionSecretsPath: secrets.json
 
 mongodb:
