@@ -21,7 +21,7 @@ build-cli: check-tools ## Build the Go application.
 	@echo "Building the ipam-cli..."
 	@go build -o ./bin/ipam-cli ./cmd/cli/
 
-test: check-tools ## Run tests
+test: check-toolspwd ## Run tests
 	@echo "Running tests..."
 	@go test -v ./...
 	@echo "Tests complete!"
