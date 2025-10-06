@@ -8,7 +8,7 @@ spec:
   schedule: "{{ .Values.backup.schedule }}"
   timeZone: "Europe/Oslo"
   concurrencyPolicy: Forbid
-  failedJobsHistoryLimit: "{{ .Values.backup.failedJobsHistoryLimit }}"
+  failedJobsHistoryLimit: {{ int .Values.backup.failedJobsHistoryLimit }}
   jobTemplate:
     spec:
       backoffLimit: 1
