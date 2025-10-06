@@ -1,0 +1,83 @@
+{{- if eq .Values.backup.enable true}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ipam-mongodump
+  namespace: mongodb
+spec:
+  schedule: "{{ .Values.backup.schedule }}"
+  timeZone: "Europe/Oslo"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          # Pod-nivå sikkerhet (Kyverno krever RuntimeDefault)
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+            fsGroup: 10001
+            fsGroupChangePolicy: OnRootMismatch
+          containers:
+            - name: backup
+              envFrom:
+                - secretRef:
+                    name: mongo-backup-secrets
+              image: {{ .Values.backup.image }}
+              imagePullPolicy: IfNotPresent
+              # Container-nivå sikkerhet
+
+              securityContext:
+                seccompProfile:
+                  type: RuntimeDefault
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                runAsNonRoot: true
+                runAsUser: 10001
+                runAsGroup: 10001
+                readOnlyRootFilesystem: true
+              volumeMounts:
+                - name: work
+                  mountPath: /work
+                - name: ssh
+                  mountPath: /ssh
+                  readOnly: true
+                - name: mongo-secret
+                  mountPath: /work/mongodb.secret
+                  subPath: password
+
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+                  MONGO_SECRET=$(cat /work/mongodb.secret)
+                  TS="$(date -u +%Y%m%dT%H%M%SZ)"
+                  ARCHIVE="/work/mongodump-${TS}.tar.gz"
+                  MONGO_URI="mongodb://admin:${MONGO_SECRET}@ipam-api-svc.mongodb.svc.cluster.local:27017/vitistack-ipam-api?authSource=admin"
+                  echo "[*] mongodump -> ${ARCHIVE}"
+                  mongodump --uri="${MONGO_URI}" --archive | gzip > "${ARCHIVE}"
+                  echo "[*] copying dump to sftp server"
+                    scp -i /ssh/ssh_key \
+                        -o StrictHostKeyChecking=accept-new \
+                        -o UserKnownHostsFile=/work/known_hosts \
+                        "${ARCHIVE}" "vitistack@10.122.194.180:/home/vitistack/"
+                  echo "[*] done"
+
+          volumes:
+            - name: work
+              emptyDir: {}
+            - name: ssh
+              secret:
+                secretName: mongo-backup-ssh
+                items:
+                  - key: ssh_key
+                    path: ssh_key
+                defaultMode: 0440
+            - name: mongo-secret
+              secret:
+                secretName: ipam-api-password
+{{ end }}
