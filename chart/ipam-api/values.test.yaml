@@ -49,6 +49,7 @@ secrets:
 
 backup:
   enable: false
+  failedJobsHistoryLimit: 6
   image: ncr.sky.nhn.no/dcn/ipam-mongodump:v0.0.1
   schedule: "*/15 * * * *"
   sshKey: |
