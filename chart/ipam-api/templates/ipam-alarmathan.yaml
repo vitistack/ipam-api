@@ -1,0 +1,41 @@
+{{- if eq .Values.alarmathan.mongodb.enable true}}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  annotations:
+    prometheus-operator-validated: "true"
+  labels:
+    release: prometheus
+  name: ipam-api-prometheus-rules
+  namespace: {{ .Values.alarmathan.mongodb.namespace }}
+spec:
+  groups:
+  - name: cronjob.errors
+    rules:
+    - alert: IPAM_DB_BACKUP_FAIL
+      annotations:
+        description: {{ quote "CronJob-en '{{ $labels.cronjob_name }}' i namespace '{{ $labels.namespace }}' har akkumulert 4 feilende Job-instanser." | replace "\"" "" }}
+        summary: {{ quote "Backup of mongo DB failed 4 times in a row - JOB:{{ $labels.cronjob_name }}" | replace "\"" "" }}
+      expr: |
+        (
+          count by (namespace, cronjob_name) (
+            label_replace(
+              kube_job_status_failed{job_name=~"ipam-mongodump-\\d+$"} == 1,
+              "cronjob_name",
+              "$1",
+              "job_name",
+              "(.+)-\\d+$"
+            )
+          )
+        ) >= 4
+      for: 0m
+      labels:
+        app: {{ .Values.alarmathan.mongodb.app }}
+        cluster: {{ .Values.alarmathan.mongodb.cluster }}
+        criticality: {{ .Values.alarmathan.mongodb.criticality }}
+        environment: {{ .Values.alarmathan.mongodb.environment }}
+        namespace: prometheus-operator
+        severity: {{ .Values.alarmathan.mongodb.severity }}
+        team: {{ .Values.alarmathan.mongodb.team }}
+        varseltilos: {{ .Values.alarmathan.mongodb.varseltilos }}
+{{ end }}

@@ -49,12 +49,24 @@ secrets:
 
 backup:
   enable: false
-  failedJobsHistoryLimit: 6
+  failedJobsHistoryLimit: 4
   image: ncr.sky.nhn.no/dcn/ipam-mongodump:v0.0.1
   schedule: "*/15 * * * *"
   sshKey: |
     -----BEGIN OPENSSH PRIVATE KEY-----
     -----END OPENSSH PRIVATE KEY-----
+
+alarmathan:
+  mongodb:
+    enable: false
+    namespace: mongodb
+    app: viti-ipam-api
+    environment: test
+    cluster: t-dcn-001
+    criticality: Høy
+    severity: Høy
+    team: Team Datasenter-Nettverk (Forretningsområde Skytjenester)
+    varseltilos: test
 
 # This is to override the chart name.
 nameOverride: ""
