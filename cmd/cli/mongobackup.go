@@ -27,7 +27,9 @@ var mongoBackup = &cobra.Command{
 
 func init() {
 	mongoBackup.Flags().StringVar(&outPath, "out", "", "output path (required)")
-	mongoBackup.MarkFlagRequired("out")
+	if err := mongoBackup.MarkFlagRequired("out"); err != nil {
+		log.Fatalf("Failed to mark 'out' flag as required: %v", err)
+	}
 	RootCmd.AddCommand(mongoBackup)
 }
 
@@ -38,10 +40,12 @@ func backup() error {
 		log.Fatalf("%s", err.Error())
 	}
 
-	logger.InitLogger("./logs")
-
+	err = logger.InitLogger("./logs")
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
 	backupDir := "./backup"
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(backupDir, 0750); err != nil {
 		return fmt.Errorf("failed to create backup directory: %w", err)
 	}
 

@@ -18,12 +18,12 @@ type NetboxPrefix struct {
 	}
 	CustomFields struct {
 		Infra   string `json:"infra"`
-		K8sUuid string `json:"k8s_uuid"`
+		K8sUUID string `json:"k8s_uuid"`
 		K8sZone string `json:"k8s_zone"`
 	} `json:"custom_fields"`
 }
 
-func (n NetboxPrefix) GetIpFamily() int {
+func (n NetboxPrefix) GetIPFamily() int {
 	switch n.Family.Value {
 	case 4:
 		return 4

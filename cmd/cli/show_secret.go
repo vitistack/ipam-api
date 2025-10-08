@@ -31,8 +31,12 @@ var showSecret = &cobra.Command{
 func init() {
 	showSecret.Flags().StringVar(&address, "address", "", "Address (required)")
 	showSecret.Flags().StringVar(&zone, "zone", "", "Zone (required)")
-	showSecret.MarkFlagRequired("address")
-	showSecret.MarkFlagRequired("zone")
+	if err := showSecret.MarkFlagRequired("address"); err != nil {
+		fmt.Println("Error marking 'address' flag as required:", err)
+	}
+	if err := showSecret.MarkFlagRequired("zone"); err != nil {
+		fmt.Println("Error marking 'zone' flag as required:", err)
+	}
 	RootCmd.AddCommand(showSecret)
 }
 

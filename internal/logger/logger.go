@@ -20,12 +20,12 @@ var baseLogger *zap.Logger
 var httpLogger *zap.Logger
 
 type SplunkConfig struct {
-	Url   string
+	URL   string
 	Token string
 }
 
 func InitLogger(logDir string) error {
-	if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(logDir, 0750); err != nil {
 		return fmt.Errorf("could not create log directory: %w", err)
 	}
 
@@ -152,7 +152,7 @@ func Sync() {
 }
 
 func getWriter(path string) *os.File {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		panic("unable to open log file: " + err.Error())
 	}

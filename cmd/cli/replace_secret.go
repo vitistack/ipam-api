@@ -33,9 +33,15 @@ func init() {
 	replaceSecret.Flags().StringVar(&replaceSecretAddress, "address", "", "Address (required)")
 	replaceSecret.Flags().StringVar(&replaceSecretZone, "zone", "", "Zone (required)")
 	replaceSecret.Flags().StringVar(&newSecret, "new", "", "Zone (required)")
-	replaceSecret.MarkFlagRequired("address")
-	replaceSecret.MarkFlagRequired("zone")
-	replaceSecret.MarkFlagRequired("new")
+	if err := replaceSecret.MarkFlagRequired("address"); err != nil {
+		fmt.Println("Error marking 'address' flag as required:", err)
+	}
+	if err := replaceSecret.MarkFlagRequired("zone"); err != nil {
+		fmt.Println("Error marking 'zone' flag as required:", err)
+	}
+	if err := replaceSecret.MarkFlagRequired("new"); err != nil {
+		fmt.Println("Error marking 'new' flag as required:", err)
+	}
 	RootCmd.AddCommand(replaceSecret)
 }
 

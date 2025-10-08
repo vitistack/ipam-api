@@ -21,28 +21,28 @@ import (
 //   - Otherwise, it updates the registration as default.
 //
 // Returns an IpamApiResponse and an error if any operation fails.
-func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
+func RegisterAddress(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
 	alreadyRegistered, err := mongodbservice.ServiceAlreadyRegistered(request)
 	if err != nil {
 		logger.Log.Errorf("Failed to check if service is already registered: %v", err)
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	availableInNetbox := false
 	if request.Address != "" {
-		zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+		zone := request.Zone + "_v" + string(request.IPFamily[len(request.IPFamily)-1])
 		zonePrefixes := netboxservice.Cache.Get(zone)
 
 		// Assuming all prefixes in the zone have the same VRF ID.
 		// zonePrefixes length is validated in ValidateRequest function.
-		vrfId := zonePrefixes[0].Vrf.ID
+		vrfID := zonePrefixes[0].Vrf.ID
 		queryParams := map[string]string{
 			"prefix":            request.Address,
-			"present_in_vrf_id": strconv.Itoa(vrfId),
+			"present_in_vrf_id": strconv.Itoa(vrfID),
 		}
 		availableInNetbox, err = netboxservice.PrefixAvailable(queryParams)
 		if err != nil {
-			return apicontracts.IpamApiResponse{}, err
+			return apicontracts.IpamAPIResponse{}, err
 		}
 	}
 
@@ -50,7 +50,7 @@ func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiR
 		// Not registered in MongoDB and no address provided
 		response, err := RegisterNextAvailable(request)
 		if err != nil {
-			return apicontracts.IpamApiResponse{}, err
+			return apicontracts.IpamAPIResponse{}, err
 		}
 		return response, nil
 	} else if request.Address == "" && alreadyRegistered.Address != "" {
@@ -59,7 +59,7 @@ func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiR
 		response, err := Update(request)
 		if err != nil {
 			logger.Log.Errorf("Failed to register update address: %v", err)
-			return apicontracts.IpamApiResponse{}, err
+			return apicontracts.IpamAPIResponse{}, err
 		}
 		return response, nil
 	} else if availableInNetbox && request.Address != "" {
@@ -67,7 +67,7 @@ func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiR
 		response, err := RegisterSpecific(request)
 		if err != nil {
 			logger.Log.Errorf("Failed to register specific address: %v", err)
-			return apicontracts.IpamApiResponse{}, err
+			return apicontracts.IpamAPIResponse{}, err
 		}
 		return response, nil
 	} else {
@@ -75,7 +75,7 @@ func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiR
 		response, err := Update(request)
 		if err != nil {
 			logger.Log.Errorf("Failed to update address: %v", err)
-			return apicontracts.IpamApiResponse{}, err
+			return apicontracts.IpamAPIResponse{}, err
 		}
 		return response, nil
 	}
@@ -91,11 +91,11 @@ func RegisterAddress(request apicontracts.IpamApiRequest) (apicontracts.IpamApiR
 //  6. Logs the successful registration and returns a response containing the registered address.
 //
 // Returns an IpamApiResponse with the registered address on success, or an error if any step fails.
-func RegisterNextAvailable(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
+func RegisterNextAvailable(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
 	container, err := netboxservice.GetAvailablePrefixContainer(request)
 
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	payload := apicontracts.GetNextPrefixPayload(request, container)
@@ -103,24 +103,24 @@ func RegisterNextAvailable(request apicontracts.IpamApiRequest) (apicontracts.Ip
 	nextPrefix, err := netboxservice.GetNextPrefixFromContainer(strconv.Itoa(container.ID), payload)
 
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	addressDocument, err := mongodbservice.RegisterAddress(request, nextPrefix)
 
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	updatePayload := apicontracts.GetUpdatePrefixPayload(nextPrefix, addressDocument, request)
 	err = netboxservice.UpdateNetboxPrefix(strconv.Itoa(nextPrefix.ID), updatePayload)
 
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	logger.Log.Infof("Address %s registered successfully", nextPrefix.Prefix)
-	return apicontracts.IpamApiResponse{
+	return apicontracts.IpamAPIResponse{
 		Message: "Address registered successfully",
 		Address: nextPrefix.Prefix,
 	}, nil
@@ -139,8 +139,8 @@ func RegisterNextAvailable(request apicontracts.IpamApiRequest) (apicontracts.Ip
 // Returns:
 //   - apicontracts.IpamApiResponse: Response containing a success message and the registered address.
 //   - error: Error if the address is invalid for the zone or if any registration step fails.
-func RegisterSpecific(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
-	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+func RegisterSpecific(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
+	zone := request.Zone + "_v" + string(request.IPFamily[len(request.IPFamily)-1])
 	zonePrefixes := netboxservice.Cache.Get(zone)
 
 	validZonePrefix := false
@@ -158,26 +158,26 @@ func RegisterSpecific(request apicontracts.IpamApiRequest) (apicontracts.IpamApi
 	}
 
 	if !validZonePrefix {
-		return apicontracts.IpamApiResponse{}, errors.New("the requested address is not valid for the provided zone")
+		return apicontracts.IpamAPIResponse{}, errors.New("the requested address is not valid for the provided zone")
 	}
 
 	container, err := netboxservice.GetAvailablePrefixContainer(request)
 
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	payload := apicontracts.GetCreatePrefixPayload(request, container)
 	prefix, err := netboxservice.RegisterPrefix(payload)
 
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	addressDocument, err := mongodbservice.RegisterAddress(request, prefix)
 
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	updatePayload := apicontracts.GetUpdatePrefixPayload(prefix, addressDocument, request)
@@ -185,11 +185,11 @@ func RegisterSpecific(request apicontracts.IpamApiRequest) (apicontracts.IpamApi
 
 	if err != nil {
 		logger.Log.Infof("Failed to update %s in Netbox: %v", request.Address, err.Error())
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	logger.Log.Infof("Address %s registered successfully in Netbox and MongoDB", request.Address)
-	return apicontracts.IpamApiResponse{
+	return apicontracts.IpamAPIResponse{
 		Message: "Address registered successfully",
 		Address: request.Address,
 	}, nil
@@ -206,14 +206,14 @@ func RegisterSpecific(request apicontracts.IpamApiRequest) (apicontracts.IpamApi
 // Returns:
 //   - apicontracts.IpamApiResponse: Response with a success message and the updated address.
 //   - error: Error encountered during the update operation, if any.
-func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
+func Update(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
 	address, err := mongodbservice.UpdateAddressDocument(request)
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
 	logger.Log.Infof("Address %s updated successfully", request.Address)
-	return apicontracts.IpamApiResponse{
+	return apicontracts.IpamAPIResponse{
 		Message: "Address updated successfully",
 		Address: address.Address,
 	}, nil
@@ -229,13 +229,13 @@ func Update(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, 
 // Returns:
 //   - apicontracts.IpamApiResponse: Response containing a message and the address.
 //   - error: Error if setting the expiration fails.
-func SetServiceExpiration(request apicontracts.IpamApiRequest) (apicontracts.IpamApiResponse, error) {
+func SetServiceExpiration(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
 	err := mongodbservice.SetServiceExpirationOnAddress(request)
 	if err != nil {
-		return apicontracts.IpamApiResponse{}, err
+		return apicontracts.IpamAPIResponse{}, err
 	}
 
-	return apicontracts.IpamApiResponse{
+	return apicontracts.IpamAPIResponse{
 		Message: "Service expiration set successfully",
 		Address: request.Address,
 	}, nil

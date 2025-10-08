@@ -89,11 +89,11 @@ func InitConfig() error {
 	}
 
 	if viper.GetString("netbox.constraint_tag") != "" {
-		constraintTagId, err := netboxservice.GetTagId(viper.GetString("netbox.constraint_tag"))
+		constraintTagID, err := netboxservice.GetTagID(viper.GetString("netbox.constraint_tag"))
 		if err != nil {
 			return fmt.Errorf("failed to get constraint tag ID: %w", err)
 		}
-		viper.Set("netbox.constraint_tag_id", constraintTagId)
+		viper.Set("netbox.constraint_tag_id", constraintTagID)
 	}
 
 	return nil

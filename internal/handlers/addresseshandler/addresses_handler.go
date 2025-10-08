@@ -31,11 +31,14 @@ import (
 //	@Failure		500		{object}	apicontracts.HTTPError
 //	@Router			/ [POST]
 func RegisterAddress(ginContext *gin.Context) {
-	var request apicontracts.IpamApiRequest
+	var request apicontracts.IpamAPIRequest
 	err := ginContext.ShouldBindJSON(&request)
 
 	if err != nil {
-		ginContext.Error(err)
+		err := ginContext.Error(err)
+		if err != nil {
+			logger.Log.Errorf("Failed to attach error to context: %v", err)
+		}
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
 		return
 	}
@@ -44,18 +47,24 @@ func RegisterAddress(ginContext *gin.Context) {
 
 	if err != nil {
 		logger.Log.Errorf("Request validation failed: %v", err)
-		ginContext.Error(err)
+		err := ginContext.Error(err)
+		if err != nil {
+			logger.Log.Errorf("Failed to attach error to context: %v", err)
+		}
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
-	var response apicontracts.IpamApiResponse
+	var response apicontracts.IpamAPIResponse
 	httpStatus := http.StatusOK
 
 	response, err = addressesservice.RegisterAddress(request)
 	if err != nil {
 		logger.Log.Errorf("Failed to register address: %v", err)
-		ginContext.Error(err)
+		err := ginContext.Error(err)
+		if err != nil {
+			logger.Log.Errorf("Failed to attach error to context: %v", err)
+		}
 		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": "Could not register address: " + err.Error()})
 		return
 	}
@@ -79,12 +88,15 @@ func RegisterAddress(ginContext *gin.Context) {
 //	@Failure		500		{object}	apicontracts.HTTPError
 //	@Router			/ [DELETE]
 func ExpireAddress(ginContext *gin.Context) {
-	var prefixRequest apicontracts.IpamApiRequest
+	var prefixRequest apicontracts.IpamAPIRequest
 
 	err := ginContext.ShouldBindJSON(&prefixRequest)
 
 	if err != nil {
-		ginContext.Error(err)
+		err := ginContext.Error(err)
+		if err != nil {
+			logger.Log.Errorf("Failed to attach error to context: %v", err)
+		}
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse incomming request"})
 		return
 	}
@@ -92,7 +104,10 @@ func ExpireAddress(ginContext *gin.Context) {
 	err = ValidateRequest(&prefixRequest)
 
 	if err != nil {
-		ginContext.Error(err)
+		err := ginContext.Error(err)
+		if err != nil {
+			logger.Log.Errorf("Failed to attach error to context: %v", err)
+		}
 		ginContext.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
@@ -100,7 +115,10 @@ func ExpireAddress(ginContext *gin.Context) {
 	response, err := addressesservice.SetServiceExpiration(prefixRequest)
 
 	if err != nil {
-		ginContext.Error(err)
+		err := ginContext.Error(err)
+		if err != nil {
+			logger.Log.Errorf("Failed to attach error to context: %v", err)
+		}
 		ginContext.JSON(http.StatusNotFound, gin.H{"message": "Could not deregister service: " + err.Error()})
 		return
 	}
@@ -109,7 +127,7 @@ func ExpireAddress(ginContext *gin.Context) {
 
 }
 
-func ValidateRequest(request *apicontracts.IpamApiRequest) error {
+func ValidateRequest(request *apicontracts.IpamAPIRequest) error {
 	validate := validator.New()
 
 	netboxZones, err := netboxservice.GetK8sZones()
@@ -139,22 +157,22 @@ func ValidateRequest(request *apicontracts.IpamApiRequest) error {
 	}
 
 	if request.Address != "" {
-		prefixIpFamily, err := utils.IPFamilyFromPrefix(request.Address)
+		prefixIPFamily, err := utils.IPFamilyFromPrefix(request.Address)
 
 		if err != nil {
 			return err
 		}
 
-		if prefixIpFamily != request.IpFamily {
+		if prefixIPFamily != request.IPFamily {
 			return errors.New("invalid ip familiy for the provided address")
 		}
 	}
 
-	zone := request.Zone + "_v" + string(request.IpFamily[len(request.IpFamily)-1])
+	zone := request.Zone + "_v" + string(request.IPFamily[len(request.IPFamily)-1])
 	zonePrefixes := netboxservice.Cache.Get(zone)
 
 	if len(zonePrefixes) == 0 {
-		return fmt.Errorf("no prefixes found for zone %s with IP family %s", request.Zone, request.IpFamily)
+		return fmt.Errorf("no prefixes found for zone %s with IP family %s", request.Zone, request.IPFamily)
 	}
 
 	return nil

@@ -10,23 +10,23 @@ import (
 
 type Service struct {
 	ServiceName         string     `json:"service_name" bson:"service_name" validate:"required" example:"service1"`
-	NamespaceId         string     `json:"namespace_id" bson:"namespace_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
-	ClusterId           string     `json:"cluster_id" bson:"cluster_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
+	NamespaceID         string     `json:"namespace_id" bson:"namespace_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
+	ClusterID           string     `json:"cluster_id" bson:"cluster_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
 	RetentionPeriodDays int        `json:"retention_period_days,omitempty" bson:"retention_period_days,omitempty"`
 	ExpiresAt           *time.Time `json:"expires_at,omitempty" bson:"expires_at,omitempty" example:"2025-06-03 14:39:31.546230273"`
 	DenyExternalCleanup bool       `json:"deny_external_cleanup,omitempty" bson:"deny_external_cleanup"`
 }
 
-type IpamApiRequest struct {
+type IpamAPIRequest struct {
 	Secret    string  `json:"secret" validate:"required,min=8,max=64" example:"a_secret_value"`
 	Zone      string  `json:"zone" validate:"required" example:"inet"`
-	IpFamily  string  `json:"ip_family" bson:"ip_family" validate:"required,oneof=ipv4 ipv6" example:"ipv4"`
+	IPFamily  string  `json:"ip_family" bson:"ip_family" validate:"required,oneof=ipv4 ipv6" example:"ipv4"`
 	Address   string  `json:"address"`
 	Service   Service `json:"service"`
 	NewSecret string  `json:"new_secret,omitempty" bson:"new_secret,omitempty"`
 }
 
-type IpamApiResponse struct {
+type IpamAPIResponse struct {
 	Message string `json:"message"`
 	Address string `json:"address"`
 }
@@ -42,18 +42,18 @@ type CustomFields struct {
 
 type NextPrefixPayload struct {
 	PrefixLength int          `json:"prefix_length"`
-	VrfId        int          `json:"vrf"`
-	TenantId     int          `json:"tenant"`
-	RoleId       int          `json:"role"`
+	VrfID        int          `json:"vrf"`
+	TenantID     int          `json:"tenant"`
+	RoleID       int          `json:"role"`
 	CustomFields CustomFields `json:"custom_fields"`
 	Tags         []int        `json:"tags,omitempty"`
 }
 
 type CreatePrefixPayload struct {
 	Prefix       string       `json:"prefix,omitempty"`
-	VrfId        int          `json:"vrf"`
-	TenantId     int          `json:"tenant"`
-	RoleId       int          `json:"role"`
+	VrfID        int          `json:"vrf"`
+	TenantID     int          `json:"tenant"`
+	RoleID       int          `json:"role"`
 	CustomFields CustomFields `json:"custom_fields"`
 	Tags         []int        `json:"tags,omitempty"`
 }
@@ -78,25 +78,25 @@ type HTTPError struct {
 //
 // Returns:
 //   - NextPrefixPayload: The constructed payload for the next prefix allocation.
-func GetNextPrefixPayload(request IpamApiRequest, container responses.NetboxPrefix) NextPrefixPayload {
+func GetNextPrefixPayload(request IpamAPIRequest, container responses.NetboxPrefix) NextPrefixPayload {
 	var prefixLength int
-	if request.IpFamily == "ipv4" {
+	if request.IPFamily == "ipv4" {
 		prefixLength = 32
-	} else if request.IpFamily == "ipv6" {
+	} else if request.IPFamily == "ipv6" {
 		prefixLength = 128
 	}
 
 	tags := []int{}
 	if viper.IsSet("netbox.constraint_tag_id") {
-		tagId := viper.GetInt("netbox.constraint_tag_id")
-		tags = append(tags, tagId)
+		tagID := viper.GetInt("netbox.constraint_tag_id")
+		tags = append(tags, tagID)
 	}
 
 	return NextPrefixPayload{
 		PrefixLength: prefixLength,
-		VrfId:        container.Vrf.ID,
-		TenantId:     container.Tenant.ID,
-		RoleId:       container.Role.ID,
+		VrfID:        container.Vrf.ID,
+		TenantID:     container.Tenant.ID,
+		RoleID:       container.Role.ID,
 		Tags:         tags,
 		CustomFields: CustomFields{
 			Domain:  "na",
@@ -118,19 +118,19 @@ func GetNextPrefixPayload(request IpamApiRequest, container responses.NetboxPref
 //
 // Returns:
 //   - CreatePrefixPayload: The payload ready for prefix creation.
-func GetCreatePrefixPayload(request IpamApiRequest, container responses.NetboxPrefix) CreatePrefixPayload {
+func GetCreatePrefixPayload(request IpamAPIRequest, container responses.NetboxPrefix) CreatePrefixPayload {
 	tags := []int{}
 	if viper.IsSet("netbox.constraint_tag_id") {
-		tagId := viper.GetInt("netbox.constraint_tag_id")
-		tags = append(tags, tagId)
+		tagID := viper.GetInt("netbox.constraint_tag_id")
+		tags = append(tags, tagID)
 
 	}
 
 	return CreatePrefixPayload{
 		Prefix:   request.Address,
-		VrfId:    container.Vrf.ID,
-		TenantId: container.Tenant.ID,
-		RoleId:   container.Role.ID,
+		VrfID:    container.Vrf.ID,
+		TenantID: container.Tenant.ID,
+		RoleID:   container.Role.ID,
 		Tags:     tags,
 		CustomFields: CustomFields{
 			Domain:  "na",
@@ -155,11 +155,11 @@ func GetCreatePrefixPayload(request IpamApiRequest, container responses.NetboxPr
 //
 // Returns:
 //   - An UpdatePrefixPayload populated with the relevant data from the inputs.
-func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Address, request IpamApiRequest) UpdatePrefixPayload {
+func GetUpdatePrefixPayload(nextPrefix responses.NetboxPrefix, mongoPrefix mongodbtypes.Address, request IpamAPIRequest) UpdatePrefixPayload {
 	tags := []int{}
 	if viper.IsSet("netbox.constraint_tag_id") {
-		tagId := viper.GetInt("netbox.constraint_tag_id")
-		tags = append(tags, tagId)
+		tagID := viper.GetInt("netbox.constraint_tag_id")
+		tags = append(tags, tagID)
 	}
 
 	return UpdatePrefixPayload{
