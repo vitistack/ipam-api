@@ -21,22 +21,22 @@ var (
 	deleteServiceZone    string
 	deleteServiceSecret  string
 	deleteServiceName    string
-	deleteNamespaceId    string
-	deleteClusterId      string
+	deleteNamespaceID    string
+	deleteClusterID      string
 )
 
 var deleteService = &cobra.Command{
 	Use:   "delete-service",
 	Short: "Delete service from address",
 	Run: func(cmd *cobra.Command, args []string) {
-		expireAddress := apicontracts.IpamApiRequest{
+		expireAddress := apicontracts.IpamAPIRequest{
 			Address: deleteServiceAddress,
 			Zone:    deleteServiceZone,
 			Secret:  deleteServiceSecret,
 			Service: apicontracts.Service{
 				ServiceName: deleteServiceName,
-				NamespaceId: deleteNamespaceId,
-				ClusterId:   deleteClusterId,
+				NamespaceID: deleteNamespaceID,
+				ClusterID:   deleteClusterID,
 			},
 		}
 
@@ -53,14 +53,26 @@ func init() {
 	deleteService.Flags().StringVar(&deleteServiceZone, "zone", "", "Zone (required)")
 	deleteService.Flags().StringVar(&deleteServiceSecret, "secret", "", "Secret (required)")
 	deleteService.Flags().StringVar(&deleteServiceName, "service-name", "", "Service Name (required)")
-	deleteService.Flags().StringVar(&deleteNamespaceId, "namespace-id", "", "Namespace ID (required)")
-	deleteService.Flags().StringVar(&deleteClusterId, "cluster-id", "", "Cluster ID (required)")
-	deleteService.MarkFlagRequired("address")
-	deleteService.MarkFlagRequired("zone")
-	deleteService.MarkFlagRequired("secret")
-	deleteService.MarkFlagRequired("service-name")
-	deleteService.MarkFlagRequired("namespace-id")
-	deleteService.MarkFlagRequired("cluster-id")
+	deleteService.Flags().StringVar(&deleteNamespaceID, "namespace-id", "", "Namespace ID (required)")
+	deleteService.Flags().StringVar(&deleteClusterID, "cluster-id", "", "Cluster ID (required)")
+	if err := deleteService.MarkFlagRequired("address"); err != nil {
+		fmt.Printf("Error marking 'address' flag as required: %v\n", err)
+	}
+	if err := deleteService.MarkFlagRequired("zone"); err != nil {
+		fmt.Printf("Error marking 'zone' flag as required: %v\n", err)
+	}
+	if err := deleteService.MarkFlagRequired("secret"); err != nil {
+		fmt.Printf("Error marking 'secret' flag as required: %v\n", err)
+	}
+	if err := deleteService.MarkFlagRequired("service-name"); err != nil {
+		fmt.Printf("Error marking 'service-name' flag as required: %v\n", err)
+	}
+	if err := deleteService.MarkFlagRequired("namespace-id"); err != nil {
+		fmt.Printf("Error marking 'namespace-id' flag as required: %v\n", err)
+	}
+	if err := deleteService.MarkFlagRequired("cluster-id"); err != nil {
+		fmt.Printf("Error marking 'cluster-id' flag as required: %v\n", err)
+	}
 
 	RootCmd.AddCommand(deleteService)
 }
@@ -80,7 +92,7 @@ func init() {
 //
 // Returns:
 //   - error: An error if any step fails, or nil on success.
-func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
+func setServiceExpirationOnAddress(request apicontracts.IpamAPIRequest) error {
 
 	mongoConfig := mongodb.MongoConfig{
 		Host:     viper.GetString("mongodb.host"),
@@ -122,13 +134,13 @@ func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	// Loop through the services array and remove the service that matches the request
 	var newServices []mongodbtypes.Service
 	for _, service := range registeredAddress.Services {
-		if !(service.NamespaceId == request.Service.NamespaceId &&
+		if !(service.NamespaceID == request.Service.NamespaceID &&
 			service.ServiceName == request.Service.ServiceName &&
-			service.ClusterId == request.Service.ClusterId) {
+			service.ClusterID == request.Service.ClusterID) {
 			newServices = append(newServices, mongodbtypes.Service{
 				ServiceName:         service.ServiceName,
-				NamespaceId:         service.NamespaceId,
-				ClusterId:           service.ClusterId,
+				NamespaceID:         service.NamespaceID,
+				ClusterID:           service.ClusterID,
 				RetentionPeriodDays: service.RetentionPeriodDays,
 				ExpiresAt:           service.ExpiresAt,
 			})
@@ -141,8 +153,8 @@ func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	expiresAt = &exp
 	newServices = append(newServices, mongodbtypes.Service{
 		ServiceName:         request.Service.ServiceName,
-		NamespaceId:         request.Service.NamespaceId,
-		ClusterId:           request.Service.ClusterId,
+		NamespaceID:         request.Service.NamespaceID,
+		ClusterID:           request.Service.ClusterID,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		ExpiresAt:           expiresAt})
 
@@ -158,7 +170,7 @@ func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 		return fmt.Errorf("failed to update services array: %w", err)
 	}
 	fmt.Printf("Expiration set for service '%s' cluster id '%s' 'namespace id '%s' on address '%s'\n",
-		request.Service.ServiceName, request.Service.ClusterId, request.Service.NamespaceId, request.Address)
+		request.Service.ServiceName, request.Service.ClusterID, request.Service.NamespaceID, request.Address)
 	return nil
 }
 
@@ -167,9 +179,9 @@ func setServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 // otherwise it returns false.
 func serviceExists(services []mongodbtypes.Service, target mongodbtypes.Service) bool {
 	for _, s := range services {
-		if s.NamespaceId == target.NamespaceId &&
+		if s.NamespaceID == target.NamespaceID &&
 			s.ServiceName == target.ServiceName &&
-			s.ClusterId == target.ClusterId {
+			s.ClusterID == target.ClusterID {
 			return true
 		}
 	}

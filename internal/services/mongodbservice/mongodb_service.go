@@ -30,7 +30,7 @@ import (
 // Returns:
 //   - mongodbtypes.Address: The newly created address document.
 //   - error: An error if the operation fails, otherwise nil.
-func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
+func RegisterAddress(request apicontracts.IpamAPIRequest, nextPrefix responses.NetboxPrefix) (mongodbtypes.Address, error) {
 
 	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
 
@@ -40,8 +40,8 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 
 	service := apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
-		NamespaceId:         request.Service.NamespaceId,
-		ClusterId:           request.Service.ClusterId,
+		NamespaceID:         request.Service.NamespaceID,
+		ClusterID:           request.Service.ClusterID,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		DenyExternalCleanup: request.Service.DenyExternalCleanup,
 		ExpiresAt:           nil,
@@ -51,7 +51,7 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 		"secret":    encryptedSecret,
 		"zone":      request.Zone,
 		"address":   nextPrefix.Prefix,
-		"ip_family": request.IpFamily,
+		"ip_family": request.IPFamily,
 		"netbox_id": nextPrefix.ID,
 		"services":  []apicontracts.Service{service},
 	}
@@ -89,11 +89,15 @@ func RegisterAddress(request apicontracts.IpamApiRequest, nextPrefix responses.N
 //
 // Returns:
 //   - error: An error if the update fails or validation does not pass; otherwise, nil.
-func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
+func UpdateAddressDocument(request apicontracts.IpamAPIRequest) (mongodbtypes.Address, error) {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
 	encryptedRequestSecret, err := utils.DeterministicEncrypt(request.Secret)
+
+	if err != nil {
+		return mongodbtypes.Address{}, fmt.Errorf("failed to encrypted secret: %w", err)
+	}
 	encryptedNewSecret, err := utils.DeterministicEncrypt(request.NewSecret)
 
 	if err != nil {
@@ -104,7 +108,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 		"secret":    encryptedRequestSecret,
 		"zone":      request.Zone,
 		"address":   request.Address,
-		"ip_family": request.IpFamily,
+		"ip_family": request.IPFamily,
 	}
 
 	if request.Address != "" {
@@ -135,16 +139,16 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 		}
 
 		if registeredAddress.Services[0].ServiceName != request.Service.ServiceName ||
-			registeredAddress.Services[0].NamespaceId != request.Service.NamespaceId ||
-			registeredAddress.Services[0].ClusterId != request.Service.ClusterId {
+			registeredAddress.Services[0].NamespaceID != request.Service.NamespaceID ||
+			registeredAddress.Services[0].ClusterID != request.Service.ClusterID {
 			return mongodbtypes.Address{}, errors.New("service mismatch. unable to change secret")
 		}
 
 		var currentServices []mongodbtypes.Service
 		currentServices = append(currentServices, mongodbtypes.Service{
 			ServiceName:         request.Service.ServiceName,
-			NamespaceId:         request.Service.NamespaceId,
-			ClusterId:           request.Service.ClusterId,
+			NamespaceID:         request.Service.NamespaceID,
+			ClusterID:           request.Service.ClusterID,
 			RetentionPeriodDays: request.Service.RetentionPeriodDays,
 			DenyExternalCleanup: request.Service.DenyExternalCleanup})
 
@@ -166,13 +170,13 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 	// Loop through the services array and remove the service that matches the request
 	var newServices []mongodbtypes.Service
 	for _, service := range registeredAddress.Services {
-		if !(service.NamespaceId == request.Service.NamespaceId &&
+		if !(service.NamespaceID == request.Service.NamespaceID &&
 			service.ServiceName == request.Service.ServiceName &&
-			service.ClusterId == request.Service.ClusterId) {
+			service.ClusterID == request.Service.ClusterID) {
 			newServices = append(newServices, mongodbtypes.Service{
 				ServiceName:         service.ServiceName,
-				NamespaceId:         service.NamespaceId,
-				ClusterId:           service.ClusterId,
+				NamespaceID:         service.NamespaceID,
+				ClusterID:           service.ClusterID,
 				RetentionPeriodDays: service.RetentionPeriodDays,
 				DenyExternalCleanup: service.DenyExternalCleanup,
 				ExpiresAt:           service.ExpiresAt,
@@ -183,8 +187,8 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 	// Add the service to be updated
 	newServices = append(newServices, mongodbtypes.Service(apicontracts.Service{
 		ServiceName:         request.Service.ServiceName,
-		NamespaceId:         request.Service.NamespaceId,
-		ClusterId:           request.Service.ClusterId,
+		NamespaceID:         request.Service.NamespaceID,
+		ClusterID:           request.Service.ClusterID,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		DenyExternalCleanup: request.Service.DenyExternalCleanup,
 		ExpiresAt:           nil,
@@ -220,7 +224,7 @@ func UpdateAddressDocument(request apicontracts.IpamApiRequest) (mongodbtypes.Ad
 //
 // Returns:
 //   - error: An error if the operation fails at any step, or nil if successful.
-func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
+func SetServiceExpirationOnAddress(request apicontracts.IpamAPIRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
@@ -234,7 +238,7 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 		"secret":    encryptedSecret,
 		"zone":      request.Zone,
 		"address":   request.Address,
-		"ip_family": request.IpFamily,
+		"ip_family": request.IPFamily,
 	}
 
 	var registeredAddress mongodbtypes.Address
@@ -253,9 +257,9 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	// Loop through the services array and remove the service that matches the request
 	var newServices []mongodbtypes.Service
 	for _, service := range registeredAddress.Services {
-		if !(service.NamespaceId == request.Service.NamespaceId &&
+		if !(service.NamespaceID == request.Service.NamespaceID &&
 			service.ServiceName == request.Service.ServiceName &&
-			service.ClusterId == request.Service.ClusterId) {
+			service.ClusterID == request.Service.ClusterID) {
 			newServices = append(newServices, service)
 		}
 	}
@@ -266,8 +270,8 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 	expiresAt = &exp
 	newServices = append(newServices, mongodbtypes.Service{
 		ServiceName:         request.Service.ServiceName,
-		NamespaceId:         request.Service.NamespaceId,
-		ClusterId:           request.Service.ClusterId,
+		NamespaceID:         request.Service.NamespaceID,
+		ClusterID:           request.Service.ClusterID,
 		RetentionPeriodDays: request.Service.RetentionPeriodDays,
 		DenyExternalCleanup: request.Service.DenyExternalCleanup,
 		ExpiresAt:           expiresAt})
@@ -292,9 +296,9 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamApiRequest) error {
 // ServiceName, and ClusterId of the target Service; otherwise, it returns false.
 func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service) bool {
 	for _, s := range services {
-		if s.NamespaceId == target.NamespaceId &&
+		if s.NamespaceID == target.NamespaceID &&
 			s.ServiceName == target.ServiceName &&
-			s.ClusterId == target.ClusterId {
+			s.ClusterID == target.ClusterID {
 			return true
 		}
 	}
@@ -308,7 +312,7 @@ func ServiceExists(services []mongodbtypes.Service, target mongodbtypes.Service)
 // ServiceName, NamespaceId, and ClusterId as in the request, it returns the registered
 // address and a nil error. If no such service is found, it returns an empty Address and nil error.
 // Returns an error if encryption, querying, or decoding fails.
-func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes.Address, error) {
+func ServiceAlreadyRegistered(request apicontracts.IpamAPIRequest) (mongodbtypes.Address, error) {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
@@ -320,7 +324,7 @@ func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes
 	filter := bson.M{
 		"secret":    encryptedSecret,
 		"zone":      request.Zone,
-		"ip_family": request.IpFamily,
+		"ip_family": request.IPFamily,
 	}
 
 	cursor, err := collection.Find(context.Background(), filter)
@@ -335,8 +339,8 @@ func ServiceAlreadyRegistered(request apicontracts.IpamApiRequest) (mongodbtypes
 		}
 		for _, service := range registeredAddress.Services {
 			if service.ServiceName == request.Service.ServiceName &&
-				service.NamespaceId == request.Service.NamespaceId &&
-				service.ClusterId == request.Service.ClusterId {
+				service.NamespaceID == request.Service.NamespaceID &&
+				service.ClusterID == request.Service.ClusterID {
 				return registeredAddress, nil
 			}
 		}
