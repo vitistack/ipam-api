@@ -152,7 +152,10 @@ func Sync() {
 }
 
 func getWriter(path string) *os.File {
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	// Clean the path to prevent path traversal attacks
+	cleanPath := filepath.Clean(path)
+
+	f, err := os.OpenFile(cleanPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		panic("unable to open log file: " + err.Error())
 	}

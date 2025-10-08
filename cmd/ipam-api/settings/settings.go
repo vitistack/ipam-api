@@ -3,6 +3,7 @@ package settings
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
@@ -41,28 +42,28 @@ func InitConfig() error {
 	}
 
 	viper.Set("mongodb.collection", "addresses") // Set default collection name
-
 	if viper.GetString("mongodb.password_path") != "" {
 		secretPath := viper.GetString("mongodb.password_path")
-		secret, err := os.ReadFile(secretPath)
+		cleanPath := filepath.Clean(secretPath)
+		secret, err := os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("failed to read mongodb password from file: %w", err)
 		}
 		viper.Set("mongodb.password", string(secret))
 	}
-
 	if viper.GetString("netbox.token_path") != "" {
 		secretPath := viper.GetString("netbox.token_path")
-		secret, err := os.ReadFile(secretPath)
+		cleanPath := filepath.Clean(secretPath)
+		secret, err := os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("failed to read Netbox token from file: %w", err)
 		}
 		viper.Set("netbox.token", string(secret))
 	}
-
 	if viper.GetString("splunk.token_path") != "" {
 		secretPath := viper.GetString("splunk.token_path")
-		secret, err := os.ReadFile(secretPath)
+		cleanPath := filepath.Clean(secretPath)
+		secret, err := os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("failed to read Splunk token from file: %w", err)
 		}

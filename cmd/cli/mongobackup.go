@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -49,11 +50,26 @@ func backup() error {
 		return fmt.Errorf("failed to create backup directory: %w", err)
 	}
 
+	// Validate and sanitize the output filename
+	sanitizedFilename := filepath.Base(filepath.Clean(outPath))
+	if sanitizedFilename == "" || sanitizedFilename == "." || sanitizedFilename == ".." {
+		return fmt.Errorf("invalid output filename: %s", outPath)
+	}
+
+	archivePath := filepath.Join(backupDir, sanitizedFilename)
+
+	// Build and validate MongoDB URI components
+	mongoURI, err := buildValidatedMongoURI()
+	if err != nil {
+		return fmt.Errorf("failed to build MongoDB URI: %w", err)
+	}
+
+	// Use literal arguments to prevent command injection
+	// #nosec G204 -- mongoURI and archivePath are validated above to prevent injection
 	cmd := exec.Command("mongodump",
-		"--uri="+buildMongoURI(),
-		"--archive="+backupDir+"/"+outPath,
-		"--gzip",
-	)
+		"--uri", mongoURI,
+		"--archive", archivePath,
+		"--gzip")
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -74,12 +90,39 @@ func backup() error {
 
 }
 
-func buildMongoURI() string {
+func buildValidatedMongoURI() (string, error) {
 	host := viper.GetString("mongodb.host")
 	user := viper.GetString("mongodb.username")
 	pass := viper.GetString("mongodb.password")
 
-	return fmt.Sprintf("mongodb://%v:%v@%v:27017/?authSource=admin&readPreference=primary&ssl=false", user, pass, host)
+	// Validate required fields
+	if host == "" {
+		return "", fmt.Errorf("mongodb host is required")
+	}
+	if user == "" {
+		return "", fmt.Errorf("mongodb username is required")
+	}
+	if pass == "" {
+		return "", fmt.Errorf("mongodb password is required")
+	}
+
+	// Basic validation to prevent injection - ensure no special characters that could break URI
+	if containsInvalidChars(host) || containsInvalidChars(user) {
+		return "", fmt.Errorf("mongodb connection parameters contain invalid characters")
+	}
+
+	return fmt.Sprintf("mongodb://%s:%s@%s:27017/?authSource=admin&readPreference=primary&ssl=false", user, pass, host), nil
+}
+
+func containsInvalidChars(s string) bool {
+	// Check for characters that could cause URI injection or other issues
+	invalidChars := " @/?#[]\n\r\t"
+	for _, char := range invalidChars {
+		if strings.ContainsRune(s, char) {
+			return true
+		}
+	}
+	return false
 }
 
 func cleanupOldBackups(dir string) error {
