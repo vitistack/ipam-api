@@ -25,19 +25,23 @@ python3 ./hack/netbox-scripts/setup_netbox_prefixes
 
 ## Netbox
 
-**URL** ``http://localhost:8000``
+**URL:** ``http://localhost:8000``
 
 **Username:** ``admin`` & **Password:** ``admin``
 
 ## Shell to IPAM-API
 
-``docker exec -it ipam-api bash``
+```sh
+docker exec -it ipam-api bash
+```
 
 ## IPAM-CLI
 
 Executable within container IPAM-API.
 
-``./ipam-cli --help``
+```sh
+./ipam-cli --help
+```
 
 # ArgoCD
 ```yaml
