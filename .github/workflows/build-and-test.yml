@@ -51,5 +51,4 @@ jobs:
 
       - name: Run security scan
         run: |
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./...
+          make go-security-scan

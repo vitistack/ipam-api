@@ -8,7 +8,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o ipam-api cmd/ipam-api/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -o ipam-cli ./cmd/cli
 
-FROM alpine
+FROM alpine:latest
 RUN apk add --no-cache bash
 
 WORKDIR /app
