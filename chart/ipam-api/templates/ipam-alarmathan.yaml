@@ -36,6 +36,7 @@ spec:
         environment: {{ .Values.alarmathan.mongodb.environment }}
         namespace: prometheus-operator
         severity: {{ .Values.alarmathan.mongodb.severity }}
+        service_id: {{ .Values.alarmathan.mongodb.service_id }}
         team: {{ .Values.alarmathan.mongodb.team }}
         varseltilos: {{ .Values.alarmathan.mongodb.varseltilos }}
 {{ end }}

@@ -65,6 +65,7 @@ alarmathan:
     cluster: t-dcn-001
     criticality: Høy
     severity: Høy
+    service_id: 248
     team: Team Datasenter-Nettverk (Forretningsområde Skytjenester)
     varseltilos: test
 
