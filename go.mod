@@ -8,7 +8,7 @@ require (
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
-	go.mongodb.org/mongo-driver/v2 v2.3.0
+	go.mongodb.org/mongo-driver/v2 v2.4.1
 	go.uber.org/zap v1.27.0
 )
 
