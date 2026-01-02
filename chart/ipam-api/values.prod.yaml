@@ -35,7 +35,8 @@ ipamConfig:
 mongodb:
   namespace: mongodb
   replicaCount: 2
-  version: "7.0.24"
+  version: "7.0.28"
+  featureCompatibilityVersion: "7.0.28"
   volumes:
     data: 10Gi
     logs: 2Gi  
