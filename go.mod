@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.28.0
-	github.com/go-resty/resty/v2 v2.16.5
+	github.com/go-resty/resty/v2 v2.17.1
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	go.mongodb.org/mongo-driver/v2 v2.3.0
