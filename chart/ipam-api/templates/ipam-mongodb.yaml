@@ -7,7 +7,7 @@ spec:
   members: {{ .Values.mongodb.replicaCount }}
   type: ReplicaSet
   version: {{ .Values.mongodb.version }}
-  featureCompatibilityVersion: {{ .Values.mongodb.featureCompatibilityVersion }}
+  #featureCompatibilityVersion: {{ .Values.mongodb.featureCompatibilityVersion }}
   security:
     authentication:
       modes: ["SCRAM"]
