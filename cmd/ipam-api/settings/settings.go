@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
@@ -70,6 +71,12 @@ func InitConfig() error {
 		viper.Set("splunk.token", string(secret))
 	}
 
+	authTokenBytes, err := os.ReadFile("auth.secret")
+	if err != nil {
+		return fmt.Errorf("failed to read auth token from file: %w", err)
+	}
+	viper.Set("auth.token", strings.TrimSpace(string(authTokenBytes)))
+
 	required := []string{
 		"mongodb.username",
 		"mongodb.password_path",
@@ -81,6 +88,7 @@ func InitConfig() error {
 		"encryption_secrets.path",
 		"enc_key",
 		"enc_iv",
+		"auth.token",
 	}
 
 	for _, key := range required {
