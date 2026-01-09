@@ -134,10 +134,10 @@ func RegisterNextAvailable(request apicontracts.IpamAPIRequest) (apicontracts.Ip
 // Returns a successful IpamApiResponse if the operation completes, or an error if any step fails.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the address, zone, and IP family information.
+//   - request: apicontracts.IpamAPIRequest containing the address, zone, and IP family information.
 //
 // Returns:
-//   - apicontracts.IpamApiResponse: Response containing a success message and the registered address.
+//   - apicontracts.IpamAPIResponse: Response containing a success message and the registered address.
 //   - error: Error if the address is invalid for the zone or if any registration step fails.
 func RegisterSpecific(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
 	zone := request.Zone + "_v" + string(request.IPFamily[len(request.IPFamily)-1])
@@ -201,10 +201,10 @@ func RegisterSpecific(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPI
 // If an error occurs during the update, it returns an empty response and the error.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the address and update details.
+//   - request: apicontracts.IpamAPIRequest containing the address and update details.
 //
 // Returns:
-//   - apicontracts.IpamApiResponse: Response with a success message and the updated address.
+//   - apicontracts.IpamAPIResponse: Response with a success message and the updated address.
 //   - error: Error encountered during the update operation, if any.
 func Update(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
 	address, err := mongodbservice.UpdateAddressDocument(request)
@@ -224,13 +224,13 @@ func Update(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, 
 // and the address if successful, or an error if the operation fails.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the address and expiration details.
+//   - request: apicontracts.IpamAPIRequest containing the address and expiration details.
 //
 // Returns:
-//   - apicontracts.IpamApiResponse: Response containing a message and the address.
+//   - apicontracts.IpamAPIResponse: Response containing a message and the address.
 //   - error: Error if setting the expiration fails.
 func SetServiceExpiration(request apicontracts.IpamAPIRequest) (apicontracts.IpamAPIResponse, error) {
-	err := mongodbservice.SetServiceExpirationOnAddress(request)
+	err := mongodbservice.SetServiceExpiration(request)
 	if err != nil {
 		return apicontracts.IpamAPIResponse{}, err
 	}
@@ -238,5 +238,27 @@ func SetServiceExpiration(request apicontracts.IpamAPIRequest) (apicontracts.Ipa
 	return apicontracts.IpamAPIResponse{
 		Message: "Service expiration set successfully",
 		Address: request.Address,
+	}, nil
+}
+
+// SetClusterExpiration sets the service expiration on an address using the provided IpamApiRequest.
+// It calls the mongodbservice to update the expiration and returns an IpamApiResponse with a success message
+// and the address if successful, or an error if the operation fails.
+//
+// Parameters:
+//   - request: apicontracts.IpamAPIDeleteClusterRequest containing the cluster ID .
+//
+// Returns:
+//   - apicontracts.IpamAPIResponse: Response containing a message and the cluster ID.
+//   - error: Error if setting the expiration fails.
+func SetClusterExpiration(request apicontracts.IpamAPIDeleteClusterRequest) (apicontracts.IpamAPIResponse, error) {
+	err := mongodbservice.SetClusterExpiration(request)
+	if err != nil {
+		return apicontracts.IpamAPIResponse{}, err
+	}
+
+	return apicontracts.IpamAPIResponse{
+		Message:   "Cluster expiration set successfully",
+		ClusterID: request.ClusterID,
 	}, nil
 }

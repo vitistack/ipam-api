@@ -24,7 +24,7 @@ import (
 // mongodbtypes.Address or an error if the operation fails.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the address and service details.
+//   - request: apicontracts.IpamAPIRequest containing the address and service details.
 //   - nextPrefix: responses.NetboxPrefix representing the prefix to assign.
 //
 // Returns:
@@ -85,7 +85,7 @@ func RegisterAddress(request apicontracts.IpamAPIRequest, nextPrefix responses.N
 //   - Returns an error if the document is not found, if there are mismatches, or if any MongoDB operation fails.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the details for the update operation.
+//   - request: apicontracts.IpamAPIRequest containing the details for the update operation.
 //
 // Returns:
 //   - error: An error if the update fails or validation does not pass; otherwise, nil.
@@ -210,7 +210,7 @@ func UpdateAddressDocument(request apicontracts.IpamAPIRequest) (mongodbtypes.Ad
 	return registeredAddress, nil
 }
 
-// SetServiceExpirationOnAddress sets an expiration date for a specific service associated with an address in MongoDB.
+// SetServiceExpiration sets an expiration date for a specific service associated with an address in MongoDB.
 // It performs the following steps:
 //  1. Encrypts the provided secret deterministically.
 //  2. Finds the address document in MongoDB matching the encrypted secret, zone, address, and IP family.
@@ -220,11 +220,11 @@ func UpdateAddressDocument(request apicontracts.IpamAPIRequest) (mongodbtypes.Ad
 //  6. Updates the address document in MongoDB with the modified services array.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the secret, zone, address, IP family, and service details.
+//   - request: apicontracts.IpamAPIRequest containing the secret, zone, address, IP family, and service details.
 //
 // Returns:
 //   - error: An error if the operation fails at any step, or nil if successful.
-func SetServiceExpirationOnAddress(request apicontracts.IpamAPIRequest) error {
+func SetServiceExpiration(request apicontracts.IpamAPIRequest) error {
 	client := mongodb.GetClient()
 	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
 
@@ -288,6 +288,67 @@ func SetServiceExpirationOnAddress(request apicontracts.IpamAPIRequest) error {
 		return fmt.Errorf("failed to update services array: %w", err)
 	}
 	logger.Log.Infof("Service expiration set for service %s successfully in MongoDB", request.Service.ServiceName)
+	return nil
+}
+
+// SetClusterExpiration sets an expiration date for a all services associated with a cluster in MongoDB.
+//
+// Parameters:
+//   - request: apicontracts.IpamAPIDeleteClusterRequest containing the cluster ID.
+//
+// Returns:
+//   - error: An error if the operation fails at any step, or nil if successful.
+func SetClusterExpiration(request apicontracts.IpamAPIDeleteClusterRequest) error {
+	ctx := context.Background()
+
+	client := mongodb.GetClient()
+	collection := client.Database(viper.GetString("mongodb.database")).
+		Collection(viper.GetString("mongodb.collection"))
+
+	var addresses []mongodbtypes.Address
+
+	cursor, err := collection.Find(ctx, bson.M{"services.cluster_id": request.ClusterID})
+	if err != nil {
+		return fmt.Errorf("failed to query addresses: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	if err := cursor.All(ctx, &addresses); err != nil {
+		return fmt.Errorf("failed to decode addresses: %w", err)
+	}
+
+	if len(addresses) == 0 {
+		return errors.New("no addresses with assosiated cluster_id found in the database")
+	}
+
+	now := time.Now()
+
+	for _, addr := range addresses {
+		newServices := make([]mongodbtypes.Service, 0, len(addr.Services))
+
+		for _, svc := range addr.Services {
+			if svc.ClusterID != request.ClusterID {
+				newServices = append(newServices, svc)
+				continue
+			}
+			svc.ExpiresAt = &now
+			newServices = append(newServices, svc)
+
+			logger.Log.Infof("Setting expiresAt for service with cluster ID: %s for address %s",
+				svc.ClusterID, addr.Address)
+		}
+
+		update := bson.M{
+			"$set": bson.M{"services": newServices},
+		}
+
+		_, err := collection.UpdateOne(ctx, bson.M{"_id": addr.ID}, update)
+		if err != nil {
+			return fmt.Errorf("failed to update services for address %s: %w", addr.Address, err)
+		}
+	}
+
+	logger.Log.Infof("Service expiration set for cluster_id '%s' successfully in MongoDB", request.ClusterID)
 	return nil
 }
 

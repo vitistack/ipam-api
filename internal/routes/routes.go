@@ -17,8 +17,17 @@ func SetupRoutes(server *gin.Engine) {
 	docs.SwaggerInfo.BasePath = "/v2"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
+	// API routes before versioning
 	server.POST("/", addresseshandler.RegisterAddress)
 	server.DELETE("/", addresseshandler.ExpireAddress)
+
+	// v2 API routes
+	v2 := server.Group("/v2")
+	{
+		v2.POST("/address", addresseshandler.RegisterAddress)
+		v2.DELETE("/cluster", addresseshandler.ExpireCluster)
+		v2.DELETE("/service", addresseshandler.ExpireAddress)
+	}
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

@@ -240,7 +240,7 @@ func DeleteNetboxPrefix(prefixID string) error {
 // If an available prefix is found, it is returned; otherwise, an error is returned indicating no available prefix was found.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the zone and IP family information.
+//   - request: apicontracts.IpamAPIRequest containing the zone and IP family information.
 //
 // Returns:
 //   - responses.NetboxPrefix: The first available prefix found for the specified zone.
@@ -486,7 +486,7 @@ func GetTagID(tagName string) (int, error) {
 	}
 
 	if resp.IsError() || len(result.Results) == 0 {
-		return 0, fmt.Errorf("tag %s not found", tagName)
+		return 0, fmt.Errorf("%s", resp.String())
 	}
 
 	return result.Results[0].ID, nil

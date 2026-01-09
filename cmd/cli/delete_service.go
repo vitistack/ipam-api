@@ -88,7 +88,7 @@ func init() {
 //  7. Updates the address document in MongoDB with the modified services array.
 //
 // Parameters:
-//   - request: apicontracts.IpamApiRequest containing the secret, zone, address, and service details.
+//   - request: apicontracts.IpamAPIRequest containing the secret, zone, address, and service details.
 //
 // Returns:
 //   - error: An error if any step fails, or nil on success.

@@ -26,9 +26,14 @@ type IpamAPIRequest struct {
 	NewSecret string  `json:"new_secret,omitempty" bson:"new_secret,omitempty"`
 }
 
+type IpamAPIDeleteClusterRequest struct {
+	ClusterID string `json:"cluster_id" bson:"cluster_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
+}
+
 type IpamAPIResponse struct {
-	Message string `json:"message"`
-	Address string `json:"address"`
+	Message   string `json:"message"`
+	Address   string `json:"address,omitempty"`
+	ClusterID string `json:"cluster_id,omitempty"`
 }
 
 type CustomFields struct {
@@ -80,9 +85,10 @@ type HTTPError struct {
 //   - NextPrefixPayload: The constructed payload for the next prefix allocation.
 func GetNextPrefixPayload(request IpamAPIRequest, container responses.NetboxPrefix) NextPrefixPayload {
 	var prefixLength int
-	if request.IPFamily == "ipv4" {
+	switch request.IPFamily {
+	case "ipv4":
 		prefixLength = 32
-	} else if request.IPFamily == "ipv6" {
+	case "ipv6":
 		prefixLength = 128
 	}
 
