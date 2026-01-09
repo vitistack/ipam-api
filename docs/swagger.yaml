@@ -1,12 +1,20 @@
 definitions:
-  apicontracts.HTTPError:
+  HTTPError:
     properties:
       code:
         type: integer
       message:
         type: string
     type: object
-  apicontracts.IpamApiRequest:
+  IpamAPIDeleteClusterRequest:
+    properties:
+      cluster_id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+    required:
+    - cluster_id
+    type: object
+  IpamAPIRequest:
     properties:
       address:
         type: string
@@ -24,7 +32,7 @@ definitions:
         minLength: 8
         type: string
       service:
-        $ref: '#/definitions/apicontracts.Service'
+        $ref: '#/definitions/Service'
       zone:
         example: inet
         type: string
@@ -33,18 +41,16 @@ definitions:
     - secret
     - zone
     type: object
-  apicontracts.IpamApiResponse:
+  IpamAPIResponse:
     properties:
       address:
         type: string
+      cluster_id:
+        type: string
       message:
         type: string
-      secret:
-        type: string
-      zone:
-        type: string
     type: object
-  apicontracts.Service:
+  Service:
     properties:
       cluster_id:
         example: 123e4567-e89b-12d3-a456-426614174000
@@ -70,40 +76,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /:
-    delete:
-      consumes:
-      - application/json
-      description: Set expiration for a service
-      parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/apicontracts.IpamApiRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/apicontracts.IpamApiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
-      summary: Set expiration for a service
-      tags:
-      - addresses
+  /address:
     post:
       consumes:
       - application/json
@@ -114,27 +87,95 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/apicontracts.IpamApiRequest'
+          $ref: '#/definitions/IpamAPIRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/apicontracts.IpamApiResponse'
+            $ref: '#/definitions/IpamAPIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: Register an address
+      tags:
+      - addresses
+  /cluster:
+    delete:
+      consumes:
+      - application/json
+      description: Set expiration for a cluster
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/IpamAPIDeleteClusterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/IpamAPIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/HTTPError'
+      summary: Set expiration for a cluster
+      tags:
+      - addresses
+  /service:
+    delete:
+      consumes:
+      - application/json
+      description: Set expiration for a service
+      parameters:
+      - description: Request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/IpamAPIRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/IpamAPIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/HTTPError'
+      summary: Set expiration for a service
       tags:
       - addresses
 swagger: "2.0"
