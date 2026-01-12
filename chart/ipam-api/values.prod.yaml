@@ -47,6 +47,7 @@ secrets:
   mongodb: supersecret
   netbox: {}
   splunk: {}
+  auth: supersecret
 
 backup:
   enable: true
