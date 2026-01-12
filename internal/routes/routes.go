@@ -6,6 +6,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 	docs "github.com/vitistack/ipam-api/docs"
 	"github.com/vitistack/ipam-api/internal/handlers/addresseshandler"
+	"github.com/vitistack/ipam-api/internal/middleware"
 )
 
 func SetupRoutes(server *gin.Engine) {
@@ -17,8 +18,17 @@ func SetupRoutes(server *gin.Engine) {
 	docs.SwaggerInfo.BasePath = "/v2"
 	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
+	// API routes before versioning
 	server.POST("/", addresseshandler.RegisterAddress)
 	server.DELETE("/", addresseshandler.ExpireAddress)
+
+	// v2 API routes
+	v2 := server.Group("/v2")
+	{
+		v2.POST("/address", addresseshandler.RegisterAddress)
+		v2.DELETE("/cluster", middleware.TokenAuth(), addresseshandler.ExpireCluster)
+		v2.DELETE("/service", addresseshandler.ExpireAddress)
+	}
 
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
