@@ -18,16 +18,37 @@ type IPAMClient struct {
 	token      string
 }
 
-// NewIPAMClient creates a new IPAM API client.
-//
-// baseURL is the base URL of the IPAM API (e.g. "http://localhost:3000/v2").
+// NewIPAMv2Client creates a new IPAM API client with the default baseURL for ipam-api.vitistack.io.
 //
 // token is the Bearer token used for authentication.
 //
 // Example:
 //
-//	client := ipam.NewIPAMClient("http://localhost:3000/v2", "your-token-goes-here")
-func NewIPAMClient(baseURL, token string) *IPAMClient {
+//	client := ipam.NewIPAMv2Client("your-token-goes-here")
+func NewIPAMv2Client(token string) *IPAMClient {
+	baseURL := "https://ipam-api.vitistack.io/v2"
+	httpClient := &http.Client{
+		Timeout: 20 * time.Second,
+	}
+
+	return &IPAMClient{
+		httpClient: httpClient,
+		baseURL:    baseURL,
+		token:      token,
+	}
+}
+
+// NewIPAMv2Client creates a new IPAM API client.
+//
+// baseURL is the full base URL of the IPAM API (e.g. "http://localhost:3000/v2").
+//
+// token is the Bearer token used for authentication.
+//
+// Example:
+//
+//	client := ipam.NewIPAMv2ClientWithBaseURL("http://localhost:3000/v2", "your-token-goes-here")
+func NewIPAMv2ClientWithBaseURL(baseURL, token string) *IPAMClient {
+
 	httpClient := &http.Client{
 		Timeout: 20 * time.Second,
 	}
