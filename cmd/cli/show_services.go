@@ -35,9 +35,12 @@ func init() {
 	showServices.Flags().StringVar(&showServicesAddress, "address", "", "Address (required)")
 	showServices.Flags().StringVar(&showServicesZone, "zone", "", "Zone (required)")
 	showServices.Flags().StringVar(&showServicesFormat, "format", "", "Output format (optional, default text. Use 'json' for JSON output)")
-	showServices.MarkFlagRequired("address")
-	showServices.MarkFlagRequired("zone")
-
+	if err := showServices.MarkFlagRequired("address"); err != nil {
+		fmt.Println("Error marking 'address' flag as required:", err)
+	}
+	if err := showServices.MarkFlagRequired("zone"); err != nil {
+		fmt.Println("Error marking 'zone' flag as required:", err)
+	}
 	RootCmd.AddCommand(showServices)
 }
 
@@ -88,13 +91,13 @@ func displayServices(address, zone string) error {
 
 	savedAddress.Secret = decryptedSecret
 
-	addressJson, err := json.MarshalIndent(savedAddress, "", "  ")
+	addressJSON, err := json.MarshalIndent(savedAddress, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal address to JSON: %w", err)
 	}
 
 	if showServicesFormat == "json" {
-		fmt.Println(string(addressJson))
+		fmt.Println(string(addressJSON))
 	} else {
 		fmt.Println("Address\t\t " + savedAddress.Address)
 		fmt.Println("Secret\t\t " + savedAddress.Secret)
@@ -106,8 +109,8 @@ func displayServices(address, zone string) error {
 				} else {
 					fmt.Println("\t\t- Service Name:\t\t\t" + service.ServiceName)
 				}
-				fmt.Println("\t\t  Namespace ID:\t\t\t" + service.NamespaceId)
-				fmt.Println("\t\t  Cluster ID:\t\t\t" + service.ClusterId)
+				fmt.Println("\t\t  Namespace ID:\t\t\t" + service.NamespaceID)
+				fmt.Println("\t\t  Cluster ID:\t\t\t" + service.ClusterID)
 				fmt.Println("\t\t  Retention Period Days:\t" + strconv.Itoa(service.RetentionPeriodDays))
 				fmt.Println("\t\t  Deny External Cleanup:\t" + strconv.FormatBool(service.DenyExternalCleanup))
 				if service.ExpiresAt != nil {

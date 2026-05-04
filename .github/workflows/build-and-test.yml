@@ -2,7 +2,7 @@ name: Build and Test
 
 on:
   push:
-    branches: [cfl]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -51,5 +51,4 @@ jobs:
 
       - name: Run security scan
         run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck ./...
+          make go-security-scan

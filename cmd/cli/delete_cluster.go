@@ -28,7 +28,9 @@ var deleteClusterCmd = &cobra.Command{
 
 func init() {
 	deleteClusterCmd.Flags().StringVar(&clusterID, "cluster", "", "Cluster ID (required)")
-	deleteClusterCmd.MarkFlagRequired("cluster")
+	if err := deleteClusterCmd.MarkFlagRequired("cluster"); err != nil {
+		fmt.Println("Error marking 'cluster' flag as required:", err)
+	}
 	RootCmd.AddCommand(deleteClusterCmd)
 }
 
@@ -39,11 +41,11 @@ func init() {
 // the database, or if decoding fails.
 //
 // Parameters:
-//   - clusterId: The ID of the cluster whose services' expiration should be set.
+//   - clusterID: The ID of the cluster whose services' expiration should be set.
 //
 // Returns:
 //   - error: An error if the operation fails, or nil on success.
-func setExpiresForCluster(clusterId string) error {
+func setExpiresForCluster(clusterID string) error {
 	// Initialize MongoDB client
 	mongoConfig := mongodb.MongoConfig{
 		Host:     viper.GetString("mongodb.host"),
@@ -59,7 +61,7 @@ func setExpiresForCluster(clusterId string) error {
 	defer cancel()
 
 	filter := bson.M{
-		"services.cluster_id": clusterId,
+		"services.cluster_id": clusterID,
 	}
 
 	var addresses []mongodbtypes.Address
@@ -81,13 +83,13 @@ func setExpiresForCluster(clusterId string) error {
 	}
 
 	if len(addresses) == 0 {
-		return fmt.Errorf("no address found for cluster_id=%s", clusterId)
+		return fmt.Errorf("no address found for cluster_id=%s", clusterID)
 	}
 
 	for _, a := range addresses {
 		newServices := []mongodbtypes.Service{}
 		for _, service := range a.Services {
-			if service.ClusterId == clusterId {
+			if service.ClusterID == clusterID {
 				exp := time.Now()
 				service.ExpiresAt = &exp
 				service.RetentionPeriodDays = 0
@@ -106,6 +108,6 @@ func setExpiresForCluster(clusterId string) error {
 			return fmt.Errorf("failed to update services array: %w", err)
 		}
 	}
-	fmt.Println("Expiration set for addresses with cluster ID:", clusterId)
+	fmt.Println("Expiration set for addresses with cluster ID:", clusterID)
 	return nil
 }

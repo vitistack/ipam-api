@@ -3,6 +3,8 @@ package settings
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/viper"
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
@@ -41,33 +43,39 @@ func InitConfig() error {
 	}
 
 	viper.Set("mongodb.collection", "addresses") // Set default collection name
-
 	if viper.GetString("mongodb.password_path") != "" {
 		secretPath := viper.GetString("mongodb.password_path")
-		secret, err := os.ReadFile(secretPath)
+		cleanPath := filepath.Clean(secretPath)
+		secret, err := os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("failed to read mongodb password from file: %w", err)
 		}
 		viper.Set("mongodb.password", string(secret))
 	}
-
 	if viper.GetString("netbox.token_path") != "" {
 		secretPath := viper.GetString("netbox.token_path")
-		secret, err := os.ReadFile(secretPath)
+		cleanPath := filepath.Clean(secretPath)
+		secret, err := os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("failed to read Netbox token from file: %w", err)
 		}
 		viper.Set("netbox.token", string(secret))
 	}
-
 	if viper.GetString("splunk.token_path") != "" {
 		secretPath := viper.GetString("splunk.token_path")
-		secret, err := os.ReadFile(secretPath)
+		cleanPath := filepath.Clean(secretPath)
+		secret, err := os.ReadFile(cleanPath)
 		if err != nil {
 			return fmt.Errorf("failed to read Splunk token from file: %w", err)
 		}
 		viper.Set("splunk.token", string(secret))
 	}
+
+	authTokenBytes, err := os.ReadFile("auth.secret")
+	if err != nil {
+		return fmt.Errorf("failed to read auth token from file: %w", err)
+	}
+	viper.Set("auth.token", strings.TrimSpace(string(authTokenBytes)))
 
 	required := []string{
 		"mongodb.username",
@@ -80,6 +88,7 @@ func InitConfig() error {
 		"encryption_secrets.path",
 		"enc_key",
 		"enc_iv",
+		"auth.token",
 	}
 
 	for _, key := range required {
@@ -89,11 +98,11 @@ func InitConfig() error {
 	}
 
 	if viper.GetString("netbox.constraint_tag") != "" {
-		constraintTagId, err := netboxservice.GetTagId(viper.GetString("netbox.constraint_tag"))
+		constraintTagID, err := netboxservice.GetTagID(viper.GetString("netbox.constraint_tag"))
 		if err != nil {
 			return fmt.Errorf("failed to get constraint tag ID: %w", err)
 		}
-		viper.Set("netbox.constraint_tag_id", constraintTagId)
+		viper.Set("netbox.constraint_tag_id", constraintTagID)
 	}
 
 	return nil

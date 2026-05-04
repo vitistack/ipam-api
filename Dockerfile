@@ -1,4 +1,4 @@
-FROM golang:1.24.4 AS builder
+FROM golang:1.25.6 AS builder
 
 WORKDIR /app
 COPY go.mod go.sum ./
@@ -8,7 +8,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o ipam-api cmd/ipam-api/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -o ipam-cli ./cmd/cli
 
-FROM alpine
+FROM alpine:latest
 RUN apk add --no-cache bash
 
 WORKDIR /app

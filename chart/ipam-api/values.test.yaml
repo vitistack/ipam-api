@@ -4,6 +4,8 @@
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 
+environment: test
+
 replicaCount: 1
 
 ipamApi:
@@ -16,36 +18,58 @@ encryption:
 
 ipamConfig:
   mongodb:
-    username: {}
-    password: {}
-    host: ipam-system-mongodb
+    username: admin
+    password: supersecret
+    host: ipam-api-svc.mongodb.svc.cluster.local
     port: 27017
     database: vitistack-ipam-api
     collection: addresses
   netbox:
     url: https://ipam.dcn.nhn.no
     token: {}
+  splunk:
+    enable: true
+    url: https://splunk-hec.nhn.no
   encryptionSecretsPath: secrets.json
 
 mongodb:
-  image:
-    registry: ncr.sky.nhn.no/dockerhub
-    repository: bitnami/mongodb
-    tag: 7.0.5
-    pullSecrets: []
-  architecture: standalone
-  auth:
-    rootUser: ""
-    rootPassword: ""
+  namespace: mongodb
+  replicaCount: 2
+  version: "7.0.28"
+  featureCompatibilityVersion: "7.0"
+  volumes:
+    data: 10Gi
+    logs: 2Gi  
   service:
     port: 27017
-  persistence:
-    storageClass: "cephfs"
 
 secrets:
   mongodb: supersecret
   netbox: {}
   splunk: {}
+  auth: supersecret
+
+backup:
+  enable: false
+  failedJobsHistoryLimit: 4
+  image: ncr.sky.nhn.no/dcn/ipam-mongodump:v0.0.1
+  schedule: "*/15 * * * *"
+  sshKey: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    -----END OPENSSH PRIVATE KEY-----
+
+alarmathan:
+  mongodb:
+    enable: false
+    namespace: mongodb
+    app: viti-ipam-api
+    environment: test
+    cluster: t-dcn-001
+    criticality: Høy
+    severity: Høy
+    service_id: 917
+    team: Team Datasenter-Nettverk (Forretningsområde Skytjenester)
+    varseltilos: test
 
 # This is to override the chart name.
 nameOverride: ""
@@ -98,6 +122,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
     cert-manager.io/cluster-issuer: internpki
+    dns.nhn.no/override-infrastructure: '{"infrastructure":["internett"]}'
 
   hosts:
     - host: ipam-api.test.vitistack.io

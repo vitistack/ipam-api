@@ -7,7 +7,7 @@ import (
 	"github.com/vitistack/ipam-api/internal/routes"
 )
 
-func InitHttpServer() {
+func InitHTTPServer() {
 	gin.SetMode(gin.ReleaseMode)
 	server := gin.New() // or gin.Default()
 

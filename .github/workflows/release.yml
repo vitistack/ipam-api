@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -49,6 +49,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -77,8 +80,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64
-          #   platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -91,7 +94,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install helm
-        uses: azure/setup-helm@v1
+        uses: azure/setup-helm@v4
         with:
           version: v3.16.4
 
@@ -106,8 +109,9 @@ jobs:
         run: |
           export HELM_VERSION=${VERSION#v*}
           ./yq e -i '.version = strenv(HELM_VERSION),.appVersion = strenv(VERSION)' chart/ipam-api/Chart.yaml
-          ./yq e -i '.ipamApi.tag = strenv(VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.yaml
-          helm package chart/ipam-api 
+          ./yq e -i '.ipamApi.tag = strenv(HELM_VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.prod.yaml
+          ./yq e -i '.ipamApi.tag = strenv(HELM_VERSION),.ipamApi.image = "ncr.sky.nhn.no/ghcr/vitistack/ipam-api"' chart/ipam-api/values.test.yaml
+          helm package chart/ipam-api
           echo  ${{ secrets.GITHUB_TOKEN }} | helm registry login -u ${{ github.actor }} ghcr.io --password-stdin
           helm push ipam-api-${HELM_VERSION}.tgz oci://ghcr.io/vitistack/helm/
         env:

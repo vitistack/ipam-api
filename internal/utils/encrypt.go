@@ -19,7 +19,7 @@ func DeterministicEncrypt(plaintext string) (string, error) {
 		return "", err
 	}
 
-	stream := cipher.NewCTR(block, fixedNonce)
+	stream := cipher.NewCTR(block, fixedNonce) // #nosec G407 -- Fixed nonce is intentional for deterministic encryption
 	ciphertext := make([]byte, len(plaintext))
 	stream.XORKeyStream(ciphertext, []byte(plaintext))
 
@@ -42,7 +42,7 @@ func DeterministicDecrypt(encoded string) (string, error) {
 		return "", err
 	}
 
-	stream := cipher.NewCTR(block, fixedNonce)
+	stream := cipher.NewCTR(block, fixedNonce) // #nosec G407 -- Fixed nonce is intentional for deterministic encryption
 	plaintext := make([]byte, len(ciphertext))
 	stream.XORKeyStream(plaintext, ciphertext)
 

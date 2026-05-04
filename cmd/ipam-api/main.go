@@ -69,7 +69,7 @@ func main() {
 	// Start web server in a goroutine
 	_, serverCancel := context.WithCancel(context.Background())
 	go func() {
-		webserver.InitHttpServer()
+		webserver.InitHTTPServer()
 	}()
 
 	// Start cleanup worker

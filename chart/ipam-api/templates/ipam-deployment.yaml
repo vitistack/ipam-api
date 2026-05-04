@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: ipam-deployment
 spec:
-  replicas: { { .Values.replicaCount } }
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: ipam
@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         app: ipam
+        {{- include "ipam-apiv2.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         - name: ipam-api
@@ -33,6 +34,9 @@ spec:
             - name: splunk-secret
               mountPath: /app/splunk.secret
               subPath: splunk.secret
+            - name: auth-secret
+              mountPath: /app/auth.secret
+              subPath: auth.secret
       volumes:
         - name: ipam-config
           secret:
@@ -49,3 +53,6 @@ spec:
         - name: splunk-secret
           secret:
             secretName: ipam-secret-splunk
+        - name: auth-secret
+          secret:
+            secretName: ipam-secret-auth

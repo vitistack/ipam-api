@@ -23,8 +23,3 @@ version: 0.1.0
 # It is recommended to use it with quotes.
 appVersion: "1.0.0"
 
-
-dependencies:
-- name: mongodb
-  version: 15.6.26
-  repository: https://charts.bitnami.com/bitnami

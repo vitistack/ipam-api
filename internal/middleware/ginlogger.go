@@ -70,7 +70,7 @@ func ZapErrorLogger() gin.HandlerFunc {
 	}
 }
 
-// maskSecretField masks the value of the "secret" field in a JSON body.
+// maskSecretField masks the value of the "secret" and "new_secret" fields in a JSON body.
 func maskSecretField(body []byte) []byte {
 	var m map[string]interface{}
 	if err := json.Unmarshal(body, &m); err != nil {
@@ -78,6 +78,9 @@ func maskSecretField(body []byte) []byte {
 	}
 	if val, ok := m["secret"]; ok && val != nil {
 		m["secret"] = "*********"
+	}
+	if val, ok := m["new_secret"]; ok && val != nil {
+		m["new_secret"] = "*********"
 	}
 	masked, err := json.Marshal(m)
 	if err != nil {

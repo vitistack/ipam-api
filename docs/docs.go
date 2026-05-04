@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/": {
+        "/address": {
             "post": {
                 "description": "Register an address in Vitistack IPAM API",
                 "consumes": [
@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.IpamApiRequest"
+                            "$ref": "#/definitions/IpamAPIRequest"
                         }
                     }
                 ],
@@ -43,29 +43,83 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.IpamApiResponse"
+                            "$ref": "#/definitions/IpamAPIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.HTTPError"
+                            "$ref": "#/definitions/HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.HTTPError"
+                            "$ref": "#/definitions/HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.HTTPError"
+                            "$ref": "#/definitions/HTTPError"
                         }
                     }
                 }
-            },
+            }
+        },
+        "/cluster": {
+            "delete": {
+                "description": "Set expiration for a cluster",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Set expiration for a cluster",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/IpamAPIDeleteClusterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/IpamAPIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/service": {
             "delete": {
                 "description": "Set expiration for a service",
                 "consumes": [
@@ -85,7 +139,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.IpamApiRequest"
+                            "$ref": "#/definitions/IpamAPIRequest"
                         }
                     }
                 ],
@@ -93,25 +147,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.IpamApiResponse"
+                            "$ref": "#/definitions/IpamAPIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.HTTPError"
+                            "$ref": "#/definitions/HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.HTTPError"
+                            "$ref": "#/definitions/HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/apicontracts.HTTPError"
+                            "$ref": "#/definitions/HTTPError"
                         }
                     }
                 }
@@ -119,7 +173,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "apicontracts.HTTPError": {
+        "HTTPError": {
             "type": "object",
             "properties": {
                 "code": {
@@ -130,7 +184,19 @@ const docTemplate = `{
                 }
             }
         },
-        "apicontracts.IpamApiRequest": {
+        "IpamAPIDeleteClusterRequest": {
+            "type": "object",
+            "required": [
+                "cluster_id"
+            ],
+            "properties": {
+                "cluster_id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                }
+            }
+        },
+        "IpamAPIRequest": {
             "type": "object",
             "required": [
                 "ip_family",
@@ -159,7 +225,7 @@ const docTemplate = `{
                     "example": "a_secret_value"
                 },
                 "service": {
-                    "$ref": "#/definitions/apicontracts.Service"
+                    "$ref": "#/definitions/Service"
                 },
                 "zone": {
                     "type": "string",
@@ -167,24 +233,21 @@ const docTemplate = `{
                 }
             }
         },
-        "apicontracts.IpamApiResponse": {
+        "IpamAPIResponse": {
             "type": "object",
             "properties": {
                 "address": {
                     "type": "string"
                 },
+                "cluster_id": {
+                    "type": "string"
+                },
                 "message": {
-                    "type": "string"
-                },
-                "secret": {
-                    "type": "string"
-                },
-                "zone": {
                     "type": "string"
                 }
             }
         },
-        "apicontracts.Service": {
+        "Service": {
             "type": "object",
             "required": [
                 "cluster_id",
