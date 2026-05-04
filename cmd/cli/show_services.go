@@ -91,7 +91,7 @@ func displayServices(address, zone string) error {
 
 	savedAddress.Secret = decryptedSecret
 
-	addressJSON, err := json.MarshalIndent(savedAddress, "", "  ")
+	addressJSON, err := json.MarshalIndent(savedAddress, "", "  ") // #nosec G117 -- intentional: this CLI command is designed to display decrypted secrets
 	if err != nil {
 		return fmt.Errorf("failed to marshal address to JSON: %w", err)
 	}
