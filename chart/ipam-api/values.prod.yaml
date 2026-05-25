@@ -120,6 +120,7 @@ ingress:
     # kubernetes.io/tls-acme: "true"
     cert-manager.io/cluster-issuer: internpki
     dns.nhn.no/override-infrastructure: "{\"infrastructure\":[\"internett\"]}"
+    dns.nhn.no/ignore: "true"
 
   hosts:
     - host: ipam-api.vitistack.io
@@ -130,6 +131,13 @@ ingress:
     - secretName: ipam-api-tls
       hosts:
         - ipam-api.vitistack.io
+
+# This block is for setting up the httproute for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/#httproute
+httproute:
+  enabled: true
+  zone: hnet-public
+  issuer: internpki
+  domain: ipam-api.vitistack.io
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
