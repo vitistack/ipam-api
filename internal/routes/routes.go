@@ -6,7 +6,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 	docs "github.com/vitistack/ipam-api/docs"
 	"github.com/vitistack/ipam-api/internal/handlers/addresseshandler"
-	"github.com/vitistack/ipam-api/internal/middleware"
+	// "github.com/vitistack/ipam-api/internal/middleware"
 )
 
 func SetupRoutes(server *gin.Engine) {
