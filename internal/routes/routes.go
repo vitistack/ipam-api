@@ -26,7 +26,7 @@ func SetupRoutes(server *gin.Engine) {
 	v2 := server.Group("/v2")
 	{
 		v2.POST("/address", addresseshandler.RegisterAddress)
-		v2.DELETE("/cluster", middleware.TokenAuth(), addresseshandler.ExpireCluster)
+		// v2.DELETE("/cluster", middleware.TokenAuth(), addresseshandler.ExpireCluster)
 		v2.DELETE("/service", addresseshandler.ExpireAddress)
 	}
 
