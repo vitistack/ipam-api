@@ -138,6 +138,11 @@ httproute:
   zone: hnet-public
   issuer: internpki
   domain: ipam-api.test.vitistack.io
+  securityPolicy:
+    enabled: false
+    defaultAction: deny
+    lists: ""
+    addresses: ""
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

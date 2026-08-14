@@ -10,6 +10,15 @@ metadata:
     ipam.vitistack.io/zone: {{ .Values.httproute.zone }}
     gatewayapi-operator.vitistack.io/cluster-issuer: {{ .Values.httproute.issuer }}
     dns.nhn.no/override-infrastructure: '{"infrastructure":["helsenett","internett"]}'
+    {{- if .Values.httproute.securityPolicy.enabled }}
+    securitypolicies.vitistack.io/default-action: {{ .Values.httproute.securityPolicy.defaultAction | quote }}
+    {{- if .Values.httproute.securityPolicy.lists }}
+    securitypolicies.vitistack.io/lists: {{ .Values.httproute.securityPolicy.lists | quote }}
+    {{- end }}
+    {{- if .Values.httproute.securityPolicy.addresses }}
+    securitypolicies.vitistack.io/addresses: {{ .Values.httproute.securityPolicy.addresses | quote }}
+    {{- end }}
+    {{- end }}
 spec:
   parentRefs:
     - name: {{ .Values.httproute.zone }}-{{ .Values.httproute.issuer }}
