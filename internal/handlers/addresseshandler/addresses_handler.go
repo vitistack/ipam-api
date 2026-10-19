@@ -27,7 +27,7 @@ import (
 //	@Success		200		{object}	apicontracts.VerifyIPOwnerResponse
 //	@Failure		400		{object}	apicontracts.HTTPError
 //	@Failure		500		{object}	apicontracts.HTTPError
-//	@Router			/verifyIpOwner [POST]
+//	@Router			/verify [POST]
 func VerifyIPOwner(ginContext *gin.Context) {
 	var request apicontracts.VerifyIPOwnerRequest
 	if err := ginContext.ShouldBindJSON(&request); err != nil {

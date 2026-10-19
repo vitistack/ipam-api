@@ -15,7 +15,7 @@ func TestVerifyIPOwnerRejectsInvalidRequests(t *testing.T) {
 	server := gin.New()
 	SetupRoutes(server)
 
-	for _, path := range []string{"/verifyIpOwner", "/v2/verifyIpOwner"} {
+	for _, path := range []string{"/verify", "/v2/verify"} {
 		t.Run(path, func(t *testing.T) {
 			bodies := []string{"{", "null", "{}"}
 			for _, missing := range []string{"address", "zone", "secret", "namespace_id", "cluster_id"} {

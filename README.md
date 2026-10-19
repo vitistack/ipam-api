@@ -24,7 +24,7 @@ python3 ./hack/netbox-scripts/setup_netbox_prefixes
 
 ## Verify IP ownership
 
-Send `POST /verifyIpOwner` (also available at `/v2/verifyIpOwner`) with:
+Send `POST /verify` (also available at `/v2/verify`) with:
 
 ```json
 {

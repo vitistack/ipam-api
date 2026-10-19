@@ -21,13 +21,13 @@ func SetupRoutes(server *gin.Engine) {
 	// API routes before versioning
 	server.POST("/", addresseshandler.RegisterAddress)
 	server.DELETE("/", addresseshandler.ExpireAddress)
-	server.POST("/verifyIpOwner", addresseshandler.VerifyIPOwner)
+	server.POST("/verify", addresseshandler.VerifyIPOwner)
 
 	// v2 API routes
 	v2 := server.Group("/v2")
 	{
 		v2.POST("/address", addresseshandler.RegisterAddress)
-		v2.POST("/verifyIpOwner", addresseshandler.VerifyIPOwner)
+		v2.POST("/verify", addresseshandler.VerifyIPOwner)
 		// v2.DELETE("/cluster", middleware.TokenAuth(), addresseshandler.ExpireCluster)
 		v2.DELETE("/service", addresseshandler.ExpireAddress)
 	}

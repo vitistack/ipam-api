@@ -12,7 +12,7 @@ definitions:
         example: 123e4567-e89b-12d3-a456-426614174000
         type: string
     required:
-    - cluster_id
+      - cluster_id
     type: object
   apicontracts.IpamAPIRequest:
     properties:
@@ -20,8 +20,8 @@ definitions:
         type: string
       ip_family:
         enum:
-        - ipv4
-        - ipv6
+          - ipv4
+          - ipv6
         example: ipv4
         type: string
       new_secret:
@@ -32,14 +32,14 @@ definitions:
         minLength: 8
         type: string
       service:
-        $ref: '#/definitions/apicontracts.Service'
+        $ref: "#/definitions/apicontracts.Service"
       zone:
         example: inet
         type: string
     required:
-    - ip_family
-    - secret
-    - zone
+      - ip_family
+      - secret
+      - zone
     type: object
   apicontracts.IpamAPIResponse:
     properties:
@@ -69,9 +69,9 @@ definitions:
         example: service1
         type: string
     required:
-    - cluster_id
-    - namespace_id
-    - service_name
+      - cluster_id
+      - namespace_id
+      - service_name
     type: object
   apicontracts.VerifyIPOwnerRequest:
     properties:
@@ -86,11 +86,11 @@ definitions:
       zone:
         type: string
     required:
-    - address
-    - cluster_id
-    - namespace_id
-    - secret
-    - zone
+      - address
+      - cluster_id
+      - namespace_id
+      - secret
+      - zone
     type: object
   apicontracts.VerifyIPOwnerResponse:
     properties:
@@ -103,134 +103,134 @@ paths:
   /address:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Register an address in Vitistack IPAM API
       parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/apicontracts.IpamAPIRequest'
+        - description: Request body
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/apicontracts.IpamAPIRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/apicontracts.IpamAPIResponse'
+            $ref: "#/definitions/apicontracts.IpamAPIResponse"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
       summary: Register an address
       tags:
-      - addresses
+        - addresses
   /cluster:
     delete:
       consumes:
-      - application/json
+        - application/json
       description: Set expiration for a cluster
       parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/apicontracts.IpamAPIDeleteClusterRequest'
+        - description: Request body
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/apicontracts.IpamAPIDeleteClusterRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/apicontracts.IpamAPIResponse'
+            $ref: "#/definitions/apicontracts.IpamAPIResponse"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
       summary: Set expiration for a cluster
       tags:
-      - addresses
+        - addresses
   /service:
     delete:
       consumes:
-      - application/json
+        - application/json
       description: Set expiration for a service
       parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/apicontracts.IpamAPIRequest'
+        - description: Request body
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/apicontracts.IpamAPIRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/apicontracts.IpamAPIResponse'
+            $ref: "#/definitions/apicontracts.IpamAPIResponse"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
       summary: Set expiration for a service
       tags:
-      - addresses
-  /verifyIpOwner:
+        - addresses
+  /verify:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Check address, zone, secret and a service matching both cluster_id
         and namespace_id.
       parameters:
-      - description: Request body
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/apicontracts.VerifyIPOwnerRequest'
+        - description: Request body
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/apicontracts.VerifyIPOwnerRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/apicontracts.VerifyIPOwnerResponse'
+            $ref: "#/definitions/apicontracts.VerifyIPOwnerResponse"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/apicontracts.HTTPError'
+            $ref: "#/definitions/apicontracts.HTTPError"
       summary: Verify IP address ownership
       tags:
-      - addresses
+        - addresses
 swagger: "2.0"

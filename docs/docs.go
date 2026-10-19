@@ -171,7 +171,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/verifyIpOwner": {
+        "/verify": {
             "post": {
                 "description": "Check address, zone, secret and a service matching both cluster_id and namespace_id.",
                 "consumes": [
