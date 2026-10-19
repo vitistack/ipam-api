@@ -1,6 +1,7 @@
 package addressesservice
 
 import (
+	"context"
 	"errors"
 	"net"
 	"strconv"
@@ -11,6 +12,10 @@ import (
 	"github.com/vitistack/ipam-api/internal/services/netboxservice"
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
+
+func VerifyIPOwner(ctx context.Context, request apicontracts.VerifyIPOwnerRequest) (bool, error) {
+	return mongodbservice.VerifyIPOwner(ctx, request)
+}
 
 // RegisterAddress handles the registration of an IP address based on the provided IpamApiRequest.
 // It checks if the service is already registered in MongoDB, verifies address availability in Netbox,

@@ -30,6 +30,18 @@ type IpamAPIDeleteClusterRequest struct {
 	ClusterID string `json:"cluster_id" bson:"cluster_id" validate:"required" example:"123e4567-e89b-12d3-a456-426614174000"`
 }
 
+type VerifyIPOwnerRequest struct {
+	Address     string `json:"address" binding:"required"`
+	Zone        string `json:"zone" binding:"required"`
+	Secret      string `json:"secret" binding:"required"`
+	NamespaceID string `json:"namespace_id" binding:"required"`
+	ClusterID   string `json:"cluster_id" binding:"required"`
+}
+
+type VerifyIPOwnerResponse struct {
+	Verified bool `json:"verified"`
+}
+
 type IpamAPIResponse struct {
 	Message   string `json:"message"`
 	Address   string `json:"address,omitempty"`
