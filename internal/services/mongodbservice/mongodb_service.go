@@ -18,6 +18,45 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+func VerifyIPOwner(ctx context.Context, request apicontracts.VerifyIPOwnerRequest) (bool, error) {
+	client := mongodb.GetClient()
+	collection := client.Database(viper.GetString("mongodb.database")).Collection(viper.GetString("mongodb.collection"))
+	return verifyIPOwner(ctx, collection, request)
+}
+
+func verifyIPOwner(ctx context.Context, collection *mongo.Collection, request apicontracts.VerifyIPOwnerRequest) (bool, error) {
+	filter, err := ipOwnerFilter(request)
+	if err != nil {
+		return false, err
+	}
+
+	err = collection.FindOne(ctx, filter).Err()
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed to verify IP owner: %w", err)
+	}
+	return true, nil
+}
+
+func ipOwnerFilter(request apicontracts.VerifyIPOwnerRequest) (bson.M, error) {
+	encryptedSecret, err := utils.DeterministicEncrypt(request.Secret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt secret: %w", err)
+	}
+
+	return bson.M{
+		"address": request.Address,
+		"zone":    request.Zone,
+		"secret":  encryptedSecret,
+		"services": bson.M{"$elemMatch": bson.M{
+			"cluster_id":   request.ClusterID,
+			"namespace_id": request.NamespaceID,
+		}},
+	}, nil
+}
+
 // RegisterAddress creates a new address document in the MongoDB collection using the provided
 // IpamApiRequest and NetboxPrefix. It encrypts the secret from the request, constructs the
 // address document, and inserts it into the database. The function returns the newly created

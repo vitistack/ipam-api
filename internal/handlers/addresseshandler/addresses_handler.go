@@ -16,6 +16,33 @@ import (
 	"github.com/vitistack/ipam-api/pkg/models/apicontracts"
 )
 
+// VerifyIPOwner godoc
+//
+//	@Summary		Verify IP address ownership
+//	@Description	Check address, zone, secret and a service matching both cluster_id and namespace_id.
+//	@Tags			addresses
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		apicontracts.VerifyIPOwnerRequest	true	"Request body"
+//	@Success		200		{object}	apicontracts.VerifyIPOwnerResponse
+//	@Failure		400		{object}	apicontracts.HTTPError
+//	@Failure		500		{object}	apicontracts.HTTPError
+//	@Router			/verifyIpOwner [POST]
+func VerifyIPOwner(ginContext *gin.Context) {
+	var request apicontracts.VerifyIPOwnerRequest
+	if err := ginContext.ShouldBindJSON(&request); err != nil {
+		ginContext.JSON(http.StatusBadRequest, gin.H{"message": "address, zone, secret, namespace_id and cluster_id are required"})
+		return
+	}
+
+	owner, err := addressesservice.VerifyIPOwner(ginContext.Request.Context(), request)
+	if err != nil {
+		ginContext.JSON(http.StatusInternalServerError, gin.H{"message": "Could not verify IP owner"})
+		return
+	}
+	ginContext.JSON(http.StatusOK, apicontracts.VerifyIPOwnerResponse{Verified: owner})
+}
+
 // RegisterAddress godoc
 //
 //	@Summary	Register an address

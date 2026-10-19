@@ -10,3 +10,8 @@ hack/data/*
 #*.secret
 backup/
 tmp/
+config
+mongodb.secret
+netbox.secret
+splunk.secret
+secrets.json

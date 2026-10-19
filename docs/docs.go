@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/IpamAPIRequest"
+                            "$ref": "#/definitions/apicontracts.IpamAPIRequest"
                         }
                     }
                 ],
@@ -43,25 +43,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/IpamAPIResponse"
+                            "$ref": "#/definitions/apicontracts.IpamAPIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     }
                 }
@@ -87,7 +87,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/IpamAPIDeleteClusterRequest"
+                            "$ref": "#/definitions/apicontracts.IpamAPIDeleteClusterRequest"
                         }
                     }
                 ],
@@ -95,25 +95,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/IpamAPIResponse"
+                            "$ref": "#/definitions/apicontracts.IpamAPIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     }
                 }
@@ -139,7 +139,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/IpamAPIRequest"
+                            "$ref": "#/definitions/apicontracts.IpamAPIRequest"
                         }
                     }
                 ],
@@ -147,25 +147,71 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/IpamAPIResponse"
+                            "$ref": "#/definitions/apicontracts.IpamAPIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/HTTPError"
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/verifyIpOwner": {
+            "post": {
+                "description": "Check address, zone, secret and a service matching both cluster_id and namespace_id.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Verify IP address ownership",
+                "parameters": [
+                    {
+                        "description": "Request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.VerifyIPOwnerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.VerifyIPOwnerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/apicontracts.HTTPError"
                         }
                     }
                 }
@@ -173,7 +219,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "HTTPError": {
+        "apicontracts.HTTPError": {
             "type": "object",
             "properties": {
                 "code": {
@@ -184,7 +230,7 @@ const docTemplate = `{
                 }
             }
         },
-        "IpamAPIDeleteClusterRequest": {
+        "apicontracts.IpamAPIDeleteClusterRequest": {
             "type": "object",
             "required": [
                 "cluster_id"
@@ -196,7 +242,7 @@ const docTemplate = `{
                 }
             }
         },
-        "IpamAPIRequest": {
+        "apicontracts.IpamAPIRequest": {
             "type": "object",
             "required": [
                 "ip_family",
@@ -225,7 +271,7 @@ const docTemplate = `{
                     "example": "a_secret_value"
                 },
                 "service": {
-                    "$ref": "#/definitions/Service"
+                    "$ref": "#/definitions/apicontracts.Service"
                 },
                 "zone": {
                     "type": "string",
@@ -233,7 +279,7 @@ const docTemplate = `{
                 }
             }
         },
-        "IpamAPIResponse": {
+        "apicontracts.IpamAPIResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -247,7 +293,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Service": {
+        "apicontracts.Service": {
             "type": "object",
             "required": [
                 "cluster_id",
@@ -276,6 +322,41 @@ const docTemplate = `{
                 "service_name": {
                     "type": "string",
                     "example": "service1"
+                }
+            }
+        },
+        "apicontracts.VerifyIPOwnerRequest": {
+            "type": "object",
+            "required": [
+                "address",
+                "cluster_id",
+                "namespace_id",
+                "secret",
+                "zone"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "cluster_id": {
+                    "type": "string"
+                },
+                "namespace_id": {
+                    "type": "string"
+                },
+                "secret": {
+                    "type": "string"
+                },
+                "zone": {
+                    "type": "string"
+                }
+            }
+        },
+        "apicontracts.VerifyIPOwnerResponse": {
+            "type": "object",
+            "properties": {
+                "verified": {
+                    "type": "boolean"
                 }
             }
         }
